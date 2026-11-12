@@ -55,3 +55,56 @@ public record ShelterAllocatedEvent(
     int AllocatedMembersCount
 ) : IDomainEvent
 {
+    public string EventType => nameof(ShelterAllocatedEvent);
+}
+
+public record ResourceShortageDetectedEvent(
+    Guid EventId,
+    DateTime OccurredAtUtc,
+    Guid ResourceItemId,
+    string ResourceName,
+    int AvailableQuantity,
+    int TotalCompetingDemand
+) : IDomainEvent
+{
+    public string EventType => nameof(ResourceShortageDetectedEvent);
+}
+
+public record RequestStatusChangedEvent(
+    Guid EventId,
+    DateTime OccurredAtUtc,
+    Guid RequestId,
+    Guid CitizenUserId,
+    string ReferenceCode,
+    string NewStatus,
+    string PreferredLanguage,
+    string Note
+) : IDomainEvent
+{
+    public string EventType => nameof(RequestStatusChangedEvent);
+}
+
+public record VolunteerAssignedEvent(
+    Guid EventId,
+    DateTime OccurredAtUtc,
+    Guid AssignmentId,
+    Guid VolunteerUserId,
+    string VolunteerName,
+    string TaskTitle
+) : IDomainEvent
+{
+    public string EventType => nameof(VolunteerAssignedEvent);
+}
+
+public record PublicAlertBroadcastEvent(
+    Guid EventId,
+    DateTime OccurredAtUtc,
+    Guid AlertId,
+    Guid CrisisEventId,
+    string Title,
+    string SeverityLevel,
+    string Message
+) : IDomainEvent
+{
+    public string EventType => nameof(PublicAlertBroadcastEvent);
+}
