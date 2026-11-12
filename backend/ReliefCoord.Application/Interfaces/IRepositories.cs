@@ -35,4 +35,14 @@ public interface IUnitOfWork
     IRepository<PartnerAidRequest> PartnerAidRequests { get; }
     IRepository<VolunteerProfile> Volunteers { get; }
     IRepository<VolunteerTaskAssignment> VolunteerAssignments { get; }
+    IRepository<DonationCampaign> DonationCampaigns { get; }
+    IRepository<DonationRecord> Donations { get; }
+    IRepository<NotificationRecord> Notifications { get; }
+    IRepository<MappingReference> MappingReferences { get; }
+    IRepository<AuditEventRecord> AuditEvents { get; }
+    IRepository<CampaignExpenditure> CampaignExpenditures { get; }
+    IRepository<OperationalKpiSnapshot> OperationalKpiSnapshots { get; }
+
+    Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
+    Task ExecuteInTransactionAsync(Func<Task> operation, CancellationToken cancellationToken = default);
 }
