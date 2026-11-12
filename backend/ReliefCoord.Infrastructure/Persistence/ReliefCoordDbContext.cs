@@ -64,5 +64,39 @@ public class ReliefCoordDbContext : DbContext
             .HasOne(a => a.HumanDecision)
             .WithOne()
             .HasForeignKey<HumanGovernanceDecision>(d => d.AiRecommendationId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<CrisisEvent>()
+            .HasMany(c => c.OperationalAreas)
+            .WithOne()
+            .HasForeignKey(o => o.CrisisEventId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<DonationCampaign>()
+            .Property(c => c.TargetAmountUsd)
+            .HasPrecision(18, 2);
+
+        modelBuilder.Entity<DonationCampaign>()
+            .Property(c => c.CollectedAmountUsd)
+            .HasPrecision(18, 2);
+
+        modelBuilder.Entity<DonationCampaign>()
+            .Property(c => c.DisbursedAmountUsd)
+            .HasPrecision(18, 2);
+
+        modelBuilder.Entity<DonationRecord>()
+            .Property(d => d.MonetaryAmountUsd)
+            .HasPrecision(18, 2);
+
+        modelBuilder.Entity<CampaignExpenditure>()
+            .Property(e => e.AmountUsd)
+            .HasPrecision(18, 2);
+
+        modelBuilder.Entity<OperationalKpiSnapshot>()
+            .Property(s => s.TotalDonationsCollectedUsd)
+            .HasPrecision(18, 2);
+
+        modelBuilder.Entity<NotificationRecord>()
+            .HasIndex(n => n.IdempotencyKey);
     }
 }
