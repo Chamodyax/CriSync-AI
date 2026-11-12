@@ -32,15 +32,6 @@ CREATE TABLE Users (
     InvitedByUserName NVARCHAR(200) NOT NULL DEFAULT '',
     InvitationCode NVARCHAR(100) NOT NULL DEFAULT '',
     ProfilePhotoUrl NVARCHAR(MAX) NOT NULL DEFAULT '',
-    QuickUnlockEnabled BIT NOT NULL DEFAULT 0,
-    QuickUnlockMode NVARCHAR(30) NOT NULL DEFAULT '',
-    QuickUnlockSecretHash NVARCHAR(256) NOT NULL DEFAULT '',
-    QuickUnlockSecretSalt NVARCHAR(128) NOT NULL DEFAULT '',
-    QuickUnlockDeviceTokenHash NVARCHAR(256) NOT NULL DEFAULT '',
-    QuickUnlockDeviceTokenSalt NVARCHAR(128) NOT NULL DEFAULT '',
-    QuickUnlockBiometricCredentialId NVARCHAR(512) NOT NULL DEFAULT '',
-    QuickUnlockFailedAttempts INT NOT NULL DEFAULT 0,
-    QuickUnlockTrustedDevicesJson NVARCHAR(MAX) NOT NULL DEFAULT '[]',
     CreatedAtUtc DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
     UpdatedAtUtc DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME()
 );
@@ -198,3 +189,183 @@ CREATE TABLE AiRecommendations (
 CREATE TABLE GovernanceDecisions (
     Id UNIQUEIDENTIFIER NOT NULL PRIMARY KEY,
     AiRecommendationId UNIQUEIDENTIFIER NOT NULL UNIQUE REFERENCES AiRecommendations(Id) ON DELETE CASCADE,
+    ActionTaken NVARCHAR(50) NOT NULL,
+    OriginalAiRecommendationSummary NVARCHAR(500) NOT NULL,
+    OriginalConfidence FLOAT NOT NULL,
+    FinalHumanDecisionSummary NVARCHAR(500) NOT NULL,
+    OverrideJustification NVARCHAR(1000) NOT NULL,
+    ResponsibleUserId UNIQUEIDENTIFIER NOT NULL,
+    ResponsibleUserName NVARCHAR(200) NOT NULL,
+    ResponsibleUserRole NVARCHAR(50) NOT NULL,
+    DecisionTimestampUtc DATETIME2 NOT NULL,
+    CreatedAtUtc DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
+    UpdatedAtUtc DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME()
+);
+
+CREATE TABLE Shelters (
+    Id UNIQUEIDENTIFIER NOT NULL PRIMARY KEY,
+    Name NVARCHAR(200) NOT NULL,
+    CrisisEventId UNIQUEIDENTIFIER NOT NULL REFERENCES CrisisEvents(Id),
+    Address NVARCHAR(300) NOT NULL,
+    Latitude FLOAT NOT NULL,
+    Longitude FLOAT NOT NULL,
+    TotalCapacity INT NOT NULL,
+    CurrentOccupancy INT NOT NULL,
+    IsWheelchairAccessible BIT NOT NULL,
+    HasMedicalFacility BIT NOT NULL,
+    HasCleanWater BIT NOT NULL,
+    HasPowerBackup BIT NOT NULL,
+    HasChildSafeSpace BIT NOT NULL,
+    AvailableServices NVARCHAR(500) NOT NULL,
+    Status NVARCHAR(50) NOT NULL,
+    ManagedByOrganisationId UNIQUEIDENTIFIER NULL,
+    CreatedAtUtc DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
+    UpdatedAtUtc DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME()
+);
+
+CREATE TABLE ShelterAllocations (
+    Id UNIQUEIDENTIFIER NOT NULL PRIMARY KEY,
+    ShelterId UNIQUEIDENTIFIER NOT NULL REFERENCES Shelters(Id),
+    AssistanceRequestId UNIQUEIDENTIFIER NULL,
+    CitizenUserId UNIQUEIDENTIFIER NOT NULL,
+    HouseholdName NVARCHAR(200) NOT NULL,
+    AllocatedMembersCount INT NOT NULL,
+    RequiresAccessibility BIT NOT NULL,
+    AllocationStatus NVARCHAR(50) NOT NULL,
+    ApprovedByUserId UNIQUEIDENTIFIER NOT NULL,
+    CreatedAtUtc DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
+    UpdatedAtUtc DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME()
+);
+
+CREATE TABLE Resources (
+    Id UNIQUEIDENTIFIER NOT NULL PRIMARY KEY,
+    Name NVARCHAR(200) NOT NULL,
+    Category NVARCHAR(50) NOT NULL,
+    Unit NVARCHAR(50) NOT NULL,
+    TotalQuantity INT NOT NULL,
+    AvailableQuantity INT NOT NULL,
+    AllocatedQuantity INT NOT NULL,
+    ReorderThreshold INT NOT NULL,
+    WarehouseName NVARCHAR(200) NOT NULL,
+    WarehouseLatitude FLOAT NOT NULL,
+    WarehouseLongitude FLOAT NOT NULL,
+    SupportsColdChain BIT NOT NULL,
+    ExpiryDateUtc DATETIME2 NULL,
+    OwningOrganisationId UNIQUEIDENTIFIER NULL,
+    CreatedAtUtc DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
+    UpdatedAtUtc DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME()
+);
+
+CREATE TABLE ResourceAllocations (
+    Id UNIQUEIDENTIFIER NOT NULL PRIMARY KEY,
+    ResourceItemId UNIQUEIDENTIFIER NOT NULL REFERENCES Resources(Id),
+    AssistanceRequestId UNIQUEIDENTIFIER NOT NULL REFERENCES AssistanceRequests(Id),
+    RequestedQuantity INT NOT NULL,
+    AllocatedQuantity INT NOT NULL,
+    IsPartialShortageAllocation BIT NOT NULL,
+    AllocationStrategyUsed NVARCHAR(100) NOT NULL,
+    ConstraintMatchScore FLOAT NOT NULL,
+    EstimatedDistanceKm FLOAT NOT NULL,
+    AlternativeRecommendation NVARCHAR(1000) NOT NULL,
+    Status NVARCHAR(50) NOT NULL,
+    ApprovedByUserId UNIQUEIDENTIFIER NOT NULL,
+    CreatedAtUtc DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
+    UpdatedAtUtc DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME()
+);
+
+CREATE TABLE DispatchRecords (
+    Id UNIQUEIDENTIFIER NOT NULL PRIMARY KEY,
+    ResourceAllocationId UNIQUEIDENTIFIER NOT NULL REFERENCES ResourceAllocations(Id),
+    VehicleRegistration NVARCHAR(50) NOT NULL,
+    DriverName NVARCHAR(150) NOT NULL,
+    RouteSummary NVARCHAR(500) NOT NULL,
+    DistanceKm FLOAT NOT NULL,
+    EstimatedTravelMinutes INT NOT NULL,
+    DispatchStatus NVARCHAR(50) NOT NULL,
+    DispatchedAtUtc DATETIME2 NOT NULL,
+    DeliveredAtUtc DATETIME2 NULL,
+    CreatedAtUtc DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
+    UpdatedAtUtc DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME()
+);
+
+CREATE TABLE PartnerAidRequests (
+    Id UNIQUEIDENTIFIER NOT NULL PRIMARY KEY,
+    RequestingOrganisationId UNIQUEIDENTIFIER NOT NULL,
+    TargetPartnerOrganisationId UNIQUEIDENTIFIER NULL,
+    NeededCategory NVARCHAR(50) NOT NULL,
+    ResourceName NVARCHAR(200) NOT NULL,
+    QuantityNeeded INT NOT NULL,
+    Justification NVARCHAR(1000) NOT NULL,
+    Status NVARCHAR(50) NOT NULL,
+    CreatedAtUtc DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
+    UpdatedAtUtc DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME()
+);
+
+CREATE TABLE Volunteers (
+    Id UNIQUEIDENTIFIER NOT NULL PRIMARY KEY,
+    UserId UNIQUEIDENTIFIER NOT NULL,
+    FullName NVARCHAR(200) NOT NULL,
+    SkillsCsv NVARCHAR(500) NOT NULL,
+    LanguagesCsv NVARCHAR(100) NOT NULL,
+    IsVerified BIT NOT NULL,
+    IsAvailable BIT NOT NULL,
+    AvailabilitySchedule NVARCHAR(200) NOT NULL,
+    CurrentLatitude FLOAT NOT NULL,
+    CurrentLongitude FLOAT NOT NULL,
+    CompletedTasksCount INT NOT NULL,
+    CreatedAtUtc DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
+    UpdatedAtUtc DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME()
+);
+
+CREATE TABLE VolunteerAssignments (
+    Id UNIQUEIDENTIFIER NOT NULL PRIMARY KEY,
+    VolunteerProfileId UNIQUEIDENTIFIER NOT NULL REFERENCES Volunteers(Id),
+    AssistanceRequestId UNIQUEIDENTIFIER NULL,
+    TaskTitle NVARCHAR(250) NOT NULL,
+    RequiredSkill NVARCHAR(100) NOT NULL,
+    AiMatchScore FLOAT NOT NULL,
+    DistanceKm FLOAT NOT NULL,
+    Status NVARCHAR(50) NOT NULL,
+    CompletionNotes NVARCHAR(1000) NOT NULL,
+    CompletedAtUtc DATETIME2 NULL,
+    CreatedAtUtc DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
+    UpdatedAtUtc DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME()
+);
+
+CREATE TABLE DonationCampaigns (
+    Id UNIQUEIDENTIFIER NOT NULL PRIMARY KEY,
+    Title NVARCHAR(250) NOT NULL,
+    CrisisEventId UNIQUEIDENTIFIER NOT NULL REFERENCES CrisisEvents(Id),
+    TargetAmountUsd DECIMAL(18, 2) NOT NULL,
+    CollectedAmountUsd DECIMAL(18, 2) NOT NULL,
+    DisbursedAmountUsd DECIMAL(18, 2) NOT NULL,
+    IsActive BIT NOT NULL,
+    CreatedAtUtc DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
+    UpdatedAtUtc DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME()
+);
+
+CREATE TABLE Donations (
+    Id UNIQUEIDENTIFIER NOT NULL PRIMARY KEY,
+    CampaignId UNIQUEIDENTIFIER NOT NULL REFERENCES DonationCampaigns(Id),
+    DonorUserId UNIQUEIDENTIFIER NULL,
+    DonorName NVARCHAR(200) NOT NULL,
+    DonationType NVARCHAR(50) NOT NULL,
+    MonetaryAmountUsd DECIMAL(18, 2) NOT NULL,
+    MaterialDescription NVARCHAR(500) NOT NULL,
+    MaterialQuantity INT NOT NULL,
+    PaymentGatewayReference NVARCHAR(150) NOT NULL,
+    AllocationPurpose NVARCHAR(300) NOT NULL,
+    IsFlaggedSuspicious BIT NOT NULL,
+    SuspiciousReason NVARCHAR(500) NOT NULL,
+    IsReviewedByHuman BIT NOT NULL,
+    VerificationStatus NVARCHAR(50) NOT NULL,
+    CreatedAtUtc DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
+    UpdatedAtUtc DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME()
+);
+
+CREATE TABLE Notifications (
+    Id UNIQUEIDENTIFIER NOT NULL PRIMARY KEY,
+    RecipientUserId UNIQUEIDENTIFIER NOT NULL,
+    RecipientContact NVARCHAR(200) NOT NULL,
+    Channel NVARCHAR(50) NOT NULL,
+    LanguageCode NVARCHAR(10) NOT NULL,
