@@ -28,7 +28,7 @@ public static class JwtConfigurationHelper
 
         if (environment != null && environment.IsProduction())
         {
-            return DevFallbackSigningKey;
+            throw new InvalidOperationException("JWT_SECRET_KEY must be configured in Production.");
         }
 
         return DevFallbackSigningKey;
