@@ -124,7 +124,7 @@ builder.Services.AddCors(options =>
                 }
                 if (Uri.TryCreate(origin, UriKind.Absolute, out Uri? uri) &&
                     uri.Scheme == Uri.UriSchemeHttps &&
-                    (
+                    (uri.Host.EndsWith(".ngrok-free.app", StringComparison.OrdinalIgnoreCase) ||
                      uri.Host.EndsWith(".ngrok-free.dev", StringComparison.OrdinalIgnoreCase) ||
                      uri.Host.EndsWith(".ngrok.io", StringComparison.OrdinalIgnoreCase)))
                 {
@@ -148,7 +148,7 @@ builder.Services.AddRateLimiter(options =>
             context.Connection.RemoteIpAddress?.ToString() ?? "local",
             _ => new FixedWindowRateLimiterOptions
             {
-                PermitLimit = isTestingEnv ? 1000 : 120,
+                PermitLimit = isTestingEnv ? 1000 : 30,
                 Window = TimeSpan.FromMinutes(1),
                 QueueLimit = 0
             }));
