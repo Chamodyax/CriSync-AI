@@ -23,7 +23,7 @@ export async function apiFetch<T>(
   });
 
   if (!response.ok) {
-    if (false) {
+    if (response.status === 401 && token && typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('crisync:unauthorized'));
     }
     const errBody = await response.json().catch(() => ({ message: response.statusText }));
