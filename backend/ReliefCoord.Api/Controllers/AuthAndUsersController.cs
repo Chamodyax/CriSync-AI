@@ -1687,5 +1687,302 @@ public class AuthAndUsersController : ControllerBase
         return Ok(new { deletedUserId = id, message = $"Removed user {user.FullName} ({user.Email})." });
     }
 
+    [HttpGet("admin/partnerships")]
+    [Authorize(Roles = "SystemAdmin,OrganizationAdmin")]
+    public async Task<ActionResult> GetPartnerships(CancellationToken cancellationToken)
+    {
+        var orgs = await _unitOfWork.Organisations.GetAllAsync(cancellationToken);
+        var users = await _unitOfWork.Users.GetAllAsync(cancellationToken);
+        var partnerUsersByOrg = users
+            .Where(u => u.OrganisationId.HasValue && u.Role == UserRole.PartnerOfficer)
+            .GroupBy(u => u.OrganisationId!.Value)
+            .ToDictionary(
+                g => g.Key,
+                g => g.Select(u => new { u.Id, u.FullName, u.Email, u.AccountStatus, u.IsActive }).ToList());
+
+        var result = orgs
+            .OrderByDescending(o => o.PartnershipStatus == "Pending")
+            .ThenBy(o => o.Name)
+            .Select(o => new
+            {
+                o.Id,
+                o.Name,
+                o.OrganisationType,
+                o.Country,
+                o.ContactEmail,
+                o.ContactPhone,
+                o.IsVerified,
+                o.PartnershipStatus,
+                o.PartnershipProposal,
+                o.CreatedAtUtc,
+                Officers = partnerUsersByOrg.TryGetValue(o.Id, out var list) ? list : new()
+            })
+            .ToList();
+
+        return Ok(result);
+    }
+
+    [HttpPost("admin/partnerships/{organisationId:guid}/approve")]
+    [Authorize(Roles = "SystemAdmin,OrganizationAdmin")]
+    public async Task<ActionResult> ApprovePartnership(Guid organisationId, CancellationToken cancellationToken)
+    {
+        var org = await _unitOfWork.Organisations.GetByIdAsync(organisationId, cancellationToken);
+        if (org == null)
+        {
+            return NotFound(new { message = "Partner organisation not found." });
+        }
+
+        org.IsVerified = true;
+        org.PartnershipStatus = "Approved";
+        await _unitOfWork.Organisations.UpdateAsync(org, cancellationToken);
+
+        var officers = await _unitOfWork.Users.FindAsync(
+            u => u.OrganisationId == organisationId && u.Role == UserRole.PartnerOfficer,
+            cancellationToken);
+        foreach (var officer in officers)
+        {
+            officer.AccountStatus = "Active";
+            officer.IsActive = true;
+            await _unitOfWork.Users.UpdateAsync(officer, cancellationToken);
+        }
+
+        var actorId = Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var uid) ? uid : (Guid?)null;
+        await _unitOfWork.AuditEvents.AddAsync(new AuditEventRecord
+        {
+            EventCategory = "PartnershipApproval",
+            ActionName = "Admin_ApprovedPartnership",
+            EntityType = nameof(Organisation),
+            EntityId = org.Id.ToString(),
+            ActorUserId = actorId,
+            ActorUserName = User.FindFirstValue(ClaimTypes.Name) ?? "Admin",
+            ActorRole = User.FindFirstValue(ClaimTypes.Role) ?? "SystemAdmin",
+            IpAddress = GetClientIp(),
+            DetailsJson = JsonSerializer.Serialize(new { org.Name, OfficersActivated = officers.Count })
+        }, cancellationToken);
+
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        return Ok(org);
+    }
+
+    [HttpPost("admin/partnerships/{organisationId:guid}/reject")]
+    [Authorize(Roles = "SystemAdmin,OrganizationAdmin")]
+    public async Task<ActionResult> RejectPartnership(Guid organisationId, CancellationToken cancellationToken)
+    {
+        var org = await _unitOfWork.Organisations.GetByIdAsync(organisationId, cancellationToken);
+        if (org == null)
+        {
+            return NotFound(new { message = "Partner organisation not found." });
+        }
+
+        org.IsVerified = false;
+        org.PartnershipStatus = "Rejected";
+        await _unitOfWork.Organisations.UpdateAsync(org, cancellationToken);
+
+        var officers = await _unitOfWork.Users.FindAsync(
+            u => u.OrganisationId == organisationId && u.Role == UserRole.PartnerOfficer,
+            cancellationToken);
+        foreach (var officer in officers)
+        {
+            officer.AccountStatus = "PartnershipRejected";
+            await _unitOfWork.Users.UpdateAsync(officer, cancellationToken);
+        }
+
+        var actorId = Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var uid) ? uid : (Guid?)null;
+        await _unitOfWork.AuditEvents.AddAsync(new AuditEventRecord
+        {
+            EventCategory = "PartnershipApproval",
+            ActionName = "Admin_RejectedPartnership",
+            EntityType = nameof(Organisation),
+            EntityId = org.Id.ToString(),
+            ActorUserId = actorId,
+            ActorUserName = User.FindFirstValue(ClaimTypes.Name) ?? "Admin",
+            ActorRole = User.FindFirstValue(ClaimTypes.Role) ?? "SystemAdmin",
+            IpAddress = GetClientIp(),
+            DetailsJson = JsonSerializer.Serialize(new { org.Name })
+        }, cancellationToken);
+
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        return Ok(org);
+    }
+
+    [HttpGet("admin/role-permissions")]
+    [Authorize(Roles = "SystemAdmin,OrganizationAdmin")]
+    public async Task<ActionResult> GetRolePermissions(CancellationToken cancellationToken)
+    {
+        var permissions = await _unitOfWork.RolePermissions.GetAllAsync(cancellationToken);
+        return Ok(permissions.OrderBy(p => p.Role.ToString()).ThenBy(p => p.PermissionCode));
+    }
+
+    [HttpPost("admin/role-permissions")]
+    [Authorize(Roles = "SystemAdmin,OrganizationAdmin")]
+    public async Task<ActionResult> AddRolePermission([FromBody] RolePermissionDto dto, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(dto.PermissionCode))
+        {
+            return BadRequest(new { message = "PermissionCode is required." });
+        }
+
+        string code = dto.PermissionCode.Trim().ToUpperInvariant();
+        var existing = await _unitOfWork.RolePermissions.FindAsync(
+            p => p.Role == dto.Role && p.PermissionCode == code,
+            cancellationToken);
+
+        if (existing.Any())
+        {
+            return Conflict(new { message = $"Permission '{code}' is already assigned to role '{dto.Role}'." });
+        }
+
+        var perm = new RolePermission
+        {
+            Role = dto.Role,
+            PermissionCode = code,
+            Description = dto.Description?.Trim() ?? string.Empty
+        };
+
+        await _unitOfWork.RolePermissions.AddAsync(perm, cancellationToken);
+
+        var actorId = Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var uid) ? uid : (Guid?)null;
+        await _unitOfWork.AuditEvents.AddAsync(new AuditEventRecord
+        {
+            EventCategory = "RolePermissions",
+            ActionName = "Admin_AddedRolePermission",
+            EntityType = nameof(RolePermission),
+            EntityId = perm.Id.ToString(),
+            ActorUserId = actorId,
+            ActorUserName = User.FindFirstValue(ClaimTypes.Name) ?? "Admin",
+            ActorRole = User.FindFirstValue(ClaimTypes.Role) ?? "SystemAdmin",
+            IpAddress = GetClientIp(),
+            DetailsJson = JsonSerializer.Serialize(new { Role = dto.Role.ToString(), code })
+        }, cancellationToken);
+
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        return Ok(perm);
+    }
+
+    [HttpDelete("admin/role-permissions/{id:guid}")]
+    [Authorize(Roles = "SystemAdmin,OrganizationAdmin")]
+    public async Task<ActionResult> DeleteRolePermission(Guid id, CancellationToken cancellationToken)
+    {
+        var perm = await _unitOfWork.RolePermissions.GetByIdAsync(id, cancellationToken);
+        if (perm == null)
+        {
+            return NotFound();
+        }
+
+        await _unitOfWork.RolePermissions.DeleteAsync(perm, cancellationToken);
+
+        var actorId = Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var uid) ? uid : (Guid?)null;
+        await _unitOfWork.AuditEvents.AddAsync(new AuditEventRecord
+        {
+            EventCategory = "RolePermissions",
+            ActionName = "Admin_RemovedRolePermission",
+            EntityType = nameof(RolePermission),
+            EntityId = perm.Id.ToString(),
+            ActorUserId = actorId,
+            ActorUserName = User.FindFirstValue(ClaimTypes.Name) ?? "Admin",
+            ActorRole = User.FindFirstValue(ClaimTypes.Role) ?? "SystemAdmin",
+            IpAddress = GetClientIp(),
+            DetailsJson = JsonSerializer.Serialize(new { Role = perm.Role.ToString(), perm.PermissionCode })
+        }, cancellationToken);
+
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        return Ok(new { deletedPermissionId = id });
+    }
+
+    [HttpGet("admin/system-config")]
+    [Authorize(Roles = "SystemAdmin,OrganizationAdmin")]
+    public ActionResult<SystemGovernanceConfigDto> GetSystemConfig()
+    {
+        return Ok(_governanceConfigProvider.GetConfig());
+    }
+
+    [HttpPut("admin/system-config")]
+    [Authorize(Roles = "SystemAdmin,OrganizationAdmin")]
+    public async Task<ActionResult<SystemGovernanceConfigDto>> UpdateSystemConfig([FromBody] SystemGovernanceConfigDto dto, CancellationToken cancellationToken)
+    {
+        int clampedMin = Math.Clamp(dto.MinGlobalAdmins, 2, 3);
+        int clampedMax = Math.Clamp(dto.MaxGlobalAdmins, clampedMin, 4);
+        int clampedOrgMax = Math.Clamp(dto.MaxOrganizationAdmins, 1, 5);
+
+        SystemGovernanceConfigDto updated = new(
+            clampedMin,
+            clampedMax,
+            clampedOrgMax,
+            dto.RequireVolunteerCoordinatorVerification,
+            dto.RequirePartnerAdminApproval,
+            Math.Max(1000m, dto.HighValueDonationThresholdUsd)
+        );
+
+        _governanceConfigProvider.UpdateConfig(updated);
+
+        var actorId = Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var uid) ? uid : (Guid?)null;
+        await _unitOfWork.AuditEvents.AddAsync(new AuditEventRecord
+        {
+            EventCategory = "SystemConfiguration",
+            ActionName = "Admin_UpdatedSystemConfig",
+            EntityType = "SystemGovernanceConfig",
+            EntityId = "GLOBAL",
+            ActorUserId = actorId,
+            ActorUserName = User.FindFirstValue(ClaimTypes.Name) ?? "Admin",
+            ActorRole = User.FindFirstValue(ClaimTypes.Role) ?? "SystemAdmin",
+            IpAddress = GetClientIp(),
+            DetailsJson = JsonSerializer.Serialize(updated)
+        }, cancellationToken);
+
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        return Ok(updated);
+    }
+
+    [HttpGet("admin/service-settings")]
+    [Authorize(Roles = "SystemAdmin,OrganizationAdmin")]
+    public ActionResult<ServiceIntegrationSettingsDto> GetServiceSettings()
+    {
+        lock (SettingsLock)
+        {
+            _serviceSettings = _serviceSettings with
+            {
+                SimulateExternalAiFailure = _resilienceMonitor.SimulateExternalAiFailure,
+                SimulateExternalNotificationFailure = _resilienceMonitor.SimulateExternalNotificationFailure,
+                SimulateExternalMappingFailure = _resilienceMonitor.SimulateExternalMappingFailure
+            };
+            return Ok(_serviceSettings);
+        }
+    }
+
+    [HttpPut("admin/service-settings")]
+    [Authorize(Roles = "SystemAdmin,OrganizationAdmin")]
+    public async Task<ActionResult<ServiceIntegrationSettingsDto>> UpdateServiceSettings([FromBody] ServiceIntegrationSettingsDto dto, CancellationToken cancellationToken)
+    {
+        _resilienceMonitor.SimulateExternalAiFailure = dto.SimulateExternalAiFailure;
+        _resilienceMonitor.SimulateExternalNotificationFailure = dto.SimulateExternalNotificationFailure;
+        _resilienceMonitor.SimulateExternalMappingFailure = dto.SimulateExternalMappingFailure;
+
+        var sanitized = dto with
+        {
+            AiConfidenceThreshold = Math.Clamp(dto.AiConfidenceThreshold, 0.1, 0.99),
+            SmsIdempotencyWindowMinutes = Math.Clamp(dto.SmsIdempotencyWindowMinutes, 1, 1440)
+        };
+
+        lock (SettingsLock)
+        {
+            _serviceSettings = sanitized;
+        }
+
+        var actorId = Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var uid) ? uid : (Guid?)null;
+        await _unitOfWork.AuditEvents.AddAsync(new AuditEventRecord
+        {
+            EventCategory = "IntegrationSettings",
+            ActionName = "Admin_UpdatedServiceIntegrationSettings",
+            EntityType = "ExternalServiceSettings",
+            EntityId = "AI_SMS_EMAIL_MAPS",
+            ActorUserId = actorId,
+            ActorUserName = User.FindFirstValue(ClaimTypes.Name) ?? "Admin",
+            ActorRole = User.FindFirstValue(ClaimTypes.Role) ?? "SystemAdmin",
+            IpAddress = GetClientIp(),
+            DetailsJson = JsonSerializer.Serialize(sanitized)
+        }, cancellationToken);
+
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        return Ok(sanitized);
     }
 }
