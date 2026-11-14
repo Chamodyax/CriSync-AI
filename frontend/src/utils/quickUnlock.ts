@@ -112,8 +112,7 @@ export async function enrollDeviceBiometric(email: string, fullName: string): Pr
   const createOptions: PublicKeyCredentialCreationOptions = {
     challenge,
     rp: {
-      name: 'CriSync Platform',
-      id: window.location.hostname
+      name: 'CriSync Humanitarian Platform'
     },
     user: {
       id: userBytes,
