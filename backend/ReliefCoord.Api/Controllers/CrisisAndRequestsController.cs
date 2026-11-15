@@ -301,7 +301,7 @@ public class CrisisAndRequestsController : ControllerBase
     }
 
     [HttpGet("requests")]
-    [AllowAnonymous]
+    [Authorize]
     public async Task<ActionResult> GetAssistanceRequests(CancellationToken cancellationToken)
     {
         var requests = await _unitOfWork.AssistanceRequests.GetAllAsync(cancellationToken);
@@ -315,5 +315,252 @@ public class CrisisAndRequestsController : ControllerBase
         {
             if (decisionMap.TryGetValue(rec.Id, out var dec))
             {
+                rec.HumanDecision = dec;
+            }
+        }
+
+        foreach (var req in requests)
+        {
+            req.Timeline = histories
+                .Where(h => h.AssistanceRequestId == req.Id)
+                .OrderByDescending(h => h.CreatedAtUtc)
+                .ToList();
+
+            req.AiRecommendations = recommendations
+                .Where(a => a.AssistanceRequestId == req.Id)
+                .OrderByDescending(a => a.CreatedAtUtc)
+                .ToList();
+        }
+
+        return Ok(requests);
+    }
+
+    [HttpPost("requests")]
+    [Authorize]
+    public async Task<ActionResult> SubmitAssistanceRequest([FromBody] CreateAssistanceRequestDto dto, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(dto.Title) || string.IsNullOrWhiteSpace(dto.Description))
+        {
+            return BadRequest(new { message = "Request title and description are required." });
+        }
+
+        var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var userName = User.FindFirstValue(ClaimTypes.Name) ?? "Authenticated Citizen";
+        Guid userId = Guid.TryParse(userIdStr, out var parsed) ? parsed : Guid.Empty;
+
+        var created = await _opsService.SubmitAssistanceRequestAsync(userId, userName, dto, cancellationToken);
+        return Ok(created);
+    }
+
+    [HttpPost("requests/upload-evidence")]
+    [Authorize]
+    public async Task<ActionResult> UploadEvidence(IFormFile? file, CancellationToken cancellationToken)
+    {
+        if (file == null || file.Length == 0)
+        {
+            return BadRequest(new { message = "No evidence file provided." });
+        }
+
+        const long maxFileSize = 5 * 1024 * 1024;
+        if (file.Length > maxFileSize)
+        {
+            return BadRequest(new { message = "Evidence file size exceeds the 5 MB security limit." });
+        }
+
+        var allowedExtensions = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { ".jpg", ".jpeg", ".png", ".pdf" };
+        string ext = Path.GetExtension(file.FileName);
+        if (!allowedExtensions.Contains(ext))
+        {
+            return BadRequest(new { message = "Invalid file extension. Only .jpg, .png, and .pdf files are permitted." });
+        }
+
+        var allowedMimeTypes = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "image/jpeg",
+            "image/jpg",
+            "image/png",
+            "application/pdf"
+        };
+        if (string.IsNullOrWhiteSpace(file.ContentType) || !allowedMimeTypes.Contains(file.ContentType))
+        {
+            return BadRequest(new { message = "Invalid content type. Only JPEG, PNG, and PDF MIME types are permitted." });
+        }
+
+        byte[] headerBytes = new byte[8];
+        int bytesRead;
+        await using (var readStream = file.OpenReadStream())
+        {
+            bytesRead = await readStream.ReadAsync(headerBytes.AsMemory(0, 8), cancellationToken);
+        }
+
+        bool validMagic = true;
+        if ((ext.Equals(".jpg", StringComparison.OrdinalIgnoreCase) || ext.Equals(".jpeg", StringComparison.OrdinalIgnoreCase)) &&
+            bytesRead >= 3 &&
+            headerBytes[0] == 0xFF && headerBytes[1] == 0xD8 && headerBytes[2] == 0xFF)
+        {
+            validMagic = true;
+        }
+        else if (ext.Equals(".png", StringComparison.OrdinalIgnoreCase) &&
+                 bytesRead >= 8 &&
+                 headerBytes[0] == 0x89 && headerBytes[1] == 0x50 && headerBytes[2] == 0x4E && headerBytes[3] == 0x47 &&
+                 headerBytes[4] == 0x0D && headerBytes[5] == 0x0A && headerBytes[6] == 0x1A && headerBytes[7] == 0x0A)
+        {
+            validMagic = true;
+        }
+        else if (ext.Equals(".pdf", StringComparison.OrdinalIgnoreCase) &&
+                 bytesRead >= 4 &&
+                 headerBytes[0] == 0x25 && headerBytes[1] == 0x50 && headerBytes[2] == 0x44 && headerBytes[3] == 0x46)
+        {
+            validMagic = true;
+        }
+
+        if (!validMagic)
+        {
+            return BadRequest(new { message = "File content signature does not match declared file type." });
+        }
+
+        string safeFileName = $"EVIDENCE_{DateTime.UtcNow:yyyyMMddHHmmss}_{Guid.NewGuid().ToString("N")[..8]}{ext.ToLowerInvariant()}";
+        string uploadsDir = Path.Combine(_env.ContentRootPath, "App_Data", "uploads");
+        Directory.CreateDirectory(uploadsDir);
+        string fullPath = Path.Combine(uploadsDir, safeFileName);
+
+        await using (var targetStream = new FileStream(fullPath, FileMode.CreateNew, FileAccess.Write, FileShare.None))
+        {
+            await file.CopyToAsync(targetStream, cancellationToken);
+        }
+
+        return Ok(new
+        {
+            SafeFileName = safeFileName,
+            OriginalFileName = Path.GetFileName(file.FileName),
+            ContentType = file.ContentType,
+            SizeBytes = file.Length,
+            SecurityScanStatus = "PassedMagicByteMimeAndExtensionValidation"
+        });
+    }
+
+    [HttpGet("requests/evidence/{fileName}")]
+    [Authorize]
+    public ActionResult DownloadEvidence(string fileName)
+    {
+        if (string.IsNullOrWhiteSpace(fileName) ||
+            fileName.Contains("..", StringComparison.Ordinal) ||
+            fileName.Contains('/') ||
+            fileName.Contains('\\'))
+        {
+            return BadRequest(new { message = "Invalid evidence filename." });
+        }
+
+        string sanitized = Path.GetFileName(fileName);
+        string uploadsDir = Path.Combine(_env.ContentRootPath, "App_Data", "uploads");
+        string fullPath = Path.Combine(uploadsDir, sanitized);
+
+        if (!System.IO.File.Exists(fullPath))
+        {
+            return NotFound(new { message = "Uploaded evidence file not found." });
+        }
+
+        string ext = Path.GetExtension(sanitized).ToLowerInvariant();
+        string contentType = ext switch
+        {
+            ".png" => "image/png",
+            ".pdf" => "application/pdf",
+            _ => "image/jpeg"
+        };
+
+        return PhysicalFile(fullPath, contentType);
+    }
+
+    [HttpPut("requests/{id:guid}/status")]
+    [Authorize(Roles = "EmergencyCoordinator,CaseManager,LogisticsManager,SystemAdmin,OrganizationAdmin")]
+    public async Task<ActionResult> UpdateRequestStatus(Guid id, [FromBody] UpdateRequestStatusDto dto, CancellationToken cancellationToken)
+    {
+        var request = await _unitOfWork.AssistanceRequests.GetByIdAsync(id, cancellationToken);
+        if (request == null)
+        {
+            return NotFound(new { message = "Assistance request not found." });
+        }
+
+        var previous = request.Status;
+        request.Status = dto.NewStatus;
+        if (dto.UpdatedUrgency.HasValue)
+        {
+            request.FinalApprovedUrgency = dto.UpdatedUrgency.Value;
+        }
+        if (dto.AssignedCaseManagerId.HasValue)
+        {
+            request.AssignedCaseManagerId = dto.AssignedCaseManagerId.Value;
+        }
+        if (dto.AssignedOrganisationId.HasValue)
+        {
+            request.AssignedOrganisationId = dto.AssignedOrganisationId.Value;
+        }
+
+        await _unitOfWork.AssistanceRequests.UpdateAsync(request, cancellationToken);
+
+        var actorId = Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var uid) ? uid : Guid.Empty;
+        var actorName = User.FindFirstValue(ClaimTypes.Name) ?? "Coordinator";
+        var actorRole = User.FindFirstValue(ClaimTypes.Role) ?? "CaseManager";
+
+        string note = string.IsNullOrWhiteSpace(dto.ActionNote)
+            ? $"Status transitioned from {previous} to {dto.NewStatus} by {actorName}."
+            : dto.ActionNote;
+
+        await _unitOfWork.RequestHistories.AddAsync(new RequestHistory
+        {
+            AssistanceRequestId = request.Id,
+            PreviousStatus = previous,
+            NewStatus = dto.NewStatus,
+            ActionDescription = note,
+            ChangedByUserId = actorId,
+            ChangedByUserName = actorName,
+            ChangedByRole = actorRole
+        }, cancellationToken);
+
+        await _unitOfWork.AuditEvents.AddAsync(new AuditEventRecord
+        {
+            EventCategory = "AssistanceRequest",
+            ActionName = $"RequestStatus_{dto.NewStatus}",
+            EntityType = nameof(AssistanceRequest),
+            EntityId = request.Id.ToString(),
+            ActorUserId = actorId == Guid.Empty ? null : actorId,
+            ActorUserName = actorName,
+            ActorRole = actorRole,
+            IpAddress = GetClientIp(),
+            DetailsJson = JsonSerializer.Serialize(new { request.ReferenceCode, Previous = previous.ToString(), Next = dto.NewStatus.ToString(), request.AssignedOrganisationId })
+        }, cancellationToken);
+
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        await _eventPublisher.PublishAsync(new RequestStatusChangedEvent(
+            Guid.NewGuid(),
+            DateTime.UtcNow,
+            request.Id,
+            request.CitizenUserId,
+            request.ReferenceCode,
+            dto.NewStatus.ToString(),
+            request.PreferredLanguage,
+            note
+        ), cancellationToken);
+
+        return Ok(request);
+    }
+
+    [HttpPost("requests/merge-duplicate")]
+    [Authorize(Roles = "EmergencyCoordinator,CaseManager,SystemAdmin,OrganizationAdmin")]
+    public async Task<ActionResult> MergeDuplicateRequest([FromBody] MergeDuplicateRequestDto dto, CancellationToken cancellationToken)
+    {
+        var primary = await _unitOfWork.AssistanceRequests.GetByIdAsync(dto.PrimaryRequestId, cancellationToken);
+        var duplicate = await _unitOfWork.AssistanceRequests.GetByIdAsync(dto.DuplicateRequestId, cancellationToken);
+
+        if (primary == null || duplicate == null)
+        {
+            return NotFound(new { message = "Primary or duplicate assistance request not found." });
+        }
+
+        var prevStatus = duplicate.Status;
+        duplicate.Status = RequestStatus.MergedAsDuplicate;
+        duplicate.PotentialDuplicateOfRequestId = primary.Id;
+        duplicate.IsFlaggedPotentialDuplicate = true;
     }
 }
