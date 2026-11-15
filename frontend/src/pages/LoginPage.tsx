@@ -694,7 +694,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                 <button
                   type="button"
                   onClick={startSignInMode}
-                  className={`py-2 px-2.5 rounded-xl text-xs truncate whitespace-nowrap font-extrabold flex items-center justify-center gap-1.5 transition ${
+                  className={`flex-auto py-2 px-2 sm:px-2.5 rounded-xl text-[11px] sm:text-xs xl:text-[13px] whitespace-nowrap font-extrabold flex items-center justify-center gap-1.5 transition ${
                     authMode === 'signin'
                       ? 'bg-indigo-600 text-white keep-white shadow-sm'
                       : 'text-zinc-300 hover:text-white'
@@ -706,7 +706,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                 <button
                   type="button"
                   onClick={startCreateAccountMode}
-                  className={`py-2 px-2.5 rounded-xl text-xs truncate whitespace-nowrap font-extrabold flex items-center justify-center gap-1.5 transition ${
+                  className={`flex-auto py-2 px-2 sm:px-2.5 rounded-xl text-[11px] sm:text-xs xl:text-[13px] whitespace-nowrap font-extrabold flex items-center justify-center gap-1.5 transition ${
                     authMode === 'signup'
                       ? 'bg-indigo-600 text-white keep-white shadow-sm'
                       : 'text-zinc-300 hover:text-white'
@@ -718,7 +718,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                 <button
                   type="button"
                   onClick={startAdminLogin}
-                  className={`py-2 px-2.5 rounded-xl text-xs truncate whitespace-nowrap font-extrabold flex items-center justify-center gap-1.5 transition ${
+                  className={`flex-auto py-2 px-2 sm:px-2.5 rounded-xl text-[11px] sm:text-xs xl:text-[13px] whitespace-nowrap font-extrabold flex items-center justify-center gap-1.5 transition ${
                     authMode === 'admin'
                       ? 'bg-violet-600 text-white keep-white shadow-sm'
                       : 'text-zinc-300 hover:text-white'
@@ -1408,7 +1408,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                   <HelpCircle className="w-3.5 h-3.5" />
                   CriSync Role Governance & Access Architecture
                 </span>
-                <h2 className="text-base font-extrabold text-white mt-0.5">
+                <h2 className="text-xl sm:text-2xl font-extrabold text-white tracking-tight mt-0.5">
                   Self-Registration, Invited Operational Roles & Two-Tier Admins
                 </h2>
                 <p className="text-[13px] sm:text-sm leading-relaxed text-zinc-400 mt-1">
