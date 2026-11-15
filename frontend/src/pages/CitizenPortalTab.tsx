@@ -491,5 +491,400 @@ export const CitizenPortalTab: React.FC<CitizenPortalTabProps> = ({
     { num: 2, label: 'Help Type', sub: 'Category, urgency & preset' },
     { num: 3, label: 'Details & Photo', sub: 'Address, count & evidence' },
     { num: 4, label: 'Review & Send', sub: 'Confirm & track aid' }
+  ];
+
+  const renderFamilyFormFields = () => (
+    <div className="space-y-3.5 text-xs">
+      <div>
+        <label className="block text-xs font-bold text-zinc-300 mb-1">
+          {t.citizen.headNameLabel}
+        </label>
+        <input
+          type="text"
+          value={headName}
+          onChange={(e) => setHeadName(e.target.value)}
+          placeholder="Full name of family contact person"
+          className="rsvp-input"
+        />
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+        <div>
+          <label className="block text-xs font-bold text-zinc-300 mb-1">{t.citizen.totalMembersLabel}</label>
+          <input
+            type="number"
+            min={1}
+            value={totalMembers}
+            onChange={(e) => setTotalMembers(Number(e.target.value))}
+            className="rsvp-input"
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-bold text-zinc-300 mb-1">{t.citizen.childrenLabel}</label>
+          <input
+            type="number"
+            min={0}
+            value={childrenCount}
+            onChange={(e) => setChildrenCount(Number(e.target.value))}
+            className="rsvp-input"
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-bold text-zinc-300 mb-1">{t.citizen.elderlyLabel}</label>
+          <input
+            type="number"
+            min={0}
+            value={elderlyCount}
+            onChange={(e) => setElderlyCount(Number(e.target.value))}
+            className="rsvp-input"
+          />
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-xs font-bold text-zinc-300 mb-1">
+          {t.citizen.medicalNotesLabel}
+        </label>
+        <textarea
+          rows={2}
+          value={medicalNotes}
+          onChange={(e) => setMedicalNotes(e.target.value)}
+          placeholder="Allergies, refrigerated insulin, oxygen tank, or dialysis schedule"
+          className="rsvp-input"
+        />
+        <p className="text-[11px] text-zinc-400/75 opacity-75 mt-1 font-normal">
+          Example: Elderly member requires daily insulin & wheelchair access during evacuation.
+        </p>
+      </div>
+
+      <div className="space-y-2 p-3 rounded-2xl bg-black/20 border border-white/[0.06]">
+        <label className="flex items-center gap-2.5 text-zinc-300 font-semibold cursor-pointer">
+          <input
+            type="checkbox"
+            checked={hasMobility}
+            onChange={(e) => setHasMobility(e.target.checked)}
+            className="w-4 h-4 rounded border-white/20 bg-black/40 text-emerald-500"
+          />
+          {t.citizen.mobilityCheckbox}
+        </label>
+        <label className="flex items-center gap-2.5 text-zinc-300 font-semibold cursor-pointer">
+          <input
+            type="checkbox"
+            checked={hasChronicMedical}
+            onChange={(e) => setHasChronicMedical(e.target.checked)}
+            className="w-4 h-4 rounded border-white/20 bg-black/40 text-emerald-500"
+          />
+          {t.citizen.chronicCheckbox}
+        </label>
+      </div>
+    </div>
+  );
+
+  const renderHelpTypeFields = () => (
+    <div className="space-y-4">
+      {crises.length === 0 ? (
+        <div className="p-3.5 rounded-2xl bg-amber-500/15 border border-amber-500/35 text-xs text-amber-200 font-semibold">
+          No active crisis event declared yet. An Emergency Coordinator or System Admin must declare a crisis first before emergency requests can be logged.
+        </div>
+      ) : (
+        <div>
+          <label className="block text-xs font-bold text-zinc-300 mb-1.5">
+            Active Emergency Operation
+          </label>
+          <select
+            value={activeCrisisId}
+            onChange={(e) => setSelectedCrisisId(e.target.value)}
+            className="rsvp-input"
+          >
+            {crises.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.title} ({c.region} — {c.severity})
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      <div className="p-3.5 rounded-2xl bg-indigo-500/10 border border-indigo-500/25 space-y-2.5">
+        <p className="text-xs font-bold text-indigo-300 flex items-center gap-1.5">
+          <Wand2 className="w-3.5 h-3.5" />
+          {t.citizen.quickTemplatePrompt}
+        </p>
+        <div className="flex flex-wrap gap-2">
+          {t.citizen.templates.map((tpl) => {
+            const isPicked = appliedTemplateLabel === tpl.label;
+            return (
+              <button
+                key={tpl.label}
+                type="button"
+                onClick={() => applyQuickTemplate(tpl)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition ${
+                  isPicked
+                    ? 'bg-indigo-600 border-indigo-400 text-white keep-white shadow-sm'
+                    : 'bg-white/[0.06] hover:bg-indigo-600 hover:text-white text-zinc-200 border-white/15'
+                }`}
+              >
+                {tpl.label}
+              </button>
+            );
+          })}
+        </div>
+        {appliedTemplateLabel && (
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-[11px] font-bold text-emerald-300">
+            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+            <span>Template applied (&ldquo;{appliedTemplateLabel}&rdquo;) — you can customize text in the next step!</span>
+          </div>
+        )}
+      </div>
+
+      <div>
+        <label className="block text-xs font-bold text-zinc-300 mb-2">
+          {t.citizen.step1Category}
+        </label>
+        <div className="flex flex-wrap gap-2">
+          {categoryKeys.map((catKey) => {
+            const active = category === catKey;
+            return (
+              <button
+                key={catKey}
+                type="button"
+                onClick={() => setCategory(catKey)}
+                className={`px-3.5 py-2 rounded-xl text-xs font-bold border transition-all ${
+                  active
+                    ? 'bg-indigo-600 border-indigo-500 text-white keep-white shadow-sm'
+                    : 'bg-white/[0.03] border-white/10 text-zinc-300 hover:bg-white/[0.06]'
+                }`}
+              >
+                {t.citizen.categories[catKey] || catKey}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-xs font-bold text-zinc-300 mb-2">
+          {t.citizen.step2Urgency}
+        </label>
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+          {Object.keys(urgencyStyles).map((uKey) => {
+            const active = urgency === uKey;
+            const uMeta = t.citizen.urgencies[uKey] || { label: uKey, desc: '' };
+            return (
+              <button
+                key={uKey}
+                type="button"
+                onClick={() => setUrgency(uKey)}
+                className={`py-2 px-2.5 rounded-xl text-xs font-bold border transition-all text-center ${
+                  active
+                    ? `${urgencyStyles[uKey]} ring-2 ring-indigo-500/40 scale-[1.01]`
+                    : 'bg-white/[0.02] border-white/10 text-zinc-400 hover:text-zinc-200'
+                }`}
+              >
+                <div className="font-extrabold">{uMeta.label}</div>
+                <div className="text-[10px] opacity-80 font-normal">{uMeta.desc}</div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderDetailsLocationFields = () => (
+    <div className="space-y-4">
+      <div>
+        <label className="block text-xs font-bold text-zinc-300 mb-1.5">
+          {t.citizen.step3Summary}
+        </label>
+        <input
+          type="text"
+          required
+          value={title}
+          onChange={(e) => {
+            setTitle(e.target.value);
+            if (stepError) setStepError(null);
+          }}
+          placeholder="Short emergency summary headline"
+          className="rsvp-input"
+        />
+        <p className="text-[11px] text-zinc-400/75 opacity-75 mt-1 font-normal">
+          Example: Stranded family of 4 needing clean water and infant food packs
+        </p>
+      </div>
+
+      <div>
+        <label className="block text-xs font-bold text-zinc-300 mb-1.5">
+          {t.citizen.step4Description}
+        </label>
+        <textarea
+          rows={3}
+          required
+          value={description}
+          onChange={(e) => {
+            setDescription(e.target.value);
+            if (stepError) setStepError(null);
+          }}
+          placeholder="Describe access conditions, urgent medical conditions, and number of people"
+          className="rsvp-input"
+        />
+        <p className="text-[11px] text-zinc-400/75 opacity-75 mt-1 font-normal">
+          Example: Road submerged by 1 meter; elderly patient on blood-pressure medication cannot walk to main road.
+        </p>
+      </div>
+
+      <div className="p-3.5 rounded-2xl bg-white/[0.02] border border-white/10 space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <label className="text-xs font-bold text-zinc-300 flex items-center gap-1.5">
+            <MapPin className="w-4 h-4 text-indigo-400" />
+            {t.citizen.step5Location}
+          </label>
+        </div>
+
+        <input
+          type="text"
+          required
+          value={address}
+          onChange={(e) => {
+            setAddress(e.target.value);
+            if (stepError) setStepError(null);
+          }}
+          placeholder="Enter street address, village, or nearest landmark"
+          className="rsvp-input"
+        />
+        <p className="text-[11px] text-zinc-400/75 opacity-75 font-normal">
+          Example: 18 Temple Lane, near Municipal Water Tank (or expand GPS below)
+        </p>
+
+        <div>
+          <button
+            type="button"
+            onClick={() => setShowExactGps((v) => !v)}
+            className="text-[11px] font-semibold text-indigo-400 hover:underline flex items-center gap-1"
+          >
+            {showExactGps ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+            <span>
+              GPS ({latitude}, {longitude})
+            </span>
+          </button>
+
+          {showExactGps && (
+            <div className="grid grid-cols-2 gap-3 mt-2">
+              <div>
+                <label className="block text-[11px] font-semibold text-zinc-400 mb-1">
+                  Latitude
+                </label>
+                <input
+                  type="number"
+                  step="0.0001"
+                  value={latitude}
+                  onChange={(e) => setLatitude(Number(e.target.value))}
+                  className="rsvp-input font-mono"
+                />
+              </div>
+              <div>
+                <label className="block text-[11px] font-semibold text-zinc-400 mb-1">
+                  Longitude
+                </label>
+                <input
+                  type="number"
+                  step="0.0001"
+                  value={longitude}
+                  onChange={(e) => setLongitude(Number(e.target.value))}
+                  className="rsvp-input font-mono"
+                />
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div>
+          <label className="block text-xs font-bold text-zinc-300 mb-1">
+            {t.citizen.peopleCountLabel}
+          </label>
+          <input
+            type="number"
+            min={1}
+            value={peopleCount}
+            onChange={(e) => setPeopleCount(Number(e.target.value))}
+            className="rsvp-input"
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-bold text-zinc-300 mb-1">
+            {t.citizen.quantityLabel}
+          </label>
+          <input
+            type="number"
+            min={1}
+            value={quantity}
+            onChange={(e) => setQuantity(Number(e.target.value))}
+            className="rsvp-input"
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-bold text-zinc-300 mb-1 flex items-center gap-1">
+            <Upload className="w-3.5 h-3.5 text-indigo-400" />
+            {t.citizen.photoLabel}
+          </label>
+          <input
+            type="file"
+            accept=".jpg,.jpeg,.png,.pdf"
+            onChange={handleFileChange}
+            className="w-full text-xs text-zinc-400 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border file:border-indigo-500/30 file:text-xs file:font-bold file:bg-indigo-500/20 file:text-indigo-200 hover:file:bg-indigo-500/30"
+          />
+          {evidenceFileName && (
+            <div className="mt-1.5 flex items-center justify-between gap-2 px-2.5 py-1 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-[11px] font-bold text-emerald-300">
+              <span className="truncate inline-flex items-center gap-1">
+                <Camera className="w-3 h-3 shrink-0" />
+                {evidenceFileName}
+              </span>
+              <button
+                type="button"
+                onClick={() => setEvidenceFileName('')}
+                className="text-zinc-300 hover:text-white shrink-0"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <label className="flex items-center gap-3 text-xs sm:text-sm font-semibold text-zinc-200 cursor-pointer p-3.5 rounded-2xl bg-white/[0.03] border border-white/10 hover:border-indigo-500/40 transition">
+        <input
+          type="checkbox"
+          checked={accessibility}
+          onChange={(e) => setAccessibility(e.target.checked)}
+          className="w-4 h-4 rounded border-white/20 bg-black/40 text-indigo-500"
+        />
+        <span>{t.citizen.wheelchairCheckbox}</span>
+      </label>
+    </div>
+  );
+
+  const renderAiAssistantPanel = () => (
+    <div className="bento-glass rounded-3xl p-5 sm:p-6 border border-indigo-500/30 space-y-5">
+      <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-white/[0.08]">
+        <div className="flex items-center gap-3">
+          <div className="keep-white w-11 h-11 rounded-2xl bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center text-white shadow-md shrink-0">
+            <Bot className="w-5 h-5" />
+          </div>
+          <div>
+            <span className="text-xs font-bold uppercase tracking-wider text-indigo-400 block">
+              {t.citizen.aiAssistantBadge}
+            </span>
+            <h2 className="text-lg font-extrabold text-white">
+              {t.citizen.aiAssistantTitle}
+            </h2>
+            <p className="text-xs text-zinc-400">
+              {t.citizen.aiAssistantSubtitle}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-1 p-1 rounded-xl bg-black/25 border border-white/10">
   );
 };
