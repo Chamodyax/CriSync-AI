@@ -517,7 +517,7 @@ public record CompleteVolunteerAssignmentDto(
 public record CreateCampaignExpenditureDto(
     [Range(0.01, 100000000)] decimal AmountUsd,
     [Required, StringLength(100)] string Category,
-    string Description
+    [Required, StringLength(500)] string Description
 );
 
 public record RequestShelterSuppliesDto(
@@ -545,7 +545,7 @@ public record FulfillPartnerAidRequestDto(
 );
 
 public record CreateOperationalAreaDto(
-    string ZoneName,
+    [Required, StringLength(200)] string ZoneName,
     [Required, StringLength(100)] string District,
     double Latitude,
     double Longitude,
