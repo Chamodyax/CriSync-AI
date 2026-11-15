@@ -442,3 +442,177 @@ public record UpdateResourceItemDto(
     double WarehouseLatitude,
     double WarehouseLongitude
 );
+
+public record CreateCrisisEventDto(
+    [Required, StringLength(250, MinimumLength = 3)] string Title,
+    CrisisType CrisisType,
+    CrisisSeverity Severity,
+    [Required, StringLength(100)] string Country,
+    [Required, StringLength(200)] string Region,
+    [Required, StringLength(2000)] string Description,
+    double CenterLatitude,
+    double CenterLongitude,
+    [Range(1, 2000)] double RadiusKm = 25.0,
+    bool IsActive = true
+);
+
+public record CreatePublicAlertDto(
+    Guid CrisisEventId,
+    [Required, StringLength(250, MinimumLength = 3)] string Title,
+    [Required, StringLength(2000, MinimumLength = 5)] string Message,
+    [Required, StringLength(50)] string SeverityLevel,
+    [StringLength(2000)] string SafetyGuidance = "",
+    string? TranslationsJson = null
+);
+
+public record CreateResourceItemDto(
+    [Required, StringLength(200, MinimumLength = 2)] string Name,
+    RequestCategory Category,
+    [Required, StringLength(50)] string Unit,
+    [Range(1, 10000000)] int TotalQuantity,
+    int? AvailableQuantity = null,
+    [Range(0, 10000000)] int ReorderThreshold = 20,
+    [Required, StringLength(200, MinimumLength = 2)] string WarehouseName = "Central Depot",
+    double WarehouseLatitude = 6.9271,
+    double WarehouseLongitude = 79.8612,
+    bool SupportsColdChain = false,
+    DateTime? ExpiryDateUtc = null,
+    Guid? OwningOrganisationId = null
+);
+
+public record CreateShelterDto(
+    [Required, StringLength(200, MinimumLength = 2)] string Name,
+    Guid? CrisisEventId = null,
+    [Required, StringLength(300, MinimumLength = 3)] string Address = "",
+    double Latitude = 6.9271,
+    double Longitude = 79.8612,
+    [Range(1, 100000)] int TotalCapacity = 100,
+    [Range(0, 100000)] int CurrentOccupancy = 0,
+    bool IsWheelchairAccessible = false,
+    bool HasMedicalFacility = false,
+    bool HasCleanWater = true,
+    bool HasPowerBackup = false,
+    bool HasChildSafeSpace = false,
+    string? AvailableServices = null,
+    string? Status = null,
+    Guid? ManagedByOrganisationId = null
+);
+
+public record UpdateVolunteerAvailabilityDto(
+    bool IsAvailable,
+    [Required, StringLength(200)] string AvailabilitySchedule,
+    double? CurrentLatitude = null,
+    double? CurrentLongitude = null
+);
+
+public record RespondVolunteerAssignmentDto(
+    [Required] string Decision,
+    string? Notes = null
+);
+
+public record CompleteVolunteerAssignmentDto(
+    [Required, StringLength(1000)] string CompletionNotes
+);
+
+public record CreateCampaignExpenditureDto(
+    [Range(0.01, 100000000)] decimal AmountUsd,
+    [Required, StringLength(100)] string Category,
+    string Description
+);
+
+public record RequestShelterSuppliesDto(
+    RequestCategory Category,
+    [Required, StringLength(200)] string ResourceName,
+    [Range(1, 1000000)] int QuantityNeeded,
+    [Required, StringLength(1000)] string Justification
+);
+
+public record ReplenishResourceDto(
+    [Range(1, 1000000)] int AddedQuantity,
+    string? SourceNote = null
+);
+
+public record CreatePartnerAidRequestDto(
+    RequestCategory NeededCategory,
+    [Required, StringLength(200)] string ResourceName,
+    [Range(1, 1000000)] int QuantityNeeded,
+    [Required, StringLength(1000)] string Justification,
+    Guid? TargetPartnerOrganisationId = null
+);
+
+public record FulfillPartnerAidRequestDto(
+    string? FulfillmentNotes = null
+);
+
+public record CreateOperationalAreaDto(
+    string ZoneName,
+    [Required, StringLength(100)] string District,
+    double Latitude,
+    double Longitude,
+    [Range(1, 500)] double CoverageRadiusKm,
+    [Range(0, 10000000)] int EstimatedAffectedPopulation,
+    [Required, StringLength(50)] string RiskLevel,
+    Guid? AssignedOrganisationId = null
+);
+
+public record QuickUnlockSetupRequestDto(
+    [Required] string CurrentPassword,
+    [Required, StringLength(20)] string Mode,
+    [Required, StringLength(64)] string Secret,
+    string? BiometricCredentialId = null,
+    string? DeviceName = null,
+    string? OriginHost = null
+);
+
+public record QuickUnlockSetupResponseDto(
+    Guid UserId,
+    string FullName,
+    string Email,
+    string Role,
+    string Mode,
+    bool HasBiometricCredential,
+    string DeviceToken,
+    string DeviceId,
+    string DeviceName
+);
+
+public record TrustedDeviceSummaryDto(
+    string DeviceId,
+    string DeviceName,
+    string OriginHost,
+    bool HasBiometrics,
+    DateTime CreatedAtUtc
+);
+
+public record QuickUnlockVerifyRequestDto(
+    Guid UserId,
+    [Required] string DeviceToken,
+    [Required] string Secret
+);
+
+public record QuickUnlockChallengeRequestDto(
+    Guid UserId,
+    [Required] string DeviceToken
+);
+
+public record QuickUnlockChallengeResponseDto(
+    string ChallengeId,
+    string ChallengeBase64Url,
+    string CredentialId
+);
+
+public record QuickUnlockBiometricVerifyRequestDto(
+    Guid UserId,
+    [Required] string DeviceToken,
+    [Required] string ChallengeId,
+    [Required] string CredentialId,
+    [Required] string ClientDataJsonBase64Url
+);
+
+public record QuickUnlockStatusDto(
+    bool QuickUnlockEnabled,
+    string Mode,
+    bool HasBiometricCredential,
+    int FailedAttempts,
+    List<TrustedDeviceSummaryDto> TrustedDevices
+);
