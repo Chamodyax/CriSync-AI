@@ -584,5 +584,507 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                 <p className="text-[15px] font-extrabold text-white">
                   Sign In or Register Your Role
                 </p>
+              </div>
+              <span className="text-[11px] whitespace-nowrap font-bold text-emerald-300 bg-emerald-500/15 border border-emerald-500/30 px-2.5 py-1 rounded-full shrink-0">
+                {ALL_PLATFORM_ROLES.length} Official Roles
+              </span>
+            </div>
+            <p className="text-[13px] text-zinc-400 leading-relaxed">
+              Sign in to an official role account, use <strong className="text-zinc-200">Create Account</strong> for citizens and teams, or open <strong className="text-zinc-200">Admin Login</strong> for System Administration.
+            </p>
+          </div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, ease: 'easeOut' }}
+            className="lg:col-span-5 space-y-5"
+          >
+            {trustedUnlock && (
+              <div className="bento-glass rounded-3xl p-5 sm:p-6 border border-indigo-500/35 space-y-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="keep-white w-11 h-11 rounded-2xl bg-gradient-to-br from-indigo-600 to-violet-600 flex items-center justify-center text-white shadow-md shrink-0">
+                      <Fingerprint className="w-5 h-5" />
+                    </div>
+                    <div className="min-w-0">
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-indigo-400 block truncate">
+                        {trustedUnlock.deviceName ? `Quick Unlock • ${trustedUnlock.deviceName}` : 'Trusted-Device Quick Unlock'}
+                      </span>
+                      <h3 className="text-base sm:text-lg font-extrabold text-white truncate">
+                        {trustedUnlock.fullName}
+                      </h3>
+                      <p className="text-xs text-zinc-400 truncate">
+                        {trustedUnlock.role} • {trustedUnlock.email}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleForgetTrustedDevice}
+                    title="Remove Quick Unlock from this browser"
+                    className="px-2.5 py-1.5 rounded-xl bg-white/[0.06] hover:bg-rose-500/15 border border-white/10 hover:border-rose-500/30 text-xs font-bold text-zinc-300 hover:text-rose-300 inline-flex items-center gap-1 transition shrink-0"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Forget</span>
+                  </button>
+                </div>
+
+                {quickUnlockError && (
+                  <div className="p-3 rounded-2xl bg-rose-500/15 border border-rose-500/30 text-xs sm:text-[13px] text-rose-200 font-semibold flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+                    <span>{quickUnlockError}</span>
+                  </div>
+                )}
+
+                <form onSubmit={handleQuickSecretUnlock} className="space-y-3">
+                  {trustedUnlock.mode === 'Pattern' ? (
+                    <PatternLockPad
+                      value={quickPatternInput}
+                      onChange={setQuickPatternInput}
+                      disabled={quickUnlockBusy}
+                      label="Draw your Pattern (drag or tap 4+ dots)"
+                    />
+                  ) : (
+                    <div>
+                      <label className="block text-[13px] font-bold text-zinc-300 mb-1.5">
+                        Enter 6-Digit PIN
+                      </label>
+                      <input
+                        type="password"
+                        inputMode="numeric"
+                        maxLength={6}
+                        autoComplete="off"
+                        value={quickPinInput}
+                        onChange={(e) => setQuickPinInput(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                        placeholder="••••••"
+                        className="rsvp-input text-center tracking-[0.45em] font-mono text-lg"
+                      />
+                    </div>
+                  )}
+
+                  <div className="flex flex-col sm:flex-row gap-2.5">
+                    <button
+                      type="submit"
+                      disabled={quickUnlockBusy}
+                      className="keep-white flex-1 py-3 px-4 rounded-2xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-extrabold text-sm flex items-center justify-center gap-2 shadow-md transition"
+                    >
+                      <KeyRound className="w-4 h-4" />
+                      <span>{quickUnlockBusy ? 'Verifying...' : `Unlock with ${trustedUnlock.mode}`}</span>
+                    </button>
+
+                    {trustedUnlock.hasBiometricCredential && biometricAvailable && (
+                      <button
+                        type="button"
+                        disabled={quickUnlockBusy}
+                        onClick={() => void handleQuickBiometricUnlock()}
+                        className="keep-white flex-1 py-3 px-4 rounded-2xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-extrabold text-sm flex items-center justify-center gap-2 shadow-md transition"
+                      >
+                        <Fingerprint className="w-4 h-4" />
+                        <span>Fingerprint / Hello</span>
+                      </button>
+                    )}
+                  </div>
+                </form>
+              </div>
+            )}
+
+            <div className="bento-glass rounded-3xl p-5 sm:p-7">
+              <div className="flex items-center gap-1 p-1 rounded-2xl bg-white/[0.04] border border-white/[0.08] mb-5">
+                <button
+                  type="button"
+                  onClick={startSignInMode}
+                  className={`flex-1 py-2 px-1.5 rounded-xl text-[11px] sm:text-xs xl:text-[13px] whitespace-nowrap font-extrabold flex items-center justify-center gap-1.5 transition ${
+                    authMode === 'signin'
+                      ? 'bg-indigo-600 text-white keep-white shadow-sm'
+                      : 'text-zinc-300 hover:text-white'
+                  }`}
+                >
+                  <Lock className="hidden sm:block w-3.5 h-3.5 shrink-0" />
+                  <span>Sign In</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={startCreateAccountMode}
+                  className={`flex-1 py-2 px-1.5 rounded-xl text-[11px] sm:text-xs xl:text-[13px] whitespace-nowrap font-extrabold flex items-center justify-center gap-1.5 transition ${
+                    authMode === 'signup'
+                      ? 'bg-indigo-600 text-white keep-white shadow-sm'
+                      : 'text-zinc-300 hover:text-white'
+                  }`}
+                >
+                  <UserPlus className="hidden sm:block w-3.5 h-3.5 shrink-0" />
+                  <span>Create Account</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={startAdminLogin}
+                  className={`flex-1 py-2 px-1.5 rounded-xl text-[11px] sm:text-xs xl:text-[13px] whitespace-nowrap font-extrabold flex items-center justify-center gap-1.5 transition ${
+                    authMode === 'admin'
+                      ? 'bg-violet-600 text-white keep-white shadow-sm'
+                      : 'text-zinc-300 hover:text-white'
+                  }`}
+                >
+                  <ShieldAlert className="hidden sm:block w-3.5 h-3.5 shrink-0" />
+                  <span>Admin Login</span>
+                </button>
+              </div>
+
+              <div className="flex items-center justify-between mb-2">
+                <h2 className="text-lg sm:text-xl font-extrabold text-white flex items-center gap-2">
+                  {authMode === 'signin' ? (
+                    <>
+                      <Lock className="w-4 h-4 text-indigo-400" />
+                      <span>Sign In to Your Account</span>
+                    </>
+                  ) : authMode === 'admin' ? (
+                    <>
+                      <ShieldAlert className="w-4 h-4 text-violet-400" />
+                      <span>System Administrator Portal</span>
+                    </>
+                  ) : (
+                    <>
+                      <UserPlus className="w-4 h-4 text-indigo-400" />
+                      <span>Create New CriSync Account</span>
+                    </>
+                  )}
+                </h2>
+              </div>
+              <p className="text-[13px] sm:text-sm leading-relaxed text-zinc-400 mb-5">
+                {authMode === 'signin'
+                  ? 'Enter your registered email and personal password below. Multiple team members and citizens can create individual accounts via Create Account.'
+                  : authMode === 'admin'
+                    ? 'Restricted administrator sign-in. Only authorised System Administrator accounts may enter here. Logged-in administrators can create additional Admin accounts from the Control Center.'
+                    : 'Register a private password-protected account for any operational or citizen role, save your household or agency affiliation, and begin working.'}
+              </p>
+
+              <AnimatePresence mode="wait">
+                {errorMessage && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="mb-4 p-3.5 rounded-2xl bg-rose-500/15 border border-rose-500/30 text-[13px] sm:text-sm text-rose-200 font-semibold flex items-center gap-2.5"
+                  >
+                    <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+                    <span>{errorMessage}</span>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {authMode === 'signin' ? (
+                <form key="user-signin-form" onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
+                  <div
+                    aria-hidden="true"
+                    className="pointer-events-none fixed -left-[9999px] top-0 h-px w-px opacity-0 overflow-hidden"
+                  >
+                    <input
+                      type="text"
+                      name="prevent_signin_autofill_user"
+                      autoComplete="username"
+                      tabIndex={-1}
+                      defaultValue=""
+                    />
+                    <input
+                      type="password"
+                      name="prevent_signin_autofill_pass"
+                      autoComplete="current-password"
+                      tabIndex={-1}
+                      defaultValue=""
+                    />
+                  </div>
+
+                  <div>
+                    <label className="flex items-center gap-1.5 text-xs font-bold text-zinc-300 mb-1.5">
+                      <Mail className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+                      <span>Email Address</span>
+                    </label>
+                    <input
+                      type="email"
+                      name="crisync_signin_identifier"
+                      autoComplete="off"
+                      required
+                      readOnly={!unlockedInputs.signInEmail}
+                      onFocus={() => unlockInput('signInEmail')}
+                      onMouseDown={() => unlockInput('signInEmail')}
+                      onKeyDown={() => unlockInput('signInEmail')}
+                      value={signInEmail}
+                      onChange={(e) => setSignInEmail(e.target.value)}
+                      className="rsvp-input"
+                      placeholder="Enter your registered email address"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="flex items-center gap-1.5 text-xs font-bold text-zinc-300 mb-1.5">
+                      <Lock className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+                      <span>Password</span>
+                    </label>
+                    <input
+                      type="password"
+                      name="crisync_signin_secret"
+                      autoComplete="new-password"
+                      required
+                      readOnly={!unlockedInputs.signInPassword}
+                      onFocus={() => unlockInput('signInPassword')}
+                      onMouseDown={() => unlockInput('signInPassword')}
+                      onKeyDown={() => unlockInput('signInPassword')}
+                      value={signInPassword}
+                      onChange={(e) => setSignInPassword(e.target.value)}
+                      className="rsvp-input"
+                      placeholder="Enter your account password"
+                    />
+                  </div>
+
+                  <motion.button
+                    whileHover={{ scale: 1.01 }}
+                    whileTap={{ scale: 0.985 }}
+                    type="submit"
+                    disabled={submitting}
+                    className="keep-white w-full py-3.5 px-5 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-[15px] sm:text-base tracking-tight transition-all shadow-md flex items-center justify-center gap-2 disabled:opacity-50"
+                  >
+                    <span>{submitting ? 'Authenticating...' : 'Sign In to CriSync'}</span>
+                    <ArrowUpRight className="w-4 h-4" />
+                  </motion.button>
+                </form>
+              ) : authMode === 'admin' ? (
+                <form key="admin-portal-form" onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
+                  <div
+                    aria-hidden="true"
+                    className="pointer-events-none fixed -left-[9999px] top-0 h-px w-px opacity-0 overflow-hidden"
+                  >
+                    <input
+                      type="text"
+                      name="prevent_admin_autofill_user"
+                      autoComplete="username"
+                      tabIndex={-1}
+                      defaultValue=""
+                    />
+                    <input
+                      type="password"
+                      name="prevent_admin_autofill_pass"
+                      autoComplete="current-password"
+                      tabIndex={-1}
+                      defaultValue=""
+                    />
+                  </div>
+
+                  <div className="p-3.5 rounded-2xl bg-violet-500/15 border border-violet-500/35 text-[13px] sm:text-sm text-violet-200 flex items-start gap-2.5">
+                    <KeyRound className="w-4 h-4 text-violet-400 shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-extrabold text-white">Restricted Administrative Access</p>
+                      <p className="text-xs sm:text-[13px] text-violet-200/80 mt-0.5 leading-relaxed">
+                        Sign in using authorised System Administrator username/email and password. Non-admin accounts are automatically declined from this portal.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="flex items-center gap-1.5 text-xs font-bold text-zinc-300 mb-1.5">
+                      <Mail className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+                      <span>Admin Email / Username</span>
+                    </label>
+                    <input
+                      type="email"
+                      name="crisync_admin_identifier"
+                      autoComplete="off"
+                      required
+                      readOnly={!unlockedInputs.adminEmail}
+                      onFocus={() => unlockInput('adminEmail')}
+                      onMouseDown={() => unlockInput('adminEmail')}
+                      onKeyDown={() => unlockInput('adminEmail')}
+                      value={adminEmail}
+                      onChange={(e) => setAdminEmail(e.target.value)}
+                      className="rsvp-input"
+                      placeholder="Enter administrator email"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="flex items-center gap-1.5 text-xs font-bold text-zinc-300 mb-1.5">
+                      <Lock className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+                      <span>Admin Password</span>
+                    </label>
+                    <input
+                      type="password"
+                      name="crisync_admin_secret"
+                      autoComplete="new-password"
+                      required
+                      readOnly={!unlockedInputs.adminPassword}
+                      onFocus={() => unlockInput('adminPassword')}
+                      onMouseDown={() => unlockInput('adminPassword')}
+                      onKeyDown={() => unlockInput('adminPassword')}
+                      value={adminPassword}
+                      onChange={(e) => setAdminPassword(e.target.value)}
+                      className="rsvp-input"
+                      placeholder="Enter administrator password"
+                    />
+                  </div>
+
+                  <motion.button
+                    whileHover={{ scale: 1.01 }}
+                    whileTap={{ scale: 0.985 }}
+                    type="submit"
+                    disabled={submitting}
+                    className="keep-white w-full py-3.5 px-5 rounded-2xl bg-violet-600 hover:bg-violet-500 text-white font-extrabold text-[15px] sm:text-base tracking-tight transition-all shadow-md flex items-center justify-center gap-2 disabled:opacity-50"
+                  >
+                    <span>{submitting ? 'Authenticating...' : 'Sign In as System Administrator'}</span>
+                    <ArrowUpRight className="w-4 h-4" />
+                  </motion.button>
+                </form>
+              ) : (
+                <form key="public-signup-form" onSubmit={handleSignUpSubmit} className="space-y-3.5 text-[13px] sm:text-sm" autoComplete="off">
+                  <div
+                    aria-hidden="true"
+                    className="pointer-events-none fixed -left-[9999px] top-0 h-px w-px opacity-0 overflow-hidden"
+                  >
+                    <input
+                      type="text"
+                      name="prevent_signup_autofill_user"
+                      autoComplete="username"
+                      tabIndex={-1}
+                      defaultValue=""
+                    />
+                    <input
+                      type="password"
+                      name="prevent_signup_autofill_pass"
+                      autoComplete="current-password"
+                      tabIndex={-1}
+                      defaultValue=""
+                    />
+                  </div>
+
+                  <div>
+                    <label className="flex items-center gap-1.5 font-bold text-zinc-300 mb-1.5">
+                      <Users className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+                      <span>Account Role</span>
+                    </label>
+                    <select
+                      value={regRole}
+                      onChange={(e) => setRegRole(e.target.value)}
+                      className="rsvp-input"
+                    >
+                      {SIGNUP_ROLE_OPTIONS.map((opt) => (
+                        <option key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </option>
+                      ))}
+                    </select>
+                    <p className="text-xs sm:text-[13px] text-zinc-400/85 mt-1 font-normal">
+                      Example: Start with Emergency Coordinator to declare a crisis, or register as Affected Citizen to submit help requests.
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="flex items-center gap-1.5 font-bold text-zinc-300 mb-1.5">
+                      <User className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+                      <span>Full Name</span>
+                    </label>
+                    <input
+                      type="text"
+                      name="crisync_register_fullname"
+                      autoComplete="off"
+                      required
+                      value={regFullName}
+                      onChange={(e) => setRegFullName(e.target.value)}
+                      placeholder="Enter your full legal name"
+                      className="rsvp-input"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="flex items-center gap-1.5 font-bold text-zinc-300 mb-1.5">
+                        <Mail className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+                        <span>Email Address</span>
+                      </label>
+                      <input
+                        type="email"
+                        name="crisync_register_email"
+                        autoComplete="off"
+                        required
+                        readOnly={!unlockedInputs.regEmail}
+                        onFocus={() => unlockInput('regEmail')}
+                        onMouseDown={() => unlockInput('regEmail')}
+                        onKeyDown={() => unlockInput('regEmail')}
+                        value={regEmail}
+                        onChange={(e) => setRegEmail(e.target.value)}
+                        placeholder="you@domain.org"
+                        className="rsvp-input"
+                      />
+                    </div>
+                    <div>
+                      <label className="flex items-center gap-1.5 font-bold text-zinc-300 mb-1.5">
+                        <Phone className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+                        <span>Phone Number</span>
+                      </label>
+                      <input
+                        type="tel"
+                        name="crisync_register_phone"
+                        autoComplete="off"
+                        required
+                        value={regPhone}
+                        onChange={(e) => setRegPhone(e.target.value)}
+                        placeholder="+94 77 123 4567"
+                        className="rsvp-input"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="flex items-center gap-1.5 font-bold text-zinc-300 mb-1.5">
+                        <Lock className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+                        <span>Password</span>
+                      </label>
+                      <input
+                        type="password"
+                        name="crisync_register_password"
+                        autoComplete="new-password"
+                        required
+                        minLength={6}
+                        readOnly={!unlockedInputs.regPassword}
+                        onFocus={() => unlockInput('regPassword')}
+                        onMouseDown={() => unlockInput('regPassword')}
+                        onKeyDown={() => unlockInput('regPassword')}
+                        value={regPassword}
+                        onChange={(e) => setRegPassword(e.target.value)}
+                        placeholder="Minimum 6 characters"
+                        className="rsvp-input"
+                      />
+                    </div>
+                    <div>
+                      <label className="flex items-center gap-1.5 font-bold text-zinc-300 mb-1.5">
+                        <Globe className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+                        <span>Preferred Language</span>
+                      </label>
+                      <select
+                        value={regLanguage}
+                        onChange={(e) => setRegLanguage(e.target.value)}
+                        className="rsvp-input"
+                      >
+                        {LANGUAGE_OPTIONS.map((lang) => (
+                          <option key={lang.code} value={lang.code}>
+                            {lang.fullName}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  {regRole === 'Donor' && (
+                    <div className="p-3.5 rounded-2xl bg-lime-500/10 border border-lime-500/25 text-lime-200 text-xs sm:text-[13px] leading-relaxed">
+                      <strong className="text-white block mb-0.5">Public Donor Registration</strong>
+                      Donors self-register independently with immediate access to active humanitarian fundraising campaigns and in-kind supply pledges.
+                    </div>
+                  )}
+
+                  {regRole === 'Volunteer' && (
+                    <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs sm:text-[13px] leading-relaxed">
+                      <strong className="text-white block mb-0.5">Pending Volunteer Verification Policy</strong>
+                      Volunteers self-register independently, and your initial account status starts as <strong>Pending</strong> until a dedicated <strong>Volunteer Coordinator</strong> verifies and activates your account.
+                    </div>
+                  )}
+
+                  {regRole === 'PartnerOfficer' && (
   );
 };
