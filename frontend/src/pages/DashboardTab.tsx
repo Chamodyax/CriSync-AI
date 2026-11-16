@@ -488,5 +488,455 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                         <span>Add Operational Area</span>
                       </button>
                     )}
+                  </>
+                )}
+                {canRegisterCitizenProxy && onRegisterCitizenOnBehalf && (
+                  <button
+                    type="button"
+                    onClick={() => setCommandTab('citizen-behalf')}
+                    className={`px-4 py-2 rounded-xl text-xs font-extrabold border transition flex items-center gap-1.5 ${
+                      commandTab === 'citizen-behalf'
+                        ? 'bg-sky-600 border-sky-500 text-white keep-white shadow-sm'
+                        : 'bg-white/[0.03] border-white/10 text-zinc-300 hover:text-white'
+                    }`}
+                  >
+                    <UserPlus className="w-3.5 h-3.5" />
+                    <span>Register Citizen on Behalf</span>
+                  </button>
+                )}
+                {canInviteOperational && onInviteStaff && (
+                  <button
+                    type="button"
+                    onClick={() => setCommandTab('invite-staff')}
+                    className={`px-4 py-2 rounded-xl text-xs font-extrabold border transition flex items-center gap-1.5 ${
+                      commandTab === 'invite-staff'
+                        ? 'bg-amber-600 border-amber-500 text-white keep-white shadow-sm'
+                        : 'bg-white/[0.03] border-white/10 text-zinc-300 hover:text-white'
+                    }`}
+                  >
+                    <KeyRound className="w-3.5 h-3.5" />
+                    <span>Invite Operational Role</span>
+                  </button>
+                )}
+              </div>
+
+              {commandTab === 'citizen-behalf' && canRegisterCitizenProxy ? (
+                <form key="citizen-behalf-form" onSubmit={handleCitizenProxySubmit} className="grid grid-cols-1 md:grid-cols-3 gap-3.5 text-xs" autoComplete="off">
+                  <div
+                    aria-hidden="true"
+                    className="pointer-events-none fixed -left-[9999px] top-0 h-px w-px opacity-0 overflow-hidden"
+                  >
+                    <input type="text" name="prevent_proxy_autofill_user" autoComplete="username" tabIndex={-1} defaultValue="" />
+                    <input type="password" name="prevent_proxy_autofill_pass" autoComplete="current-password" tabIndex={-1} defaultValue="" />
+                  </div>
+                  <div className="md:col-span-3 p-3 rounded-2xl bg-sky-500/10 border border-sky-500/30 text-sky-200 text-[11px]">
+                    <strong className="text-white">Case Manager Proxy Onboarding:</strong> Register an affected Citizen who lacks a phone or internet connection during a disaster, including their household vulnerability profile.
+                  </div>
+                  <div>
+                    <label className="block font-bold text-zinc-300 mb-1">Citizen Full Name</label>
+                    <input
+                      type="text"
+                      name="crisync_proxy_citizen_name"
+                      autoComplete="off"
+                      required
+                      value={citizenProxyForm.fullName}
+                      onChange={(e) => setCitizenProxyForm({ ...citizenProxyForm, fullName: e.target.value })}
+                      placeholder="Affected resident full name"
+                      className="rsvp-input"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-bold text-zinc-300 mb-1">Email or Household ID</label>
+                    <input
+                      type="email"
+                      name="crisync_proxy_citizen_email"
+                      autoComplete="off"
+                      required
+                      readOnly={!unlockedFields.citizenEmail}
+                      onFocus={() => unlockField('citizenEmail')}
+                      onMouseDown={() => unlockField('citizenEmail')}
+                      onKeyDown={() => unlockField('citizenEmail')}
+                      value={citizenProxyForm.email}
+                      onChange={(e) => setCitizenProxyForm({ ...citizenProxyForm, email: e.target.value })}
+                      placeholder="citizen.name@offline.crisync.org"
+                      className="rsvp-input"
+                    />
+                    <p className="text-[11px] text-zinc-400/75 opacity-75 mt-1 font-normal">
+                      Example: kamal.perera@offline.crisync.org (if resident has no email)
+                    </p>
+                  </div>
+                  <div>
+                    <label className="block font-bold text-zinc-300 mb-1">Contact Phone / Neighbour Phone</label>
+                    <input
+                      type="text"
+                      name="crisync_proxy_citizen_phone"
+                      autoComplete="off"
+                      value={citizenProxyForm.phoneNumber}
+                      onChange={(e) => setCitizenProxyForm({ ...citizenProxyForm, phoneNumber: e.target.value })}
+                      placeholder="Optional contact number"
+                      className="rsvp-input"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-bold text-zinc-300 mb-1">Assigned Access Password</label>
+                    <input
+                      type="text"
+                      name="crisync_proxy_citizen_password"
+                      autoComplete="new-password"
+                      required
+                      minLength={6}
+                      readOnly={!unlockedFields.citizenPassword}
+                      onFocus={() => unlockField('citizenPassword')}
+                      onMouseDown={() => unlockField('citizenPassword')}
+                      onKeyDown={() => unlockField('citizenPassword')}
+                      value={citizenProxyForm.password}
+                      onChange={(e) => setCitizenProxyForm({ ...citizenProxyForm, password: e.target.value })}
+                      placeholder="Temporary access password"
+                      className="rsvp-input font-mono"
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block font-bold text-zinc-300 mb-1">Residential Location / Relief Zone</label>
+                    <input
+                      type="text"
+                      required
+                      value={citizenProxyForm.primaryAddress}
+                      onChange={(e) => setCitizenProxyForm({ ...citizenProxyForm, primaryAddress: e.target.value })}
+                      placeholder="Village, street, or shelter camp name"
+                      className="rsvp-input"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-bold text-zinc-300 mb-1">Total Family Members</label>
+                    <input
+                      type="number"
+                      min={1}
+                      value={citizenProxyForm.totalMembers}
+                      onChange={(e) => setCitizenProxyForm({ ...citizenProxyForm, totalMembers: Number(e.target.value) })}
+                      className="rsvp-input font-mono"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-bold text-zinc-300 mb-1">Children Count</label>
+                    <input
+                      type="number"
+                      min={0}
+                      value={citizenProxyForm.childrenCount}
+                      onChange={(e) => setCitizenProxyForm({ ...citizenProxyForm, childrenCount: Number(e.target.value) })}
+                      className="rsvp-input font-mono"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-bold text-zinc-300 mb-1">Elderly Count</label>
+                    <input
+                      type="number"
+                      min={0}
+                      value={citizenProxyForm.elderlyCount}
+                      onChange={(e) => setCitizenProxyForm({ ...citizenProxyForm, elderlyCount: Number(e.target.value) })}
+                      className="rsvp-input font-mono"
+                    />
+                  </div>
+                  <div className="md:col-span-3 flex flex-wrap items-center gap-4">
+                    <label className="flex items-center gap-2 text-zinc-200 font-semibold cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={citizenProxyForm.hasMobilityNeeds}
+                        onChange={(e) => setCitizenProxyForm({ ...citizenProxyForm, hasMobilityNeeds: e.target.checked })}
+                        className="w-4 h-4 rounded"
+                      />
+                      Mobility / Wheelchair Support Needed
+                    </label>
+                    <label className="flex items-center gap-2 text-zinc-200 font-semibold cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={citizenProxyForm.hasChronicMedicalNeeds}
+                        onChange={(e) => setCitizenProxyForm({ ...citizenProxyForm, hasChronicMedicalNeeds: e.target.checked })}
+                        className="w-4 h-4 rounded"
+                      />
+                      Chronic Medical / Medication Needs
+                    </label>
+                  </div>
+                  <div className="md:col-span-3 flex justify-end">
+                    <button
+                      type="submit"
+                      disabled={commandSubmitting}
+                      className="keep-white px-5 py-2.5 rounded-2xl bg-sky-600 hover:bg-sky-500 text-white font-extrabold flex items-center gap-2 shadow-sm disabled:opacity-50"
+                    >
+                      <UserPlus className="w-4 h-4" />
+                      <span>{commandSubmitting ? 'Registering...' : 'Register Citizen Account & Family Profile'}</span>
+                    </button>
+                  </div>
+                </form>
+              ) : commandTab === 'invite-staff' && canInviteOperational ? (
+                <form key="invite-staff-form" onSubmit={handleInviteStaffSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-3.5 text-xs" autoComplete="off">
+                  <div
+                    aria-hidden="true"
+                    className="pointer-events-none fixed -left-[9999px] top-0 h-px w-px opacity-0 overflow-hidden"
+                  >
+                    <input type="text" name="prevent_invite_autofill_user" autoComplete="username" tabIndex={-1} defaultValue="" />
+                    <input type="password" name="prevent_invite_autofill_pass" autoComplete="current-password" tabIndex={-1} defaultValue="" />
+                  </div>
+                  <div className="md:col-span-3 p-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-[11px]">
+                    <strong className="text-white">Invitation Authority:</strong> System Admin and Emergency Coordinator can invite <strong>Case Manager</strong>, <strong>Shelter Admin</strong>, <strong>Resource & Logistics Manager</strong>, and <strong>Volunteer Coordinator</strong>. Note: <strong>Donor / Funding Officer</strong> handles money & financial transactions and can only be invited exclusively by the <strong>Global System Admin</strong>.
+                  </div>
+                  <div>
+                    <label className="block font-bold text-zinc-300 mb-1">Invited Role</label>
+                    <select
+                      value={inviteForm.role}
+                      onChange={(e) => setInviteForm({ ...inviteForm, role: e.target.value })}
+                      className="rsvp-input"
+                    >
+                      <option value="CaseManager">Case Manager</option>
+                      <option value="ShelterAdmin">Shelter Administrator</option>
+                      <option value="LogisticsManager">Resource & Logistics Manager</option>
+                      <option value="VolunteerCoordinator">Volunteer Coordinator</option>
+                      {userRole === 'SystemAdmin' && (
+                        <option value="DonorOfficer">Donor / Funding Officer (Global System Admin Only)</option>
+                      )}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block font-bold text-zinc-300 mb-1">Full Name</label>
+                    <input
+                      type="text"
+                      name="crisync_invite_staff_name"
+                      autoComplete="off"
+                      required
+                      value={inviteForm.fullName}
+                      onChange={(e) => setInviteForm({ ...inviteForm, fullName: e.target.value })}
+                      placeholder="Officer's full name"
+                      className="rsvp-input"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-bold text-zinc-300 mb-1">Work Email</label>
+                    <input
+                      type="email"
+                      name="crisync_invite_staff_email"
+                      autoComplete="off"
+                      required
+                      readOnly={!unlockedFields.inviteEmail}
+                      onFocus={() => unlockField('inviteEmail')}
+                      onMouseDown={() => unlockField('inviteEmail')}
+                      onKeyDown={() => unlockField('inviteEmail')}
+                      value={inviteForm.email}
+                      onChange={(e) => setInviteForm({ ...inviteForm, email: e.target.value })}
+                      placeholder="officer@organisation.org"
+                      className="rsvp-input"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-bold text-zinc-300 mb-1">Phone Number</label>
+                    <input
+                      type="text"
+                      name="crisync_invite_staff_phone"
+                      autoComplete="off"
+                      value={inviteForm.phoneNumber}
+                      onChange={(e) => setInviteForm({ ...inviteForm, phoneNumber: e.target.value })}
+                      placeholder="+94 77 123 4567"
+                      className="rsvp-input"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-bold text-zinc-300 mb-1">Temporary Password</label>
+                    <input
+                      type="text"
+                      name="crisync_invite_staff_password"
+                      autoComplete="new-password"
+                      required
+                      minLength={6}
+                      readOnly={!unlockedFields.invitePassword}
+                      onFocus={() => unlockField('invitePassword')}
+                      onMouseDown={() => unlockField('invitePassword')}
+                      onKeyDown={() => unlockField('invitePassword')}
+                      value={inviteForm.temporaryPassword}
+                      onChange={(e) => setInviteForm({ ...inviteForm, temporaryPassword: e.target.value })}
+                      placeholder="Minimum 6 characters"
+                      className="rsvp-input font-mono"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-bold text-zinc-300 mb-1">Organisation</label>
+                    <select
+                      value={inviteForm.organisationId}
+                      onChange={(e) => setInviteForm({ ...inviteForm, organisationId: e.target.value })}
+                      className="rsvp-input"
+                    >
+                      <option value="">Independent / Coordinating Team</option>
+                      {organisations.map((org) => (
+                        <option key={org.id} value={org.id}>
+                          {org.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  {lastInvitationResult && (
+                    <div className="md:col-span-3 p-3 rounded-2xl bg-emerald-500/15 border border-emerald-500/35 text-emerald-200 font-mono text-[11px]">
+                      Invitation Issued ({lastInvitationResult.invitationCode}) • {lastInvitationResult.fullName} ({lastInvitationResult.role}) • Email: {lastInvitationResult.email} • Password: {lastInvitationResult.temporaryPassword}
+                    </div>
+                  )}
+                  <div className="md:col-span-3 flex justify-end">
+                    <button
+                      type="submit"
+                      disabled={commandSubmitting}
+                      className="keep-white px-5 py-2.5 rounded-2xl bg-amber-600 hover:bg-amber-500 text-white font-extrabold flex items-center gap-2 shadow-sm disabled:opacity-50"
+                    >
+                      <KeyRound className="w-4 h-4" />
+                      <span>{commandSubmitting ? 'Sending Invite...' : 'Issue Staff Invitation & Credentials'}</span>
+                    </button>
+                  </div>
+                </form>
+              ) : commandTab === 'alert' ? (
+                <form onSubmit={handleBroadcastAlert} className="grid grid-cols-1 md:grid-cols-2 gap-3.5 text-xs">
+                  <div>
+                    <label className="block font-bold text-zinc-300 mb-1">Target Crisis Event</label>
+                    <select
+                      value={activeAlertCrisisId}
+                      onChange={(e) => setAlertCrisisId(e.target.value)}
+                      className="rsvp-input"
+                    >
+                      {crises.length === 0 && (
+                        <option value="">No Crisis Events Yet — Declare a Crisis First</option>
+                      )}
+                      {crises.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.title} ({c.severity})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block font-bold text-zinc-300 mb-1">Alert Severity Level</label>
+                    <select
+                      value={alertSeverity}
+                      onChange={(e) => setAlertSeverity(e.target.value)}
+                      className="rsvp-input"
+                    >
+                      <option value="Advisory">Advisory (Stay Informed)</option>
+                      <option value="Warning">Warning (Prepare to Evacuate)</option>
+                      <option value="Critical">Critical (Immediate Evacuation)</option>
+                    </select>
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block font-bold text-zinc-300 mb-1">Public Alert Headline</label>
+                    <input
+                      type="text"
+                      required
+                      value={alertTitle}
+                      onChange={(e) => setAlertTitle(e.target.value)}
+                      placeholder="Short clear public emergency headline"
+                      className="rsvp-input"
+                    />
+                    <p className="text-[11px] text-zinc-400/75 opacity-75 mt-1 font-normal">
+                      Example: Flash Flood Evacuation Warning — Low-Lying Areas Near Colombo Port
+                    </p>
+                  </div>
+                  <div>
+                    <label className="block font-bold text-zinc-300 mb-1">Broadcast Message</label>
+                    <textarea
+                      required
+                      rows={3}
+                      value={alertMessage}
+                      onChange={(e) => setAlertMessage(e.target.value)}
+                      placeholder="Describe the danger zone and immediate public situation"
+                      className="rsvp-input resize-none"
+                    />
+                    <p className="text-[11px] text-zinc-400/75 opacity-75 mt-1 font-normal">
+                      Example: River levels exceeded danger mark at 14:30. Residents in Zone A should move to higher ground.
+                    </p>
+                  </div>
+                  <div>
+                    <label className="block font-bold text-zinc-300 mb-1">Safety Guidance for Citizens</label>
+                    <textarea
+                      required
+                      rows={3}
+                      value={alertGuidance}
+                      onChange={(e) => setAlertGuidance(e.target.value)}
+                      placeholder="Actionable checklist for families and caregivers"
+                      className="rsvp-input resize-none"
+                    />
+                    <p className="text-[11px] text-zinc-400/75 opacity-75 mt-1 font-normal">
+                      Example: Switch off main breaker, pack medicines and IDs, proceed to nearest designated school shelter.
+                    </p>
+                  </div>
+                  <div className="md:col-span-2 flex justify-end">
+                    <motion.button
+                      whileTap={{ scale: 0.98 }}
+                      type="submit"
+                      disabled={commandSubmitting || !activeAlertCrisisId}
+                      className="keep-white px-5 py-2.5 rounded-2xl bg-rose-600 hover:bg-rose-500 text-white font-extrabold flex items-center gap-2 shadow-sm disabled:opacity-50"
+                    >
+                      <Send className="w-4 h-4" />
+                      <span>{commandSubmitting ? 'Broadcasting...' : 'Broadcast Public Alert Now'}</span>
+                    </motion.button>
+                  </div>
+                </form>
+              ) : commandTab === 'operational-zone' && canDeclareOrAlert && onCreateOperationalArea ? (
+                <form onSubmit={handleCreateZoneSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-3.5 text-xs">
+                  <div>
+                    <label className="block font-bold text-zinc-300 mb-1">Crisis Event</label>
+                    <select
+                      value={zoneForm.crisisId || crises[0]?.id || ''}
+                      onChange={(e) => setZoneForm({ ...zoneForm, crisisId: e.target.value })}
+                      className="rsvp-input"
+                    >
+                      {crises.map((c) => (
+                        <option key={c.id} value={c.id}>{c.title}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block font-bold text-zinc-300 mb-1">Operational Zone Name</label>
+                    <input
+                      type="text"
+                      required
+                      value={zoneForm.zoneName}
+                      onChange={(e) => setZoneForm({ ...zoneForm, zoneName: e.target.value })}
+                      placeholder="e.g., Sector Delta - Pelmadulla Valley"
+                      className="rsvp-input"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-bold text-zinc-300 mb-1">District</label>
+                    <input
+                      type="text"
+                      required
+                      value={zoneForm.district}
+                      onChange={(e) => setZoneForm({ ...zoneForm, district: e.target.value })}
+                      placeholder="e.g., Ratnapura"
+                      className="rsvp-input"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-bold text-zinc-300 mb-1">Latitude / Longitude</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <input
+                        type="number"
+                        step="0.0001"
+                        value={zoneForm.latitude}
+                        onChange={(e) => setZoneForm({ ...zoneForm, latitude: Number(e.target.value) })}
+                        className="rsvp-input font-mono"
+                      />
+                      <input
+                        type="number"
+                        step="0.0001"
+                        value={zoneForm.longitude}
+                        onChange={(e) => setZoneForm({ ...zoneForm, longitude: Number(e.target.value) })}
+                        className="rsvp-input font-mono"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block font-bold text-zinc-300 mb-1">Radius (km) &amp; Affected Pop.</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <input
+                        type="number"
+                        min={1}
+                        value={zoneForm.coverageRadiusKm}
+                        onChange={(e) => setZoneForm({ ...zoneForm, coverageRadiusKm: Number(e.target.value) })}
+                        className="rsvp-input font-mono"
+                      />
+                      <input
+                        type="number"
   );
 };
