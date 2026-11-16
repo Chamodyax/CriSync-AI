@@ -1912,7 +1912,8 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
             className="crisync-lightbox-backdrop fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6"
           >
             <motion.div
-              data-lightbox="open"
+              role="dialog"
+              aria-modal="true"
               aria-label={lightboxPhoto.title || 'Field evidence photo preview'}
               initial={{ opacity: 0, scale: 0.94, y: 14 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
