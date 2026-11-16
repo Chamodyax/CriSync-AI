@@ -886,5 +886,400 @@ export const CitizenPortalTab: React.FC<CitizenPortalTabProps> = ({
         </div>
 
         <div className="flex flex-wrap items-center gap-1 p-1 rounded-xl bg-black/25 border border-white/10">
+          {LANGUAGE_OPTIONS.map((l) => (
+            <button
+              key={l.code}
+              type="button"
+              onClick={() => handleSelectLanguage(l.code)}
+              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition ${
+                language === l.code
+                  ? 'bg-indigo-600 text-white keep-white'
+                  : 'text-zinc-400 hover:text-white'
+              }`}
+            >
+              {l.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+        {briefing && (
+          <div className="lg:col-span-5 p-4 sm:p-5 rounded-2xl bg-indigo-500/10 border border-indigo-500/30 flex flex-col justify-between space-y-3">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-indigo-400 flex items-center gap-1.5">
+                  <Globe className="w-3.5 h-3.5" />
+                  {t.citizen.aiOfficialBriefingTitle}
+                </span>
+                <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-indigo-600 text-white keep-white">
+                  {briefing.languageName}
+                </span>
+              </div>
+              <h3 className="text-sm sm:text-base font-extrabold text-white leading-snug">
+                {briefing.headline}
+              </h3>
+              <p className="text-xs text-zinc-300 leading-relaxed">
+                {briefing.operationalSummary}
+              </p>
+            </div>
+
+            <div className="p-3 rounded-xl bg-black/20 border border-indigo-500/30 text-xs text-zinc-200">
+              <strong className="text-indigo-300 block mb-0.5">{t.dashboard.safetyAdviceBadge}:</strong>
+              {briefing.citizenSafetyAdvisory}
+            </div>
+          </div>
+        )}
+
+        <div className={`${briefing ? 'lg:col-span-7' : 'lg:col-span-12'} space-y-4`}>
+          <div className="flex flex-wrap gap-2">
+            {t.citizen.aiFaqs.map((faq) => {
+              const isSelected = selectedFaqId === faq.id && !customAiReply;
+              return (
+                <button
+                  key={faq.id}
+                  type="button"
+                  onClick={() => {
+                    setSelectedFaqId(faq.id);
+                    setCustomAiReply(null);
+                  }}
+                  className={`px-3 py-2 rounded-xl text-xs font-bold border text-left transition ${
+                    isSelected
+                      ? 'bg-indigo-600 border-indigo-500 text-white keep-white shadow-sm'
+                      : 'bg-white/[0.03] border-white/10 text-zinc-300 hover:bg-white/[0.07]'
+                  }`}
+                >
+                  {faq.question}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 space-y-1.5">
+            <div className="flex items-center gap-2 text-xs font-extrabold text-emerald-300">
+              <Sparkles className="w-4 h-4 text-emerald-400 shrink-0" />
+              <span>
+                {customAiReply ? customAiQuery : activeFaqObj.question}
+              </span>
+            </div>
+            <p className="text-xs sm:text-sm text-zinc-200 leading-relaxed">
+              {customAiReply || activeFaqObj.answer}
+            </p>
+          </div>
+
+          <form onSubmit={handleAskCustomAiQuestion} className="flex gap-2">
+            <input
+              type="text"
+              value={customAiQuery}
+              onChange={(e) => setCustomAiQuery(e.target.value)}
+              placeholder={t.citizen.aiAskPlaceholder}
+              className="rsvp-input flex-1 text-xs"
+            />
+            <button
+              type="submit"
+              className="keep-white px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-extrabold flex items-center gap-1.5 shrink-0 shadow-sm"
+            >
+              <Send className="w-3.5 h-3.5" />
+              <span>{t.citizen.aiAskBtn}</span>
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderAlertsAndShelters = () => (
+    <>
+      <div className="bento-glass rounded-3xl p-5 border border-rose-500/30">
+        <h3 className="text-sm font-extrabold text-rose-300 flex items-center gap-2">
+          <ShieldAlert className="w-4 h-4 text-rose-400" />
+          {t.citizen.alertsTitle}
+        </h3>
+        {alerts.length === 0 ? (
+          <p className="text-xs text-zinc-400 mt-3 pt-3 border-t border-white/10">
+            No active public emergency broadcasts have been issued yet.
+          </p>
+        ) : (
+          alerts.map((alertItem) => (
+            <div key={alertItem.id} className="mt-3 pt-3 border-t border-white/10 text-xs space-y-1.5">
+              <p className="font-extrabold text-white text-sm">
+                {alertItem.title}
+              </p>
+              <p className="text-zinc-300 leading-relaxed">
+                {alertItem.message}
+              </p>
+              {alertItem.safetyGuidance && (
+                <p className="text-rose-200 font-semibold bg-rose-500/15 border border-rose-500/30 px-3 py-2 rounded-xl">
+                  {t.citizen.safetyWhatToDo} {alertItem.safetyGuidance}
+                </p>
+              )}
+            </div>
+          ))
+        )}
+      </div>
+
+      <div className="bento-glass rounded-3xl p-5">
+        <h3 className="text-sm font-extrabold text-white mb-3 flex items-center gap-2">
+          <Building2 className="w-4 h-4 text-indigo-400" />
+          {t.citizen.sheltersTitle}
+        </h3>
+        {shelters.length === 0 ? (
+          <p className="text-xs text-zinc-400">
+            No evacuation shelters have been registered yet.
+          </p>
+        ) : (
+          <div className="space-y-2.5">
+            {shelters.map((shelter) => (
+              <div
+                key={shelter.id}
+                className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/[0.07] text-xs"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <p className="font-bold text-white text-sm">{shelter.name}</p>
+                  <span className="font-bold text-xs text-emerald-300 bg-emerald-500/15 px-2.5 py-0.5 rounded-full border border-emerald-500/30 shrink-0">
+                    {shelter.totalCapacity - shelter.currentOccupancy} {t.citizen.spacesOpen}
+                  </span>
+                </div>
+                <p className="text-zinc-400 flex items-center gap-1 mt-1">
+                  <MapPin className="w-3.5 h-3.5 text-indigo-400" />
+                  {shelter.address}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </>
+  );
+
+  const getCitizenTrackingStage = (status: string): {
+    step: number;
+    summary: string;
+    closedSpecial?: boolean;
+  } => {
+    switch (status) {
+      case 'Submitted':
+        return { step: 0, summary: 'Received by CriSync intake queue' };
+      case 'PendingAiReview':
+        return { step: 1, summary: 'AI urgency triage score calculated' };
+      case 'Verified':
+      case 'Prioritised':
+      case 'Escalated':
+        return { step: 2, summary: 'Verified by humanitarian case coordinator' };
+      case 'Assigned':
+      case 'InProgress':
+        return { step: 3, summary: 'Relief team & resources dispatched toward you' };
+      case 'Fulfilled':
+      case 'Closed':
+        return { step: 4, summary: 'Aid delivery completed — please leave feedback' };
+      default:
+        return { step: 1, summary: `Status: ${status}`, closedSpecial: true };
+    }
+  };
+
+  const renderTrackMyRequests = () => (
+    <div className="bento-glass rounded-3xl p-5 sm:p-6">
+      <div className="flex flex-wrap items-center justify-between gap-2 mb-5 pb-4 border-b border-white/[0.08]">
+        <div>
+          <span className="text-xs font-bold uppercase tracking-wider text-indigo-400">
+            {t.citizen.trackerBadge}
+          </span>
+          <h3 className="text-lg font-extrabold text-white">
+            {t.citizen.trackerTitle}
+          </h3>
+        </div>
+        <span className="px-3.5 py-1 rounded-full bg-indigo-500/15 border border-indigo-500/30 text-xs font-bold text-indigo-300">
+          {myRequests.length}
+        </span>
+      </div>
+
+      <AnimatePresence>
+        {feedbackRequestId && (
+          <motion.form
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            onSubmit={handleFeedbackSubmit}
+            className="mb-5 p-5 rounded-3xl bg-emerald-500/10 border border-emerald-500/30 space-y-4 text-xs overflow-hidden"
+          >
+            <div className="flex items-center justify-between">
+              <p className="font-extrabold text-emerald-300 text-sm flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-emerald-400" />
+                {t.citizen.feedbackTitle}
+              </p>
+              <button
+                type="button"
+                onClick={() => setFeedbackRequestId(null)}
+                className="text-zinc-400 hover:text-white p-1"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-center">
+              <div>
+                <label className="block font-bold text-zinc-300 mb-2">{t.citizen.ratingLabel}</label>
+                <div className="flex items-center gap-1.5">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      type="button"
+                      onClick={() => setRating(star)}
+                      className={`p-2 rounded-xl border transition ${
+                        rating >= star
+                          ? 'bg-amber-500/20 border-amber-400 text-amber-300'
+                          : 'bg-black/30 border-white/10 text-zinc-600'
+                      }`}
+                    >
+                      <Star className={`w-4 h-4 ${rating >= star ? 'fill-amber-400' : ''}`} />
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="sm:col-span-2">
+                <label className="block font-bold text-zinc-300 mb-1.5">{t.citizen.commentsLabel}</label>
+                <input
+                  type="text"
+                  required
+                  value={feedbackComments}
+                  onChange={(e) => setFeedbackComments(e.target.value)}
+                  className="rsvp-input"
+                />
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              className="keep-white px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold inline-flex items-center gap-1.5 shadow-sm"
+            >
+              <CheckCircle2 className="w-4 h-4" />
+              <span>{t.citizen.submitFeedbackBtn}</span>
+            </button>
+          </motion.form>
+        )}
+      </AnimatePresence>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {myRequests.map((req) => (
+          <div
+            key={req.id}
+            className="p-5 rounded-3xl bg-white/[0.025] border border-white/[0.08] hover:border-white/20 transition flex flex-col justify-between"
+          >
+            <div>
+              <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-xs font-mono font-bold px-2.5 py-1 rounded-lg bg-white/10 text-white">
+                    {req.referenceCode}
+                  </span>
+                  <span className="text-xs px-2.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 font-bold">
+                    {req.status}
+                  </span>
+                  <span className="text-xs px-2.5 py-0.5 rounded-full bg-indigo-500/15 border border-indigo-500/30 text-indigo-300 font-semibold">
+                    {t.citizen.categories[req.category] || req.category}
+                  </span>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setFeedbackRequestId(req.id)}
+                  className="keep-white px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold flex items-center gap-1.5 transition shadow-sm"
+                >
+                  <MessageSquare className="w-3.5 h-3.5" />
+                  <span>{t.citizen.rateDeliveryBtn}</span>
+                </button>
+              </div>
+
+              <p className="text-base font-extrabold text-white">{req.title}</p>
+              <p className="text-xs text-zinc-400 mt-1 leading-relaxed">{req.description}</p>
+
+              {(() => {
+                const track = getCitizenTrackingStage(req.status);
+                const stages = ['Submitted', 'AI Triaged', 'Verified', 'Dispatched', 'Delivered'];
+                return (
+                  <div className="mt-3.5 p-3 rounded-2xl bg-white/[0.03] border border-white/[0.07] space-y-2">
+                    <div className="flex items-center justify-between gap-2 text-[11px]">
+                      <span className="font-bold text-indigo-300">Live Relief Progress</span>
+                      <span className="text-zinc-400">{track.summary}</span>
+                    </div>
+                    <div className="grid grid-cols-5 gap-1.5">
+                      {stages.map((label, sIdx) => {
+                        const completed = !track.closedSpecial && sIdx <= track.step;
+                        return (
+                          <div key={label} className="space-y-1">
+                            <div
+                              className={`h-1.5 rounded-full transition-all ${
+                                track.closedSpecial
+                                  ? 'bg-amber-500/40'
+                                  : completed
+                                  ? 'bg-gradient-to-r from-indigo-500 to-emerald-400'
+                                  : 'bg-white/10'
+                              }`}
+                            />
+                            <p
+                              className={`text-[10px] font-bold truncate ${
+                                completed ? 'text-emerald-300' : 'text-zinc-500'
+                              }`}
+                            >
+                              {label}
+                            </p>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+
+            {req.timeline && req.timeline.length > 0 && (
+              <div className="mt-4 pt-3 border-t border-white/[0.07] space-y-1.5">
+                {req.timeline.slice(0, 2).map((item: any) => (
+                  <p key={item.id} className="text-xs text-zinc-400 flex items-center gap-1.5">
+                    <History className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+                    <span className="font-bold text-indigo-300">
+                      {item.newStatus}:
+                    </span>
+                    <span className="truncate">{item.actionDescription}</span>
+                  </p>
+                ))}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  const renderMyNotifications = () => (
+    <div className="bento-glass rounded-3xl p-5 sm:p-6 border border-cyan-500/25">
+      <div className="flex flex-wrap items-center justify-between gap-2 mb-4 pb-3 border-b border-white/[0.08]">
+        <div className="flex items-center gap-2.5">
+          <div className="w-9 h-9 rounded-2xl bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 flex items-center justify-center shrink-0">
+            <BellRing className="w-4 h-4" />
+          </div>
+          <div>
+            <span className="text-[11px] font-bold uppercase tracking-wider text-cyan-400 block">
+              Real-Time Status &amp; Safety Inbox
+            </span>
+            <h3 className="text-base font-extrabold text-white">
+              My Notifications &amp; SMS/Push Alerts
+            </h3>
+          </div>
+        </div>
+        <span className="px-3 py-1 rounded-full bg-cyan-500/15 border border-cyan-500/30 text-xs font-bold text-cyan-300">
+          {notifications.length} Alerts
+        </span>
+      </div>
+      {notifications.length === 0 ? (
+        <p className="text-xs text-zinc-400">
+          Status updates, shelter confirmations, and dispatch SMS/in-app alerts addressed to your account appear here automatically.
+        </p>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+          {notifications.slice(0, 8).map((n) => (
+            <div
+              key={n.id}
+              className="p-3.5 rounded-2xl bg-white/[0.025] border border-white/[0.08] space-y-1.5"
+            >
   );
 };
