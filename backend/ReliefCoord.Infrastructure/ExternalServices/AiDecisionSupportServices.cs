@@ -107,5 +107,114 @@ public class PrimaryEnsembleAiService : IAiDecisionSupportService
             ["PeopleCountScore"] = Math.Round(demographicVulnerability, 1),
             ["UserUrgencyScore"] = Math.Round(selfUrgencyWeight, 1),
             ["CategoryBaseScore"] = Math.Round(categoryBaseWeight, 1)
+        };
+
+        string duplicateClause = isDuplicate
+            ? $" Possible duplicate found ({highestSim * 100:F0}% match with existing request; kept for coordinator check)."
+            : " No duplicate found.";
+
+        string rationale = $"Suggested category: {suggestedCategory}, Urgency: {suggestedUrgency} (Score {rawScore}/100) based on description keywords and {request.AffectedPeopleCount} affected people.{duplicateClause}";
+
+        return Task.FromResult(new AiRequestEvaluationResult(
+            suggestedCategory,
+            suggestedUrgency,
+            rawScore,
+            0.91,
+            rationale,
+            featureWeights,
+            isDuplicate,
+            duplicateOfId,
+            highestSim,
+            isSuspicious,
+            suspiciousReason,
+            ProviderName
+        ));
+    }
+
+    public Task<IReadOnlyList<AiResourceCandidateDto>> RecommendResourcesForRequestAsync(
+        AssistanceRequest request,
+        IReadOnlyList<ResourceItem> availableResources,
+        CancellationToken cancellationToken = default)
+    {
+        var results = availableResources
+            .Where(r => r.Category == request.Category && r.AvailableQuantity > 0)
+            .Select(r =>
+            {
+                double dist = _mappingService.CalculateDistanceKm(request.Latitude, request.Longitude, r.WarehouseLatitude, r.WarehouseLongitude);
+                int daysToExpiry = r.ExpiryDateUtc.HasValue
+                    ? Math.Max(1, (int)(r.ExpiryDateUtc.Value - DateTime.UtcNow).TotalDays)
+                    : 365;
+                double proxScore = Math.Max(0, 100 - dist * 1.5);
+                double stockScore = Math.Min(100, (r.AvailableQuantity / (double)Math.Max(1, request.RequestedQuantity)) * 100);
+                double coldScore = r.SupportsColdChain ? 100 : 75;
+                double totalScore = Math.Round((proxScore * 0.45) + (stockScore * 0.35) + (coldScore * 0.20), 1);
+
+                return new AiResourceCandidateDto(
+                    r.Id,
+                    r.Name,
+                    r.WarehouseName,
+                    r.AvailableQuantity,
+                    Math.Round(dist, 2),
+                    totalScore,
+                    $"Proximity={proxScore:F0}%, StockAdequacy={stockScore:F0}%, ColdChain={r.SupportsColdChain}",
+                    r.SupportsColdChain,
+                    daysToExpiry
+                );
+            })
+            .OrderByDescending(c => c.MultiConstraintScore)
+            .ToList();
+
+        return Task.FromResult<IReadOnlyList<AiResourceCandidateDto>>(results);
+    }
+
+    public Task<IReadOnlyList<AiShelterCandidateDto>> RecommendSheltersForRequestAsync(
+        AssistanceRequest request,
+        IReadOnlyList<Shelter> shelters,
+        CancellationToken cancellationToken = default)
+    {
+        var candidates = shelters
+            .Where(s => s.TotalCapacity - s.CurrentOccupancy >= request.AffectedPeopleCount)
+            .Where(s => !request.RequiresAccessibilitySupport || s.IsWheelchairAccessible)
+            .Select(s =>
+            {
+                int avail = s.TotalCapacity - s.CurrentOccupancy;
+                double dist = _mappingService.CalculateDistanceKm(request.Latitude, request.Longitude, s.Latitude, s.Longitude);
+                double score = Math.Round(
+                    Math.Max(0, 100 - dist * 1.8) * 0.5 +
+                    (s.HasMedicalFacility ? 25 : 10) +
+                    (s.IsWheelchairAccessible ? 25 : 10), 1);
+
+                return new AiShelterCandidateDto(
+                    s.Id,
+                    s.Name,
+                    s.Address,
+                    avail,
+                    Math.Round(dist, 2),
+                    score,
+                    s.IsWheelchairAccessible,
+                    s.HasMedicalFacility,
+                    $"Has {avail} open beds ({dist:F1} km away). Accessibility={s.IsWheelchairAccessible}, MedicalUnit={s.HasMedicalFacility}."
+                );
+            })
+            .OrderByDescending(c => c.SuitabilityScore)
+            .ToList();
+
+        return Task.FromResult<IReadOnlyList<AiShelterCandidateDto>>(candidates);
+    }
+
+    public Task<IReadOnlyList<AiVolunteerCandidateDto>> RecommendVolunteersForTaskAsync(
+        string requiredSkill,
+        double targetLat,
+        double targetLon,
+        IReadOnlyList<VolunteerProfile> volunteers,
+        CancellationToken cancellationToken = default)
+    {
+        string normalizedSkill = requiredSkill.Trim().ToLowerInvariant();
+        var list = volunteers
+            .Where(v => v.IsAvailable && v.IsVerified)
+            .Select(v =>
+            {
+                bool hasSkill = v.SkillsCsv.ToLowerInvariant().Contains(normalizedSkill);
+                double dist = _mappingService.CalculateDistanceKm(targetLat, targetLon, v.CurrentLatitude, v.CurrentLongitude);
     }
 }
