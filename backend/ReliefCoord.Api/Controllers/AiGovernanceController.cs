@@ -59,4 +59,54 @@ public class AiGovernanceController : ControllerBase
     {
         var actorId = Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var uid) ? uid : Guid.Empty;
         var actorName = User.FindFirstValue(ClaimTypes.Name) ?? "Authorised Coordinator";
+        var roleStr = User.FindFirstValue(ClaimTypes.Role) ?? "EmergencyCoordinator";
+        Enum.TryParse<UserRole>(roleStr, out var actorRole);
+
+        var decision = await _opsService.ReviewAiRecommendationAsync(
+            actorId,
+            actorName,
+            actorRole,
+            dto,
+            cancellationToken);
+
+        return Ok(decision);
+    }
+
+    [HttpGet("demand-forecast/{crisisEventId:guid}")]
+    [AllowAnonymous]
+    public async Task<ActionResult> GetDemandForecast(Guid crisisEventId, CancellationToken cancellationToken)
+    {
+        var requests = await _unitOfWork.AssistanceRequests.FindAsync(r => r.CrisisEventId == crisisEventId, cancellationToken);
+        var inventory = await _unitOfWork.Resources.GetAllAsync(cancellationToken);
+        var aiService = _aiProviderFactory.CreateProvider();
+        var forecast = await aiService.ForecastResourceDemandAsync(crisisEventId, requests, inventory, cancellationToken);
+        return Ok(forecast);
+    }
+
+    [HttpGet("multilingual-briefing/{crisisEventId:guid}")]
+    [AllowAnonymous]
+    public async Task<ActionResult> GetMultilingualBriefing(
+        Guid crisisEventId,
+        [FromQuery] string lang = "en",
+        CancellationToken cancellationToken = default)
+    {
+        var crisis = await _unitOfWork.CrisisEvents.GetByIdAsync(crisisEventId, cancellationToken);
+        if (crisis == null)
+        {
+            var allCrises = await _unitOfWork.CrisisEvents.GetAllAsync(cancellationToken);
+            crisis = allCrises.FirstOrDefault();
+            if (crisis == null)
+            {
+                return NotFound(new { message = "No crisis events found." });
+            }
+        }
+
+        var requests = await _unitOfWork.AssistanceRequests.FindAsync(r => r.CrisisEventId == crisis.Id, cancellationToken);
+        int openCount = requests.Count(r => r.Status != RequestStatus.Closed && r.Status != RequestStatus.Fulfilled);
+        int criticalCount = requests.Count(r => r.FinalApprovedUrgency >= UrgencyLevel.Critical);
+
+        var aiService = _aiProviderFactory.CreateProvider();
+        var briefing = await aiService.GenerateMultilingualBriefingAsync(crisis, openCount, criticalCount, lang, cancellationToken);
+        return Ok(briefing);
+    }
 }
