@@ -1762,5 +1762,198 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                         </motion.button>
 
                         <motion.button
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.97 }}
+                          onClick={() =>
+                            onUpdateRequestStatus(
+                              req.id,
+                              'Escalated',
+                              'Case escalated for immediate multi-agency dispatch.'
+                            )
+                          }
+                          className="keep-white flex-1 py-2 px-3 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold flex items-center justify-center gap-1.5 transition shadow-sm"
+                        >
+                          <Flame className="w-3.5 h-3.5" />
+                          <span>{t.dashboard.escalateBtn}</span>
+                        </motion.button>
+
+                        <motion.button
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.97 }}
+                          onClick={() =>
+                            onUpdateRequestStatus(
+                              req.id,
+                              'Closed',
+                              'Case resolved and closed by case manager.'
+                            )
+                          }
+                          className="py-2 px-3 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 text-zinc-300 text-xs font-bold flex items-center justify-center gap-1.5 transition"
+                        >
+                          <Archive className="w-3.5 h-3.5" />
+                          <span>{t.dashboard.closeBtn}</span>
+                        </motion.button>
+
+                        <motion.button
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.97 }}
+                          onClick={() =>
+                            onUpdateRequestStatus(
+                              req.id,
+                              'Rejected',
+                              'Case rejected after human verification review.'
+                            )
+                          }
+                          className="py-2 px-3 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-300 text-xs font-bold flex items-center justify-center gap-1.5 transition"
+                        >
+                          <Ban className="w-3.5 h-3.5" />
+                          <span>Reject</span>
+                        </motion.button>
+
+                        {organisations.length > 0 && (
+                          <select
+                            aria-label="Assign Partner Organisation"
+                            value={req.assignedOrganisationId || ''}
+                            onChange={(e) => {
+                              const orgId = e.target.value;
+                              if (!orgId) return;
+                              const orgName = organisations.find((o) => o.id === orgId)?.name || 'Partner Agency';
+                              onUpdateRequestStatus(
+                                req.id,
+                                'Assigned',
+                                `Assigned to partner organisation: ${orgName}`,
+                                orgId
+                              );
+                            }}
+                            className="rsvp-input text-xs py-1.5 px-2.5 w-full sm:w-auto"
+                          >
+                            <option value="">Assign Partner Org...</option>
+                            {organisations.map((org) => (
+                              <option key={org.id} value={org.id}>{org.name}</option>
+                            ))}
+                          </select>
+                        )}
+                      </>
+                    )}
+
+                    {canManageCases && req.isFlaggedPotentialDuplicate && req.status !== 'MergedAsDuplicate' && (
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.97 }}
+                        onClick={() => onMergeDuplicate(req)}
+                        className="keep-white py-2 px-3 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold flex items-center justify-center gap-1.5 transition shadow-sm"
+                      >
+                        <GitMerge className="w-3.5 h-3.5" />
+                        <span>{t.dashboard.mergeBtn}</span>
+                      </motion.button>
+                    )}
+
+                    {canReviewAi && (
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.97 }}
+                        onClick={() => onSelectForAiGovernance(req)}
+                        className="py-2 px-3.5 rounded-xl bg-indigo-500/20 hover:bg-indigo-500/30 border border-indigo-500/40 text-indigo-300 text-xs font-bold flex items-center justify-center gap-1.5 transition"
+                      >
+                        <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
+                        <span>{t.dashboard.reviewAiBtn}</span>
+                      </motion.button>
+                    )}
+                  </div>
+
+                  {req.timeline && req.timeline.length > 0 && (
+                    <div className="pt-2 border-t border-white/[0.05]">
+                      <button
+                        type="button"
+                        onClick={() => toggleExpandCard(req.id)}
+                        className="text-xs font-semibold text-indigo-400 hover:underline flex items-center gap-1"
+                      >
+                        <History className="w-3.5 h-3.5" />
+                        <span>
+                          {isExpanded
+                            ? 'Hide Activity History'
+                            : `Show Activity History (${req.timeline.length} updates)`}
+                        </span>
+                        {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                      </button>
+
+                      {isExpanded && (
+                        <div className="mt-2 space-y-1.5 pl-1">
+                          {req.timeline.map((historyItem: any) => (
+                            <div
+                              key={historyItem.id}
+                              className="text-xs text-zinc-400 flex flex-wrap items-center gap-1.5"
+                            >
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-white/[0.05] text-indigo-300 font-mono text-[11px]">
+                                {historyItem.previousStatus}
+                                <ArrowRight className="w-2.5 h-2.5" />
+                                {historyItem.newStatus}
+                              </span>
+                              <span>{historyItem.actionDescription}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
+      </div>
+
+      <AnimatePresence>
+        {lightboxPhoto && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setLightboxPhoto(null)}
+            className="crisync-lightbox-backdrop fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6"
+          >
+            <motion.div
+              data-lightbox="open"
+              aria-label={lightboxPhoto.title || 'Field evidence photo preview'}
+              initial={{ opacity: 0, scale: 0.94, y: 14 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 12 }}
+              transition={{ type: 'spring', stiffness: 320, damping: 28 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bento-glass rounded-3xl max-w-4xl w-full overflow-hidden border border-indigo-400/35 shadow-2xl"
+            >
+              <div className="relative bg-slate-950">
+                <img
+                  src={lightboxPhoto.src}
+                  alt={lightboxPhoto.caption}
+                  className="w-full max-h-[72dvh] object-contain mx-auto"
+                />
+                <button
+                  type="button"
+                  aria-label="Close photo preview"
+                  onClick={() => setLightboxPhoto(null)}
+                  className="keep-white absolute top-3 right-3 px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-extrabold inline-flex items-center gap-1.5 shadow-lg transition"
+                >
+                  <X className="w-4 h-4" />
+                  <span>Close</span>
+                </button>
+              </div>
+              <div className="p-4 sm:p-5 flex flex-wrap items-center justify-between gap-3 border-t border-white/10">
+                <div>
+                  <h3 className="text-sm sm:text-base font-extrabold text-white">
+                    {lightboxPhoto.title}
+                  </h3>
+                  <p className="text-xs text-zinc-300 mt-0.5">{lightboxPhoto.caption}</p>
+                </div>
+                {lightboxPhoto.fileName && (
+                  <span className="px-3 py-1 rounded-xl bg-white/[0.06] border border-white/10 font-mono text-[11px] text-indigo-300">
+                    {lightboxPhoto.fileName}
+                  </span>
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
 };
