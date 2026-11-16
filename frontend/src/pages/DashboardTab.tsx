@@ -1266,7 +1266,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                   / {metrics.totalRequests}
                 </span>
               </div>
-              <div className="h-4" data-spark-stub
+              <TelemetrySparkline
                 color="rose"
                 points={[
                   Math.max(1, metrics.unresolvedCasesCount - 2),
@@ -1298,7 +1298,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                 </span>
                 <span className="text-xs font-semibold text-zinc-400 ml-1">min</span>
               </div>
-              <div className="h-4" data-spark-stub
+              <TelemetrySparkline
                 color="indigo"
                 points={[
                   Math.max(8, Math.round(metrics.averageResponseTimeMinutes + 12)),
@@ -1328,7 +1328,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                   <AnimatedCounter value={metrics.resourceUtilisationPercentage} />%
                 </span>
               </div>
-              <div className="h-4" data-spark-stub
+              <TelemetrySparkline
                 color="emerald"
                 points={[
                   Math.max(5, Math.round(metrics.resourceUtilisationPercentage * 0.45)),
@@ -1363,7 +1363,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                   <AnimatedCounter value={metrics.shelterOccupancyPercentage} />%
                 </span>
               </div>
-              <div className="h-4" data-spark-stub
+              <TelemetrySparkline
                 color="amber"
                 points={[
                   Math.max(10, Math.round(metrics.shelterOccupancyPercentage * 0.55)),
@@ -1393,7 +1393,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                   <AnimatedCounter value={metrics.aiOverrideFrequencyPercentage} />%
                 </span>
               </div>
-              <div className="h-4" data-spark-stub
+              <TelemetrySparkline
                 color="purple"
                 points={[
                   Math.max(5, Math.round(metrics.aiOverrideFrequencyPercentage * 0.5)),
@@ -1423,7 +1423,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                   <AnimatedCounter value={metrics.potentialDuplicatesFlaggedCount} />
                 </span>
               </div>
-              <div className="h-4" data-spark-stub
+              <TelemetrySparkline
                 color="cyan"
                 points={[
                   1,
@@ -1526,5 +1526,241 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
 
           <div className="flex flex-wrap items-center gap-2.5 w-full lg:w-auto">
             <div className="relative flex-1 sm:w-64">
+              <Search className="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder={t.dashboard.searchPlaceholder}
+                className="rsvp-input pl-9 py-2 text-xs"
+              />
+            </div>
+
+            <div className="mobile-tabs-scroll flex items-center gap-1.5 p-1.5 rounded-2xl bg-black/30 border border-white/[0.08] overflow-x-auto w-full sm:w-auto">
+              {[
+                { id: 'all', label: `${t.dashboard.filterAll} (${requests.length})` },
+                { id: 'critical', label: `${t.dashboard.filterCritical} (${criticalCount})` },
+                { id: 'overdue', label: `Overdue (${overdueCount})` },
+                { id: 'suspicious', label: `Suspicious (${suspiciousCount})` },
+                { id: 'duplicates', label: `${t.dashboard.filterDuplicates} (${duplicateCount})` },
+                { id: 'verified', label: t.dashboard.filterVerified }
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setActiveFilter(tab.id as any)}
+                  className={`shrink-0 px-3 py-1.5 rounded-xl text-xs font-bold transition ${
+                    activeFilter === tab.id
+                      ? 'bg-indigo-600 text-white keep-white shadow-sm'
+                      : 'text-zinc-400 hover:text-white'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+          {filteredRequests.map((req, index) => {
+            const isCritical =
+              req.finalApprovedUrgency === 'LifeThreatening' || req.finalApprovedUrgency === 'Critical';
+            const isExpanded = Boolean(expandedCards[req.id]);
+            return (
+              <motion.div
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.22, delay: Math.min(index * 0.04, 0.25) }}
+                whileHover={{ y: -3 }}
+                key={req.id}
+                className={`rounded-3xl p-5 border transition-all flex flex-col justify-between relative overflow-hidden ${
+                  isCritical
+                    ? 'crisync-critical-pulse bg-gradient-to-br from-rose-500/[0.06] via-white/[0.02] to-transparent border-rose-500/35 hover:border-rose-500/50'
+                    : 'bg-white/[0.025] border-white/[0.08] hover:border-white/20'
+                }`}
+              >
+                <div>
+                  <div className="flex flex-wrap items-start justify-between gap-3 mb-3">
+                    <div className="flex items-center gap-3">
+                      <div
+                        title="AI Priority Score out of 100"
+                        className={`w-13 h-13 px-2.5 py-2 rounded-2xl flex flex-col items-center justify-center font-mono border shrink-0 ${
+                          isCritical
+                            ? 'bg-rose-500/20 border-rose-500/40 text-rose-300'
+                            : 'bg-indigo-500/20 border-indigo-500/40 text-indigo-300'
+                        }`}
+                      >
+                        <span className="text-sm font-extrabold leading-none">{req.priorityScore}/100</span>
+                        <span className="text-[9px] uppercase tracking-tighter opacity-80 mt-0.5">
+                          Priority
+                        </span>
+                      </div>
+
+                      <div>
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <span className="text-xs font-mono font-bold px-2.5 py-0.5 rounded-lg bg-white/10 text-white border border-white/10">
+                            {req.referenceCode}
+                          </span>
+                          <span
+                            className={`inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-0.5 rounded-full border ${
+                              isCritical
+                                ? 'bg-rose-500/20 text-rose-300 border-rose-500/40'
+                                : 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                            }`}
+                          >
+                            <span
+                              className={`w-1.5 h-1.5 rounded-full ${
+                                isCritical ? 'bg-rose-400 animate-ping' : 'bg-amber-400'
+                              }`}
+                            />
+                            {t.citizen.urgencies[req.finalApprovedUrgency]?.label || req.finalApprovedUrgency}
+                          </span>
+                          <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-300">
+                            {req.status}
+                          </span>
+                        </div>
+
+                        <h3 className="text-base font-extrabold text-white mt-1.5 leading-snug">
+                          {req.title}
+                        </h3>
+                      </div>
+                    </div>
+
+                    <span className="text-xs font-bold px-3 py-1 rounded-xl bg-white/[0.05] border border-white/10 text-zinc-300">
+                      {t.citizen.categories[req.category] || req.category}
+                    </span>
+                  </div>
+
+                  {req.isFlaggedPotentialDuplicate && (
+                    <div className="mb-3 px-3.5 py-2.5 rounded-2xl bg-amber-500/15 border border-amber-500/35 flex flex-wrap items-center justify-between gap-2 text-xs text-amber-200">
+                      <span className="inline-flex items-center gap-1.5 font-bold">
+                        <GitMerge className="w-4 h-4 text-amber-400" />
+                        {t.dashboard.possibleDuplicate} ({Math.round(req.duplicateSimilarityScore * 100)}%)
+                      </span>
+                    </div>
+                  )}
+
+                  {req.isFlaggedSuspicious && (
+                    <div className="mb-3 px-3.5 py-2.5 rounded-2xl bg-rose-500/15 border border-rose-500/40 text-xs text-rose-200 flex items-start gap-2">
+                      <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+                      <div>
+                        <strong className="font-extrabold">AI Anomaly Flagged:</strong>{' '}
+                        {req.suspiciousReason || 'Requires manual verification before resource dispatch.'}
+                      </div>
+                    </div>
+                  )}
+
+                  {isRequestOverdue(req) && (
+                    <div className="mb-3 px-3.5 py-2 rounded-2xl bg-orange-500/15 border border-orange-500/35 text-xs text-orange-200 inline-flex items-center gap-1.5 font-bold">
+                      <Clock className="w-3.5 h-3.5 text-orange-400" />
+                      <span>SLA Overdue (&gt;4h unresolved)</span>
+                    </div>
+                  )}
+
+                  <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed mb-3.5">
+                    {req.description}
+                  </p>
+
+                  {req.aiRecommendations?.[0] && (
+                    <div className="mb-3 p-3 rounded-2xl bg-indigo-500/10 border border-indigo-500/25 text-[11px] text-zinc-200 space-y-1">
+                      <div className="flex items-center justify-between gap-2 font-bold text-indigo-300">
+                        <span className="inline-flex items-center gap-1">
+                          <Sparkles className="w-3.5 h-3.5" />
+                          AI Confidence: {Math.round(Number(req.aiRecommendations[0].confidenceScore || 0) * 100)}%
+                        </span>
+                        <span>Governance: {req.aiRecommendations[0].governanceStatus}</span>
+                      </div>
+                      <p className="text-zinc-300 leading-relaxed">{req.aiRecommendations[0].rationale}</p>
+                    </div>
+                  )}
+
+                  {req.supportingEvidenceFileName && (() => {
+                    const evidencePhoto = resolveEvidencePhoto(
+                      req.supportingEvidenceFileName,
+                      req.category
+                    );
+                    return (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setLightboxPhoto({
+                            src: evidencePhoto.src,
+                            title: req.title,
+                            caption: evidencePhoto.caption,
+                            fileName: req.supportingEvidenceFileName
+                          })
+                        }
+                        className="mb-3.5 w-full text-left p-2.5 rounded-2xl bg-black/25 hover:bg-indigo-500/10 border border-white/[0.08] hover:border-indigo-400/40 transition-all flex items-center gap-3 group/photo"
+                      >
+                        <div className="relative h-20 w-32 sm:h-24 sm:w-40 rounded-xl overflow-hidden shrink-0 border border-white/10">
+                          <img
+                            src={evidencePhoto.src}
+                            alt={evidencePhoto.caption}
+                            className="w-full h-full object-cover group-hover/photo:scale-105 transition-transform duration-500"
+                          />
+                          <div className="keep-white absolute inset-0 bg-slate-950/25 opacity-0 group-hover/photo:opacity-100 transition-opacity flex items-center justify-center">
+                            <ZoomIn className="w-5 h-5 text-white drop-shadow" />
+                          </div>
+                        </div>
+                        <div className="min-w-0 flex-1 space-y-1">
+                          <span className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-wider text-indigo-300">
+                            <Camera className="w-3 h-3" />
+                            <span>Verified Field Photo</span>
+                          </span>
+                          <p className="text-xs font-bold text-white truncate">
+                            {evidencePhoto.caption}
+                          </p>
+                          <p className="text-[11px] font-mono text-zinc-400 truncate">
+                            {req.supportingEvidenceFileName}
+                          </p>
+                          <span className="inline-flex items-center gap-1 text-[11px] font-bold text-cyan-300">
+                            <ZoomIn className="w-3 h-3" />
+                            <span>Click to Enlarge</span>
+                          </span>
+                        </div>
+                      </button>
+                    );
+                  })()}
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 p-3 rounded-2xl bg-black/20 border border-white/[0.06] text-xs">
+                    <div className="flex items-center gap-1.5 text-zinc-300 truncate">
+                      <MapPin className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+                      <span className="truncate">{req.locationAddress}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-zinc-300">
+                      <Users className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                      <span className="font-bold">{req.affectedPeopleCount}</span>
+                      <span className="text-zinc-400">{t.dashboard.peopleAffected}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-zinc-300">
+                      <Package className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                      <span className="font-bold">{req.requestedQuantity}</span>
+                      <span className="text-zinc-400">{t.dashboard.unitsNeeded}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-4 pt-3.5 border-t border-white/[0.08] space-y-3">
+                  <div className="flex flex-wrap items-center gap-2">
+                    {canManageCases && req.status !== 'MergedAsDuplicate' && (
+                      <>
+                        <motion.button
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.97 }}
+                          onClick={() =>
+                            onUpdateRequestStatus(
+                              req.id,
+                              'Verified',
+                              'Case verified by staff after reviewing field details.'
+                            )
+                          }
+                          className="keep-white flex-1 py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center justify-center gap-1.5 transition shadow-sm"
+                        >
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                          <span>{t.dashboard.verifyBtn}</span>
+                        </motion.button>
+
+                        <motion.button
   );
 };
