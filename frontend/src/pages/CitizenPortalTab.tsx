@@ -1052,7 +1052,7 @@ export const CitizenPortalTab: React.FC<CitizenPortalTabProps> = ({
     </>
   );
 
-  const getCitizenTrackingStage = (status: string): {
+  const mapTrackingLegacy = (status: string): {
     step: number;
     summary: string;
     closedSpecial?: boolean;
@@ -1193,12 +1193,12 @@ export const CitizenPortalTab: React.FC<CitizenPortalTabProps> = ({
               <p className="text-xs text-zinc-400 mt-1 leading-relaxed">{req.description}</p>
 
               {(() => {
-                const track = getCitizenTrackingStage(req.status);
+                const track = mapTrackingLegacy(req.status);
                 const stages = ['Submitted', 'AI Triaged', 'Verified', 'Dispatched', 'Delivered'];
                 return (
                   <div className="mt-3.5 p-3 rounded-2xl bg-white/[0.03] border border-white/[0.07] space-y-2">
                     <div className="flex items-center justify-between gap-2 text-[11px]">
-                      <span className="font-bold text-indigo-300">Live Relief Progress</span>
+                      <span className="font-bold text-indigo-300">Request Timeline</span>
                       <span className="text-zinc-400">{track.summary}</span>
                     </div>
                     <div className="grid grid-cols-5 gap-1.5">
@@ -1281,5 +1281,400 @@ export const CitizenPortalTab: React.FC<CitizenPortalTabProps> = ({
               key={n.id}
               className="p-3.5 rounded-2xl bg-white/[0.025] border border-white/[0.08] space-y-1.5"
             >
+              <div className="flex items-center justify-between gap-2">
+                <span className="px-2 py-0.5 rounded-md bg-indigo-500/20 border border-indigo-500/30 text-indigo-300 font-bold text-[10px] uppercase">
+                  {n.channel} • {String(n.languageCode || 'en').toUpperCase()}
+                </span>
+                <span className="text-[11px] font-mono text-emerald-300 font-bold">
+                  {n.deliveryStatus}
+                </span>
+              </div>
+              <p className="font-extrabold text-white text-sm">{n.subject}</p>
+              <p className="text-zinc-300 leading-relaxed">{n.messageBody}</p>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+
+  return (
+    <div className="space-y-6" dir={t.dir}>
+      <div className="rounded-3xl overflow-hidden relative min-h-[168px] sm:min-h-[196px] border border-white/10 shadow-lg group">
+        <img
+          src="/images/hero-relief.jpg"
+          alt="Humanitarian emergency relief teams assisting families"
+          className="absolute inset-0 w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700"
+        />
+        <div className="crisync-photo-scrim-side absolute inset-0" />
+        <div className="keep-white relative z-10 p-5 sm:p-7 flex flex-col justify-between min-h-[168px] sm:min-h-[196px]">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="crisync-photo-pill-emerald inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-extrabold text-white">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-300 animate-pulse" />
+              24/7 Humanitarian Support • You Are Safe Here
+            </span>
+          </div>
+          <div className="mt-4 space-y-2 max-w-2xl">
+            <h2 className="crisync-photo-text text-xl sm:text-2xl font-black text-white tracking-tight leading-snug">
+              {t.citizen.portalTitle}
+            </h2>
+            <p className="crisync-photo-text text-xs sm:text-sm text-zinc-100 leading-relaxed">
+              {t.citizen.portalSubtitle}
+            </p>
+            <div className="flex flex-wrap items-center gap-2 pt-1">
+              <span className="crisync-photo-pill px-2.5 py-1 rounded-lg text-[11px] font-bold text-white">
+                {shelters.length} Safe Shelters Open
+              </span>
+              <span className="crisync-photo-pill px-2.5 py-1 rounded-lg text-[11px] font-bold text-white">
+                6 Languages Supported
+              </span>
+              <span className="crisync-photo-pill px-2.5 py-1 rounded-lg text-[11px] font-bold text-white">
+                Guided Step-by-Step Relief
+              </span>
+              <span className="crisync-photo-pill px-2.5 py-1 rounded-lg text-[11px] font-bold text-white inline-flex items-center gap-1">
+                {isOnline ? <Wifi className="w-3 h-3 text-emerald-300" /> : <WifiOff className="w-3 h-3 text-amber-300" />}
+                {isOnline ? 'Offline-Ready Outbox' : 'Offline Capture Mode'}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {(!isOnline || queuedOfflineRequests.length > 0 || offlineStatusNotice) && (
+        <div
+          className={`rounded-2xl p-4 border text-xs flex flex-wrap items-center justify-between gap-3 ${
+            isOnline
+              ? 'bg-amber-500/10 border-amber-500/30 text-amber-200'
+              : 'bg-rose-500/10 border-rose-500/30 text-rose-200'
+          }`}
+        >
+          <div className="flex items-start gap-2.5 min-w-0">
+            {isOnline ? (
+              <Wifi className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+            ) : (
+              <WifiOff className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+            )}
+            <div className="space-y-0.5">
+              <p className="font-extrabold">
+                {!isOnline
+                  ? 'Offline Mobile Capture Active'
+                  : queuedOfflineRequests.length > 0
+                  ? `${queuedOfflineRequests.length} Offline Request(s) Pending Sync`
+                  : 'Offline Sync Status'}
+              </p>
+              <p className="text-[11px] opacity-90">
+                {offlineStatusNotice ||
+                  (lastSubmitQueuedOffline
+                    ? 'Your request is saved in the device outbox and will upload automatically when internet connectivity resumes.'
+                    : 'Queued emergency requests persist locally without requiring external hardware or IoT connectivity.')}
+              </p>
+            </div>
+          </div>
+          {queuedOfflineRequests.length > 0 && isOnline && (
+            <button
+              type="button"
+              onClick={() => void syncOfflineQueue()}
+              disabled={syncingOfflineQueue}
+              className="keep-white px-3.5 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 disabled:opacity-50 text-white font-bold inline-flex items-center gap-1.5 shadow-sm transition shrink-0"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${syncingOfflineQueue ? 'animate-spin' : ''}`} />
+              <span>{syncingOfflineQueue ? 'Syncing...' : 'Sync Queued Requests'}</span>
+            </button>
+          )}
+        </div>
+      )}
+
+      <div className="bento-glass rounded-3xl p-4 sm:p-5 space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center gap-2 p-1.5 rounded-2xl bg-white/[0.03] border border-white/10">
+            <button
+              type="button"
+              onClick={() => setPortalMode('guided')}
+              className={`px-3.5 py-2 rounded-xl text-xs font-extrabold inline-flex items-center gap-2 transition ${
+                portalMode === 'guided'
+                  ? 'bg-indigo-600 text-white keep-white shadow-sm'
+                  : 'text-zinc-300 hover:text-white hover:bg-white/[0.06]'
+              }`}
+            >
+              <Compass className="w-4 h-4" />
+              <span>Guided Step-by-Step</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setPortalMode('tabs')}
+              className={`px-3.5 py-2 rounded-xl text-xs font-extrabold inline-flex items-center gap-2 transition ${
+                portalMode === 'tabs'
+                  ? 'bg-indigo-600 text-white keep-white shadow-sm'
+                  : 'text-zinc-300 hover:text-white hover:bg-white/[0.06]'
+              }`}
+            >
+              <LayoutGrid className="w-4 h-4" />
+              <span>Quick All-Tabs View</span>
+            </button>
+          </div>
+
+          <div className="mobile-tabs-scroll flex items-center gap-1.5 p-1.5 rounded-2xl bg-indigo-500/10 border border-indigo-500/30 overflow-x-auto max-w-full">
+            <span className="text-[11px] font-bold text-indigo-300 px-2 flex items-center gap-1 shrink-0">
+              <Globe className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">{t.languageLabel}:</span>
+            </span>
+            {LANGUAGE_OPTIONS.map((l) => (
+              <button
+                key={l.code}
+                type="button"
+                onClick={() => handleSelectLanguage(l.code)}
+                className={`shrink-0 px-2.5 py-1 rounded-xl text-xs font-bold transition ${
+                  language === l.code
+                    ? 'bg-indigo-600 text-white keep-white shadow-sm'
+                    : 'text-zinc-300 hover:text-white hover:bg-white/10'
+                }`}
+              >
+                {l.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {portalMode === 'tabs' && (
+          <div className="mobile-tabs-scroll flex items-center gap-1.5 bg-white/[0.03] p-1.5 rounded-2xl border border-white/10 overflow-x-auto">
+            {[
+              { id: 'all', label: t.citizen.tabAll },
+              { id: 'request', label: t.citizen.tabRequest },
+              { id: 'ai-support', label: t.citizen.tabAiSupport },
+              { id: 'track', label: `${t.citizen.tabTrack} (${myRequests.length})` },
+              { id: 'family', label: t.citizen.tabFamily },
+              { id: 'shelters', label: `${t.citizen.tabShelters} (${shelters.length})` }
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveSection(tab.id as any)}
+                className={`shrink-0 px-3 py-2 rounded-xl text-xs font-bold transition ${
+                  activeSection === tab.id
+                    ? 'bg-indigo-600 text-white keep-white shadow-sm'
+                    : 'text-zinc-400 hover:text-white hover:bg-white/[0.05]'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {portalMode === 'guided' ? (
+        <div className="space-y-6">
+          <div className="bento-glass rounded-3xl p-5 sm:p-6 space-y-5 border border-indigo-500/30">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <span className="text-[11px] font-bold uppercase tracking-wider text-indigo-400 block">
+                  {wizardStep === 5 ? 'All Steps Complete' : `Guided Help Wizard • Step ${wizardStep} of 4`}
+                </span>
+                <h1 className="text-lg sm:text-xl font-black text-white tracking-tight mt-0.5">
+                  {wizardStep === 1 && 'Step 1: Confirm Family & Medical Profile'}
+                  {wizardStep === 2 && 'Step 2: Select What Help You Need'}
+                  {wizardStep === 3 && 'Step 3: Add Details, Address & Evidence Photo'}
+                  {wizardStep === 4 && 'Step 4: Review & Submit Emergency Request'}
+                  {wizardStep === 5 && 'Request Submitted • Live Tracking & Safe Shelters'}
+                </h1>
+              </div>
+
+              <div className="flex items-center gap-2.5">
+                <div className="px-4 py-2 rounded-2xl bg-indigo-500/15 border border-indigo-400/35 text-right">
+                  <span className="text-lg sm:text-xl font-black font-mono text-emerald-300 leading-none block">
+                    {completionPercent}% Completed
+                  </span>
+                  <span className="text-[11px] text-zinc-400 font-semibold">
+                    {wizardStep === 5
+                      ? 'Aid request delivered'
+                      : `${100 - completionPercent}% remaining to finish`}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="w-full h-3 rounded-full bg-black/30 border border-white/10 overflow-hidden">
+              <motion.div
+                initial={false}
+                animate={{ width: `${completionPercent}%` }}
+                transition={{ duration: 0.45, ease: 'easeOut' }}
+                className="h-full rounded-full bg-gradient-to-r from-indigo-500 via-cyan-400 to-emerald-400 crisync-shimmer-bar"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
+              {wizardStepsMeta.map((stepMeta) => {
+                const isDone = wizardStep > stepMeta.num || wizardStep === 5;
+                const isCurrent = wizardStep === stepMeta.num;
+                const canJump = stepMeta.num <= wizardStep || isDone;
+                return (
+                  <button
+                    key={stepMeta.num}
+                    type="button"
+                    disabled={!canJump}
+                    onClick={() => {
+                      if (!canJump) return;
+                      setStepError(null);
+                      setWizardStep(stepMeta.num);
+                    }}
+                    className={`p-3 rounded-2xl border text-left transition flex items-center gap-2.5 ${
+                      isCurrent
+                        ? 'bg-indigo-600/20 border-indigo-400 ring-2 ring-indigo-500/30'
+                        : isDone
+                        ? 'bg-emerald-500/10 border-emerald-500/35 hover:border-emerald-400/60'
+                        : 'bg-white/[0.02] border-white/10 opacity-60 cursor-not-allowed'
+                    }`}
+                  >
+                    <div
+                      className={`keep-white w-8 h-8 rounded-xl flex items-center justify-center text-xs font-black shrink-0 ${
+                        isDone
+                          ? 'bg-emerald-600 text-white'
+                          : isCurrent
+                          ? 'bg-indigo-600 text-white'
+                          : 'bg-white/10 text-zinc-300'
+                      }`}
+                    >
+                      {isDone ? <CheckCircle2 className="w-4 h-4" /> : stepMeta.num}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xs font-extrabold text-white truncate">{stepMeta.label}</p>
+                      <p className="text-[11px] text-zinc-400 truncate">{stepMeta.sub}</p>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <AnimatePresence mode="wait">
+            {wizardStep !== 5 ? (
+              <motion.div
+                key={`wizard-step-${wizardStep}`}
+                initial={{ opacity: 0, x: 14 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -14 }}
+                transition={{ duration: 0.22, ease: 'easeOut' }}
+                className="bento-glass rounded-3xl p-5 sm:p-7 space-y-5 border border-white/15"
+              >
+                <div className="p-3.5 rounded-2xl bg-indigo-500/10 border border-indigo-500/30 flex items-start gap-3">
+                  <Lightbulb className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+                  <div className="text-xs text-zinc-200 leading-relaxed">
+                    <strong className="text-white block mb-0.5">
+                      {wizardStep === 1 && 'Why we ask this first'}
+                      {wizardStep === 2 && 'How to choose quickly'}
+                      {wizardStep === 3 && 'Help our dispatch team find you fast'}
+                      {wizardStep === 4 && 'Almost finished! Double-check everything'}
+                    </strong>
+                    {wizardStep === 1 &&
+                      'Confirm your family size and any medical or wheelchair needs so emergency dispatchers prioritize the right supplies automatically.'}
+                    {wizardStep === 2 &&
+                      'Pick a One-Tap Quick Template if one matches your emergency — it fills the next form automatically, or select your category and urgency below.'}
+                    {wizardStep === 3 &&
+                      'Write a clear landmark or street address, add people affected, and attach a quick photo if it is safe to do so.'}
+                    {wizardStep === 4 &&
+                      'Review your details carefully below. Once you click Submit Emergency Request, responders see it immediately with AI priority scoring.'}
+                  </div>
+                </div>
+
+                {stepError && (
+                  <div className="p-3.5 rounded-2xl bg-rose-500/15 border border-rose-500/40 text-xs font-bold text-rose-200 flex items-center gap-2.5">
+                    <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+                    <span>{stepError}</span>
+                  </div>
+                )}
+
+                {wizardStep === 1 && (
+                  <div className="space-y-4">
+                    {household && (
+                      <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-xs font-bold text-emerald-300">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                        <span>Saved family profile loaded — review or update below, then press Next.</span>
+                      </div>
+                    )}
+                    {renderFamilyFormFields()}
+                    <div className="pt-4 border-t border-white/10 flex flex-wrap items-center justify-between gap-3">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setStepError(null);
+                          setWizardStep(2);
+                        }}
+                        className="px-4 py-2.5 rounded-xl bg-white/[0.05] hover:bg-white/10 border border-white/15 text-xs font-bold text-zinc-300 transition"
+                      >
+                        Skip for now (Urgent)
+                      </button>
+                      <motion.button
+                        whileHover={{ scale: 1.01 }}
+                        whileTap={{ scale: 0.98 }}
+                        type="button"
+                        disabled={savingFamily}
+                        onClick={handleStep1SaveAndNext}
+                        className="keep-white px-6 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs sm:text-sm font-extrabold inline-flex items-center gap-2 shadow-md disabled:opacity-60 transition"
+                      >
+                        <span>{savingFamily ? 'Saving Family Info...' : 'Save Family & Next (25%)'}</span>
+                        <ArrowRight className="w-4 h-4" />
+                      </motion.button>
+                    </div>
+                  </div>
+                )}
+
+                {wizardStep === 2 && (
+                  <div className="space-y-4">
+                    {renderHelpTypeFields()}
+                    <div className="pt-4 border-t border-white/10 flex flex-wrap items-center justify-between gap-3">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setStepError(null);
+                          setWizardStep(1);
+                        }}
+                        className="px-4 py-2.5 rounded-xl bg-white/[0.05] hover:bg-white/10 border border-white/15 text-xs font-bold text-zinc-300 inline-flex items-center gap-1.5 transition"
+                      >
+                        <ArrowLeft className="w-4 h-4" />
+                        <span>Back to Step 1</span>
+                      </button>
+                      <motion.button
+                        whileHover={{ scale: 1.01 }}
+                        whileTap={{ scale: 0.98 }}
+                        type="button"
+                        onClick={handleStep2Next}
+                        className="keep-white px-6 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs sm:text-sm font-extrabold inline-flex items-center gap-2 shadow-md transition"
+                      >
+                        <span>Next: Location &amp; Details (50%)</span>
+                        <ArrowRight className="w-4 h-4" />
+                      </motion.button>
+                    </div>
+                  </div>
+                )}
+
+                {wizardStep === 3 && (
+                  <div className="space-y-4">
+                    {renderDetailsLocationFields()}
+                    <div className="pt-4 border-t border-white/10 flex flex-wrap items-center justify-between gap-3">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setStepError(null);
+                          setWizardStep(2);
+                        }}
+                        className="px-4 py-2.5 rounded-xl bg-white/[0.05] hover:bg-white/10 border border-white/15 text-xs font-bold text-zinc-300 inline-flex items-center gap-1.5 transition"
+                      >
+                        <ArrowLeft className="w-4 h-4" />
+                        <span>Back to Step 2</span>
+                      </button>
+                      <motion.button
+                        whileHover={{ scale: 1.01 }}
+                        whileTap={{ scale: 0.98 }}
+                        type="button"
+                        onClick={handleStep3Next}
+                        className="keep-white px-6 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs sm:text-sm font-extrabold inline-flex items-center gap-2 shadow-md transition"
+                      >
+                        <span>Next: Review &amp; Submit (90%)</span>
+                        <ArrowRight className="w-4 h-4" />
+                      </motion.button>
+                    </div>
+                  </div>
+                )}
+
   );
 };
