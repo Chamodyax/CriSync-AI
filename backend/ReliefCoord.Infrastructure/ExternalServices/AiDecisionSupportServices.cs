@@ -338,5 +338,99 @@ public class PrimaryEnsembleAiService : IAiDecisionSupportService
             .ToHashSet();
 
         if (!tokensA.Any() || !tokensB.Any())
+        {
+            return 0.0;
+        }
+
+        int intersection = tokensA.Intersect(tokensB).Count();
+        int union = tokensA.Union(tokensB).Count();
+        return union == 0 ? 0.0 : (double)intersection / union;
+    }
+}
+
+public class FallbackHeuristicAiService : IAiDecisionSupportService
+{
+    private readonly PrimaryEnsembleAiService _innerRuleEngine;
+
+    public FallbackHeuristicAiService(IMappingProviderService mappingService)
+    {
+        _innerRuleEngine = new PrimaryEnsembleAiService(mappingService);
+    }
+
+    public string ProviderName => "ResilientLocalHeuristicFallback-v1.0";
+
+    public async Task<AiRequestEvaluationResult> EvaluateAssistanceRequestAsync(
+        AssistanceRequest request,
+        IReadOnlyList<AssistanceRequest> existingOpenRequests,
+        CancellationToken cancellationToken = default)
+    {
+        var baseEval = await _innerRuleEngine.EvaluateAssistanceRequestAsync(request, existingOpenRequests, cancellationToken);
+        return baseEval with
+        {
+            ConfidenceScore = 0.74,
+            Rationale = $"[FALLBACK MODE ACTIVE - External AI Service Unreachable] Deterministic rule evaluation completed. {baseEval.Rationale}",
+            ProviderUsed = ProviderName
+        };
+    }
+
+    public Task<IReadOnlyList<AiResourceCandidateDto>> RecommendResourcesForRequestAsync(
+        AssistanceRequest request,
+        IReadOnlyList<ResourceItem> availableResources,
+        CancellationToken cancellationToken = default)
+        => _innerRuleEngine.RecommendResourcesForRequestAsync(request, availableResources, cancellationToken);
+
+    public Task<IReadOnlyList<AiShelterCandidateDto>> RecommendSheltersForRequestAsync(
+        AssistanceRequest request,
+        IReadOnlyList<Shelter> shelters,
+        CancellationToken cancellationToken = default)
+        => _innerRuleEngine.RecommendSheltersForRequestAsync(request, shelters, cancellationToken);
+
+    public Task<IReadOnlyList<AiVolunteerCandidateDto>> RecommendVolunteersForTaskAsync(
+        string requiredSkill,
+        double targetLat,
+        double targetLon,
+        IReadOnlyList<VolunteerProfile> volunteers,
+        CancellationToken cancellationToken = default)
+        => _innerRuleEngine.RecommendVolunteersForTaskAsync(requiredSkill, targetLat, targetLon, volunteers, cancellationToken);
+
+    public Task<IReadOnlyList<DemandForecastItemDto>> ForecastResourceDemandAsync(
+        Guid crisisEventId,
+        IReadOnlyList<AssistanceRequest> recentRequests,
+        IReadOnlyList<ResourceItem> currentInventory,
+        CancellationToken cancellationToken = default)
+        => _innerRuleEngine.ForecastResourceDemandAsync(crisisEventId, recentRequests, currentInventory, cancellationToken);
+
+    public async Task<MultilingualBriefingDto> GenerateMultilingualBriefingAsync(
+        CrisisEvent crisis,
+        int openRequestsCount,
+        int criticalCount,
+        string languageCode,
+        CancellationToken cancellationToken = default)
+    {
+        var briefing = await _innerRuleEngine.GenerateMultilingualBriefingAsync(crisis, openRequestsCount, criticalCount, languageCode, cancellationToken);
+        return briefing with { GeneratedByProvider = ProviderName };
+    }
+}
+
+public class AiProviderFactory : IAiProviderFactory
+{
+    private readonly IServiceResilienceMonitor _resilienceMonitor;
+    private readonly IMappingProviderService _mappingService;
+
+    public AiProviderFactory(IServiceResilienceMonitor resilienceMonitor, IMappingProviderService mappingService)
+    {
+        _resilienceMonitor = resilienceMonitor;
+        _mappingService = mappingService;
+    }
+
+    public IAiDecisionSupportService CreateProvider(bool forceFallback = false)
+    {
+        if (forceFallback || _resilienceMonitor.SimulateExternalAiFailure)
+        {
+            _resilienceMonitor.RecordTrip("AI");
+            return new FallbackHeuristicAiService(_mappingService);
+        }
+
+        return new PrimaryEnsembleAiService(_mappingService);
     }
 }
