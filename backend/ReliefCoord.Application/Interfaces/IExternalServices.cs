@@ -70,7 +70,7 @@ public interface IMappingProviderService
     double CalculateDistanceKm(double lat1, double lon1, double lat2, double lon2);
     Task<RouteCalculationDto> CalculateRouteAsync(double originLat, double originLon, double destLat, double destLon, CancellationToken cancellationToken = default);
     Task<GeocodingResultDto> GeocodeAddressAsync(string address, CancellationToken cancellationToken = default);
-    
+    Task<GeocodingResultDto> ReverseGeocodeAsync(double latitude, double longitude, CancellationToken cancellationToken = default);
 }
 
 public interface IDomainEventPublisher
@@ -104,7 +104,7 @@ public interface IServiceResilienceMonitor
     ResilienceStatusDto GetStatus();
 }
 
-public interface IUnusedGovernanceStub
+public interface IGovernanceConfigProvider
 {
     SystemGovernanceConfigDto GetConfig();
     void UpdateConfig(SystemGovernanceConfigDto config);
