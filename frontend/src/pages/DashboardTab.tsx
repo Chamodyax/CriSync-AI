@@ -1266,11 +1266,265 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                   / {metrics.totalRequests}
                 </span>
               </div>
-              <TelemetrySparkline
+              <div className="h-4" data-spark-stub
                 color="rose"
                 points={[
                   Math.max(1, metrics.unresolvedCasesCount - 2),
                   Math.max(2, metrics.unresolvedCasesCount - 1),
                   Math.max(2, metrics.unresolvedCasesCount + 1),
+                  Math.max(1, metrics.criticalOpenCasesCount + 1),
+                  Math.max(1, metrics.unresolvedCasesCount)
+                ]}
+              />
+              <div className="flex items-center gap-1.5 text-xs font-bold text-rose-400 mt-1.5">
+                <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping" />
+                <span>{metrics.criticalOpenCasesCount} {t.dashboard.criticalUrgency}</span>
+              </div>
+            </motion.div>
+
+            <motion.div
+              whileHover={{ y: -3, scale: 1.01 }}
+              className="bento-glass bento-glass-hover rounded-3xl p-4 flex flex-col justify-between relative overflow-hidden"
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-zinc-400">
+                  {t.dashboard.avgResponseTime}
+                </span>
+                <Clock className="w-4 h-4 text-indigo-400" />
+              </div>
+              <div className="my-2">
+                <span className="text-3xl font-extrabold font-mono text-indigo-300">
+                  <AnimatedCounter value={metrics.averageResponseTimeMinutes} />
+                </span>
+                <span className="text-xs font-semibold text-zinc-400 ml-1">min</span>
+              </div>
+              <div className="h-4" data-spark-stub
+                color="indigo"
+                points={[
+                  Math.max(8, Math.round(metrics.averageResponseTimeMinutes + 12)),
+                  Math.max(6, Math.round(metrics.averageResponseTimeMinutes + 7)),
+                  Math.max(5, Math.round(metrics.averageResponseTimeMinutes + 9)),
+                  Math.max(4, Math.round(metrics.averageResponseTimeMinutes + 2)),
+                  Math.max(3, Math.round(metrics.averageResponseTimeMinutes))
+                ]}
+              />
+              <p className="text-xs text-emerald-400 font-semibold mt-1.5">
+                {t.dashboard.underGoal}
+              </p>
+            </motion.div>
+
+            <motion.div
+              whileHover={{ y: -3, scale: 1.01 }}
+              className="bento-glass bento-glass-hover rounded-3xl p-4 flex flex-col justify-between relative overflow-hidden"
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-zinc-400">
+                  {t.dashboard.suppliesDispatched}
+                </span>
+                <PackageCheck className="w-4 h-4 text-emerald-400" />
+              </div>
+              <div className="my-2">
+                <span className="text-3xl font-extrabold font-mono text-emerald-300">
+                  <AnimatedCounter value={metrics.resourceUtilisationPercentage} />%
+                </span>
+              </div>
+              <div className="h-4" data-spark-stub
+                color="emerald"
+                points={[
+                  Math.max(5, Math.round(metrics.resourceUtilisationPercentage * 0.45)),
+                  Math.max(8, Math.round(metrics.resourceUtilisationPercentage * 0.62)),
+                  Math.max(10, Math.round(metrics.resourceUtilisationPercentage * 0.78)),
+                  Math.max(12, Math.round(metrics.resourceUtilisationPercentage * 0.9)),
+                  Math.max(12, Math.round(metrics.resourceUtilisationPercentage))
+                ]}
+              />
+              <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden mt-1.5">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${Math.min(100, metrics.resourceUtilisationPercentage)}%` }}
+                  transition={{ duration: 0.7, ease: 'easeOut' }}
+                  className="h-full bg-emerald-400 rounded-full crisync-shimmer-bar"
+                />
+              </div>
+            </motion.div>
+
+            <motion.div
+              whileHover={{ y: -3, scale: 1.01 }}
+              className="bento-glass bento-glass-hover rounded-3xl p-4 flex flex-col justify-between relative overflow-hidden"
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-zinc-400">
+                  {t.dashboard.shelterCapacity}
+                </span>
+                <Home className="w-4 h-4 text-amber-400" />
+              </div>
+              <div className="my-2">
+                <span className="text-3xl font-extrabold font-mono text-amber-300">
+                  <AnimatedCounter value={metrics.shelterOccupancyPercentage} />%
+                </span>
+              </div>
+              <div className="h-4" data-spark-stub
+                color="amber"
+                points={[
+                  Math.max(10, Math.round(metrics.shelterOccupancyPercentage * 0.55)),
+                  Math.max(12, Math.round(metrics.shelterOccupancyPercentage * 0.7)),
+                  Math.max(14, Math.round(metrics.shelterOccupancyPercentage * 0.85)),
+                  Math.max(15, Math.round(metrics.shelterOccupancyPercentage * 0.94)),
+                  Math.max(15, Math.round(metrics.shelterOccupancyPercentage))
+                ]}
+              />
+              <p className="text-xs text-zinc-400 mt-1.5">
+                {metrics.totalShelterOccupied} / {metrics.totalShelterCapacity} {t.dashboard.spacesFilled}
+              </p>
+            </motion.div>
+
+            <motion.div
+              whileHover={{ y: -3, scale: 1.01 }}
+              className="bento-glass bento-glass-hover rounded-3xl p-4 flex flex-col justify-between relative overflow-hidden"
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-zinc-400">
+                  {t.dashboard.staffAiReviews}
+                </span>
+                <Sparkles className="w-4 h-4 text-purple-400" />
+              </div>
+              <div className="my-2">
+                <span className="text-3xl font-extrabold font-mono text-purple-300">
+                  <AnimatedCounter value={metrics.aiOverrideFrequencyPercentage} />%
+                </span>
+              </div>
+              <div className="h-4" data-spark-stub
+                color="purple"
+                points={[
+                  Math.max(5, Math.round(metrics.aiOverrideFrequencyPercentage * 0.5)),
+                  Math.max(8, Math.round(metrics.aiOverrideFrequencyPercentage * 0.8)),
+                  Math.max(10, Math.round(metrics.aiOverrideFrequencyPercentage * 1.1)),
+                  Math.max(8, Math.round(metrics.aiOverrideFrequencyPercentage * 0.95)),
+                  Math.max(8, Math.round(metrics.aiOverrideFrequencyPercentage))
+                ]}
+              />
+              <p className="text-xs text-zinc-400 mt-1.5">
+                {metrics.reviewedAiRecommendations} {t.dashboard.aiScoresReviewed}
+              </p>
+            </motion.div>
+
+            <motion.div
+              whileHover={{ y: -3, scale: 1.01 }}
+              className="bento-glass bento-glass-hover rounded-3xl p-4 flex flex-col justify-between relative overflow-hidden"
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-zinc-400">
+                  {t.dashboard.duplicatesCaught}
+                </span>
+                <GitMerge className="w-4 h-4 text-cyan-400" />
+              </div>
+              <div className="my-2">
+                <span className="text-3xl font-extrabold font-mono text-cyan-300">
+                  <AnimatedCounter value={metrics.potentialDuplicatesFlaggedCount} />
+                </span>
+              </div>
+              <div className="h-4" data-spark-stub
+                color="cyan"
+                points={[
+                  1,
+                  Math.max(1, metrics.potentialDuplicatesFlaggedCount),
+                  Math.max(2, metrics.potentialDuplicatesFlaggedCount + 1),
+                  Math.max(1, metrics.duplicateNotificationsPreventedCount),
+                  Math.max(1, metrics.potentialDuplicatesFlaggedCount + 2)
+                ]}
+              />
+              <p className="text-xs text-zinc-400 mt-1.5">
+                {metrics.duplicateNotificationsPreventedCount} {t.dashboard.duplicateSmsBlocked}
+              </p>
+            </motion.div>
+          </div>
+        )}
+      </div>
+
+      {metrics && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+          <div className="bento-glass rounded-3xl p-5 space-y-3">
+            <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-white/[0.08]">
+              <h3 className="text-sm font-extrabold text-white flex items-center gap-2">
+                <BarChart3 className="w-4 h-4 text-indigo-400" />
+                Requests by Aid Category
+              </h3>
+              <span className="text-[11px] font-mono text-zinc-400">{metrics.totalRequests} total</span>
+            </div>
+            <div className="space-y-2.5 text-xs">
+              {Object.entries(metrics.requestsByCategory || {}).length === 0 ? (
+                <p className="text-zinc-400">No request categories recorded yet.</p>
+              ) : (
+                Object.entries(metrics.requestsByCategory || {}).map(([cat, count]) => {
+                  const pct = Math.round((Number(count) / Math.max(1, metrics.totalRequests)) * 100);
+                  return (
+                    <div key={cat} className="space-y-1">
+                      <div className="flex justify-between font-semibold">
+                        <span className="text-zinc-200">{t.citizen.categories[cat] || cat}</span>
+                        <span className="font-mono text-indigo-300">{String(count)} ({pct}%)</span>
+                      </div>
+                      <div className="w-full h-2 rounded-full bg-white/10 overflow-hidden">
+                        <div className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-cyan-400" style={{ width: `${Math.max(4, pct)}%` }} />
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+
+          <div className="bento-glass rounded-3xl p-5 space-y-3">
+            <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-white/[0.08]">
+              <h3 className="text-sm font-extrabold text-white flex items-center gap-2">
+                <BarChart3 className="w-4 h-4 text-emerald-400" />
+                Case Workflow Status Breakdown
+              </h3>
+              <span className="text-[11px] font-mono text-amber-300">{overdueCount} overdue (&gt;4h)</span>
+            </div>
+            <div className="space-y-2.5 text-xs">
+              {Object.entries(metrics.requestsByStatus || {}).length === 0 ? (
+                <p className="text-zinc-400">No workflow status metrics recorded yet.</p>
+              ) : (
+                Object.entries(metrics.requestsByStatus || {}).map(([st, count]) => {
+                  const pct = Math.round((Number(count) / Math.max(1, metrics.totalRequests)) * 100);
+                  return (
+                    <div key={st} className="space-y-1">
+                      <div className="flex justify-between font-semibold">
+                        <span className="text-zinc-200">{st}</span>
+                        <span className="font-mono text-emerald-300">{String(count)} ({pct}%)</span>
+                      </div>
+                      <div className="w-full h-2 rounded-full bg-white/10 overflow-hidden">
+                        <div className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-400" style={{ width: `${Math.max(4, pct)}%` }} />
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="bento-glass rounded-3xl p-5 sm:p-6 space-y-5">
+        <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-white/[0.08]">
+          <div>
+            <div className="flex items-center gap-2">
+              <Radio className="w-4 h-4 text-indigo-400" />
+              <span className="text-xs font-bold uppercase tracking-wider text-indigo-400">
+                {t.dashboard.queueBadge}
+              </span>
+            </div>
+            <h2 className="text-lg sm:text-xl font-extrabold text-white tracking-tight mt-0.5">
+              {canManageCases
+                ? t.dashboard.queueTitleManage
+                : t.dashboard.queueTitleView}
+            </h2>
+            <p className="text-xs text-zinc-400 mt-0.5">
+              {t.dashboard.queueSub}
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2.5 w-full lg:w-auto">
+            <div className="relative flex-1 sm:w-64">
   );
 };
