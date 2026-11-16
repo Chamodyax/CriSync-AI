@@ -938,5 +938,339 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                       />
                       <input
                         type="number"
+                        min={0}
+                        value={zoneForm.estimatedAffectedPopulation}
+                        onChange={(e) => setZoneForm({ ...zoneForm, estimatedAffectedPopulation: Number(e.target.value) })}
+                        className="rsvp-input font-mono"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block font-bold text-zinc-300 mb-1">Risk Level &amp; Assigned Agency</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <select
+                        value={zoneForm.riskLevel}
+                        onChange={(e) => setZoneForm({ ...zoneForm, riskLevel: e.target.value })}
+                        className="rsvp-input"
+                      >
+                        <option value="Moderate">Moderate</option>
+                        <option value="High">High</option>
+                        <option value="Critical">Critical</option>
+                      </select>
+                      <select
+                        value={zoneForm.assignedOrganisationId}
+                        onChange={(e) => setZoneForm({ ...zoneForm, assignedOrganisationId: e.target.value })}
+                        className="rsvp-input"
+                      >
+                        <option value="">Any Agency</option>
+                        {organisations.map((org) => (
+                          <option key={org.id} value={org.id}>{org.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                  <div className="md:col-span-3 flex justify-end">
+                    <button
+                      type="submit"
+                      disabled={commandSubmitting}
+                      className="keep-white px-5 py-2.5 rounded-2xl bg-cyan-600 hover:bg-cyan-500 text-white font-extrabold flex items-center gap-2 shadow-sm disabled:opacity-50"
+                    >
+                      <MapPin className="w-4 h-4" />
+                      <span>{commandSubmitting ? 'Saving...' : 'Create Operational Zone'}</span>
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <form onSubmit={handleRegisterCrisis} className="grid grid-cols-1 md:grid-cols-3 gap-3.5 text-xs">
+                  <div className="md:col-span-2">
+                    <label className="block font-bold text-zinc-300 mb-1">Crisis Title</label>
+                    <input
+                      type="text"
+                      required
+                      value={crisisTitle}
+                      onChange={(e) => setCrisisTitle(e.target.value)}
+                      placeholder="Official disaster or emergency operation name"
+                      className="rsvp-input"
+                    />
+                    <p className="text-[11px] text-zinc-400/75 opacity-75 mt-1 font-normal">
+                      Example: Western Province Monsoon Flood Response 2026
+                    </p>
+                  </div>
+                  <div>
+                    <label className="block font-bold text-zinc-300 mb-1">Crisis Type</label>
+                    <select
+                      value={crisisType}
+                      onChange={(e) => setCrisisType(e.target.value)}
+                      className="rsvp-input"
+                    >
+                      <option value="Flood">Flood</option>
+                      <option value="Landslide">Landslide</option>
+                      <option value="Earthquake">Earthquake</option>
+                      <option value="SevereStorm">Severe Storm</option>
+                      <option value="DiseaseOutbreak">Disease Outbreak</option>
+                      <option value="MassDisplacement">Mass Displacement</option>
+                      <option value="Other">Other Emergency</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block font-bold text-zinc-300 mb-1">Severity Rating</label>
+                    <select
+                      value={crisisSeverity}
+                      onChange={(e) => setCrisisSeverity(e.target.value)}
+                      className="rsvp-input"
+                    >
+                      <option value="Low">Low</option>
+                      <option value="Moderate">Moderate</option>
+                      <option value="High">High</option>
+                      <option value="Critical">Critical</option>
+                      <option value="Catastrophic">Catastrophic</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block font-bold text-zinc-300 mb-1">Country</label>
+                    <input
+                      type="text"
+                      required
+                      value={crisisCountry}
+                      onChange={(e) => setCrisisCountry(e.target.value)}
+                      placeholder="Country name"
+                      className="rsvp-input"
+                    />
+                    <p className="text-[11px] text-zinc-400/75 opacity-75 mt-1 font-normal">
+                      Example: Sri Lanka
+                    </p>
+                  </div>
+                  <div>
+                    <label className="block font-bold text-zinc-300 mb-1">Affected Region / Districts</label>
+                    <input
+                      type="text"
+                      required
+                      value={crisisRegion}
+                      onChange={(e) => setCrisisRegion(e.target.value)}
+                      placeholder="Districts, provinces, or river basin"
+                      className="rsvp-input"
+                    />
+                    <p className="text-[11px] text-zinc-400/75 opacity-75 mt-1 font-normal">
+                      Example: Colombo & Gampaha Districts
+                    </p>
+                  </div>
+                  <div>
+                    <label className="block font-bold text-zinc-300 mb-1">Center Latitude</label>
+                    <input
+                      type="number"
+                      step="0.0001"
+                      value={crisisLat}
+                      onChange={(e) => setCrisisLat(Number(e.target.value))}
+                      className="rsvp-input font-mono"
+                    />
+                    <p className="text-[11px] text-zinc-400/75 opacity-75 mt-1 font-normal">
+                      Example: 6.9271 (Decimal GPS Latitude)
+                    </p>
+                  </div>
+                  <div>
+                    <label className="block font-bold text-zinc-300 mb-1">Center Longitude</label>
+                    <input
+                      type="number"
+                      step="0.0001"
+                      value={crisisLon}
+                      onChange={(e) => setCrisisLon(Number(e.target.value))}
+                      className="rsvp-input font-mono"
+                    />
+                    <p className="text-[11px] text-zinc-400/75 opacity-75 mt-1 font-normal">
+                      Example: 79.8612 (Decimal GPS Longitude)
+                    </p>
+                  </div>
+                  <div>
+                    <label className="block font-bold text-zinc-300 mb-1">Impact Radius (km)</label>
+                    <input
+                      type="number"
+                      min={1}
+                      value={crisisRadiusKm}
+                      onChange={(e) => setCrisisRadiusKm(Number(e.target.value))}
+                      className="rsvp-input font-mono"
+                    />
+                    <p className="text-[11px] text-zinc-400/75 opacity-75 mt-1 font-normal">
+                      Example: 15 km emergency perimeter
+                    </p>
+                  </div>
+                  <div className="md:col-span-3">
+                    <label className="block font-bold text-zinc-300 mb-1">Operational Situation Summary</label>
+                    <textarea
+                      required
+                      rows={2}
+                      value={crisisDescription}
+                      onChange={(e) => setCrisisDescription(e.target.value)}
+                      placeholder="Summarize initial field assessment and priority response needs"
+                      className="rsvp-input resize-none"
+                    />
+                    <p className="text-[11px] text-zinc-400/75 opacity-75 mt-1 font-normal">
+                      Example: Heavy rainfall caused localized flash flooding; rescue boats, clean water, and emergency medical packs needed.
+                    </p>
+                  </div>
+                  <div className="md:col-span-3 flex justify-end">
+                    <motion.button
+                      whileTap={{ scale: 0.98 }}
+                      type="submit"
+                      disabled={commandSubmitting}
+                      className="keep-white px-5 py-2.5 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold flex items-center gap-2 shadow-sm disabled:opacity-50"
+                    >
+                      <PlusCircle className="w-4 h-4" />
+                      <span>{commandSubmitting ? 'Declaring...' : 'Declare & Activate Crisis Event'}</span>
+                    </motion.button>
+                  </div>
+                </form>
+              )}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      )}
+
+      <div className="bento-glass rounded-2xl px-4 py-2.5 flex flex-wrap items-center justify-between gap-3 border border-indigo-500/25 text-xs">
+        <div className="flex items-center gap-2.5">
+          <span className="inline-flex items-center gap-1.5 font-extrabold uppercase tracking-wider text-emerald-300">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+            Live Command Telemetry
+          </span>
+          <span className="text-zinc-400 hidden sm:inline">•</span>
+          <span className="text-zinc-300 font-semibold hidden sm:inline">
+            Real-Time Crisis &amp; Logistics Synchronization
+          </span>
+        </div>
+        <div className="flex flex-wrap items-center gap-3 font-mono text-[11px] font-bold">
+          <span className="px-2.5 py-1 rounded-lg bg-indigo-500/15 border border-indigo-500/30 text-indigo-300">
+            {crises.length} Active Crises
+          </span>
+          <span className="px-2.5 py-1 rounded-lg bg-rose-500/15 border border-rose-500/30 text-rose-300">
+            {metrics ? metrics.criticalOpenCasesCount : 0} Critical Alerts
+          </span>
+          <span className="px-2.5 py-1 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-300">
+            {metrics ? `${metrics.totalShelterCapacity} Shelter Beds` : `${requests.length} Cases`}
+          </span>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="lg:col-span-6 bento-glass rounded-3xl p-5 sm:p-6 relative overflow-hidden flex flex-col justify-between group"
+        >
+          <div>
+            <div className="-mx-5 -mt-5 sm:-mx-6 sm:-mt-6 mb-4 h-36 sm:h-44 relative overflow-hidden">
+              <img
+                src="/images/hero-relief.jpg"
+                alt="Active humanitarian emergency field operation"
+                className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700"
+              />
+              <div className="crisync-photo-scrim absolute inset-0" />
+              <div className="keep-white absolute bottom-3 left-4 right-4 flex flex-wrap items-center justify-between gap-2">
+                <span className="crisync-photo-pill-rose inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-extrabold text-white">
+                  <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
+                  Live Field Operation • Active Response
+                </span>
+                {crises[0] && (
+                  <span className="crisync-photo-pill px-2.5 py-1 rounded-lg text-[10px] font-bold text-white">
+                    {crises[0].region || crises[0].country || 'Sri Lanka'} • {crises[0].severity || 'Active'}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-4 pb-3.5 border-b border-white/[0.08]">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-2xl bg-indigo-500/20 border border-indigo-500/40 text-indigo-300 flex items-center justify-center shrink-0">
+                  <Globe className="w-4 h-4" />
+                </div>
+                <div>
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-indigo-400 block">
+                    {t.dashboard.briefingBadge}
+                  </span>
+                  <h2 className="text-sm sm:text-base font-extrabold text-white">
+                    {t.dashboard.briefingHeading} ({briefing?.languageName || activeLangOption.fullName})
+                  </h2>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-1 p-1 rounded-xl bg-black/30 border border-white/[0.08]">
+                {LANGUAGE_OPTIONS.map((langOption) => {
+                  const isSelected = briefingLang === langOption.code;
+                  return (
+                    <button
+                      key={langOption.code}
+                      type="button"
+                      onClick={() => onChangeBriefingLanguage(langOption.code)}
+                      className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
+                        isSelected
+                          ? 'bg-indigo-600 text-white keep-white shadow-sm'
+                          : 'text-zinc-400 hover:text-white hover:bg-white/5'
+                      }`}
+                    >
+                      {langOption.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {briefing || crises[0] ? (
+              <>
+                <h3 className="text-base sm:text-lg font-extrabold text-white tracking-tight leading-snug">
+                  {briefing?.headline || crises[0]?.title}
+                </h3>
+                <p className="text-xs sm:text-sm text-zinc-300 mt-2 leading-relaxed">
+                  {briefing?.operationalSummary || crises[0]?.description}
+                </p>
+              </>
+            ) : (
+              <div className="py-4 text-xs text-zinc-400">
+                <h3 className="text-base font-extrabold text-zinc-200">
+                  No Active Crisis Briefing Yet
+                </h3>
+                <p className="mt-1.5 leading-relaxed">
+                  Declare a new Crisis Event in Coordinator Command Actions to generate live multilingual operational briefings.
+                </p>
+              </div>
+            )}
+          </div>
+
+          <div className="mt-4 p-3.5 rounded-2xl bg-indigo-500/10 border border-indigo-500/30 flex items-start gap-3">
+            <ShieldAlert className="w-4 h-4 text-indigo-400 shrink-0 mt-0.5" />
+            <p className="text-xs text-zinc-200 leading-relaxed">
+              <strong className="uppercase text-[10px] tracking-wider bg-indigo-600 text-white keep-white px-2 py-0.5 rounded-md mr-2">
+                {t.dashboard.safetyAdviceBadge}
+              </strong>
+              {briefing?.citizenSafetyAdvisory || 'Safety advisories appear automatically once an active crisis and public alerts are published.'}
+            </p>
+          </div>
+        </motion.div>
+
+        {metrics && (
+          <div className="lg:col-span-6 grid grid-cols-2 sm:grid-cols-3 gap-3.5">
+            <motion.div
+              whileHover={{ y: -3, scale: 1.01 }}
+              className="bento-glass bento-glass-hover rounded-3xl p-4 flex flex-col justify-between relative overflow-hidden"
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-zinc-400">
+                  {t.dashboard.openRequests}
+                </span>
+                <AlertOctagon className="w-4 h-4 text-rose-400" />
+              </div>
+              <div className="my-2">
+                <span className="text-3xl font-extrabold font-mono text-white">
+                  <AnimatedCounter value={metrics.unresolvedCasesCount} />
+                </span>
+                <span className="text-xs font-mono text-zinc-500 ml-1">
+                  / {metrics.totalRequests}
+                </span>
+              </div>
+              <TelemetrySparkline
+                color="rose"
+                points={[
+                  Math.max(1, metrics.unresolvedCasesCount - 2),
+                  Math.max(2, metrics.unresolvedCasesCount - 1),
+                  Math.max(2, metrics.unresolvedCasesCount + 1),
   );
 };
