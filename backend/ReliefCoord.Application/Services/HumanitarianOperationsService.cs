@@ -417,4 +417,239 @@ public class HumanitarianOperationsService
                         request.Longitude,
                         cancellationToken);
 
+                    await _unitOfWork.DispatchRecords.AddAsync(new DispatchRecord
+                    {
+                        ResourceAllocationId = allocationEntity.Id,
+                        VehicleRegistration = $"UN-RELIEF-{Random.Shared.Next(100, 999)}",
+                        DriverName = "Logistics Rapid Response Unit",
+                        RouteSummary = route.RouteSummary,
+                        DistanceKm = route.DistanceKm,
+                        EstimatedTravelMinutes = route.EstimatedMinutes,
+                        DispatchStatus = "InTransit"
+                    }, cancellationToken);
+
+                    var previousStatus = request.Status;
+                    request.Status = item.IsPartialShortage ? RequestStatus.InProgress : RequestStatus.Fulfilled;
+                    request.UpdatedAtUtc = DateTime.UtcNow;
+                    await _unitOfWork.AssistanceRequests.UpdateAsync(request, cancellationToken);
+
+                    await _unitOfWork.RequestHistories.AddAsync(new RequestHistory
+                    {
+                        AssistanceRequestId = request.Id,
+                        PreviousStatus = previousStatus,
+                        NewStatus = request.Status,
+                        ActionDescription = $"Allocated {item.AllocatedQuantity}/{item.RequestedQuantity} units of {item.SelectedResourceName} from {item.WarehouseName} using {plan.StrategyUsed} strategy. {item.AlternativeRecommendation}",
+                        ChangedByUserId = actorUserId,
+                        ChangedByUserName = actorName,
+                        ChangedByRole = actorRole.ToString()
+                    }, cancellationToken);
+
+                    await _eventPublisher.PublishAsync(new ResourceAllocatedEvent(
+                        Guid.NewGuid(),
+                        DateTime.UtcNow,
+                        allocationEntity.Id,
+                        request.Id,
+                        request.CitizenUserId,
+                        item.SelectedResourceName,
+                        item.AllocatedQuantity,
+                        item.IsPartialShortage
+                    ), cancellationToken);
+                }
+
+                if (item.IsPartialShortage)
+                {
+                    var req = competingRequests.First(r => r.Id == item.AssistanceRequestId);
+                    await _unitOfWork.PartnerAidRequests.AddAsync(new PartnerAidRequest
+                    {
+                        RequestingOrganisationId = req.AssignedOrganisationId ?? Guid.Empty,
+                        NeededCategory = req.Category,
+                        ResourceName = item.SelectedResourceName,
+                        QuantityNeeded = item.RequestedQuantity - item.AllocatedQuantity,
+                        Justification = $"Automatic shortage escalation for Request {req.ReferenceCode}: {item.AlternativeRecommendation}",
+                        Status = "OpenPartnerEscalation"
+                    }, cancellationToken);
+                }
+            }
+
+            await _unitOfWork.AuditEvents.AddAsync(new AuditEventRecord
+            {
+                EventCategory = "ResourceLogistics",
+                ActionName = "MultiConstraintResourceAllocation",
+                EntityType = nameof(ResourceAllocation),
+                EntityId = string.Join(",", requestIds),
+                ActorUserId = actorUserId,
+                ActorUserName = actorName,
+                ActorRole = actorRole.ToString(),
+                DetailsJson = JsonSerializer.Serialize(new
+                {
+                    plan.StrategyUsed,
+                    plan.ShortageEncountered,
+                    plan.TotalRequestedAcrossCases,
+                    plan.TotalAllocatedAcrossCases,
+                    plan.TotalUnmetShortfall
+                })
+            }, cancellationToken);
+
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+        }, cancellationToken);
+
+        return plan;
+    }
+
+    public async Task<ShelterAllocation> AllocateShelterAsync(
+        Guid actorUserId,
+        string actorName,
+        UserRole actorRole,
+        AllocateShelterRequestDto dto,
+        CancellationToken cancellationToken = default)
+    {
+        if (actorRole != UserRole.ShelterAdmin &&
+            actorRole != UserRole.EmergencyCoordinator &&
+            actorRole != UserRole.CaseManager &&
+            actorRole != UserRole.OrganizationAdmin &&
+            actorRole != UserRole.SystemAdmin)
+        {
+            throw new UnauthorizedAccessException("Shelter allocation requires ShelterAdmin, CaseManager, EmergencyCoordinator, OrganizationAdmin, or SystemAdmin role.");
+        }
+
+        if (dto.MembersCount <= 0)
+        {
+            throw new ArgumentException("Allocated household member count must be at least 1.");
+        }
+
+        ShelterAllocation? allocation = null;
+        string allocatedShelterName = string.Empty;
+
+        
+        try
+        {
+            await _unitOfWork.ExecuteInTransactionAsync(async () =>
+            {
+                var shelter = await _unitOfWork.Shelters.GetByIdAsync(dto.ShelterId, cancellationToken)
+                    ?? throw new KeyNotFoundException("Shelter not found.");
+
+                int availableSpots = shelter.TotalCapacity - shelter.CurrentOccupancy;
+                if (dto.MembersCount > availableSpots)
+                {
+                    throw new InvalidOperationException($"Shelter over-allocation prevented: '{shelter.Name}' only has {availableSpots} available spaces, but {dto.MembersCount} spaces were requested.");
+                }
+
+                if (dto.RequiresAccessibility && !shelter.IsWheelchairAccessible)
+                {
+                    throw new InvalidOperationException($"Suitability constraint failed: '{shelter.Name}' does not have wheelchair accessibility required by this household.");
+                }
+
+                allocation = new ShelterAllocation
+                {
+                    ShelterId = shelter.Id,
+                    AssistanceRequestId = dto.AssistanceRequestId,
+                    CitizenUserId = dto.CitizenUserId,
+                    HouseholdName = dto.HouseholdName,
+                    AllocatedMembersCount = dto.MembersCount,
+                    RequiresAccessibility = dto.RequiresAccessibility,
+                    AllocationStatus = "CheckedIn",
+                    ApprovedByUserId = actorUserId
+                };
+
+                shelter.CurrentOccupancy += dto.MembersCount;
+                if (shelter.CurrentOccupancy >= shelter.TotalCapacity)
+                {
+                    shelter.Status = "AtFullCapacity";
+                }
+                shelter.UpdatedAtUtc = DateTime.UtcNow;
+                allocatedShelterName = shelter.Name;
+
+                await _unitOfWork.Shelters.UpdateAsync(shelter, cancellationToken);
+                await _unitOfWork.ShelterAllocations.AddAsync(allocation, cancellationToken);
+
+                await _unitOfWork.AuditEvents.AddAsync(new AuditEventRecord
+                {
+                    EventCategory = "ShelterManagement",
+                    ActionName = "ShelterHouseholdAllocated",
+                    EntityType = nameof(Shelter),
+                    EntityId = shelter.Id.ToString(),
+                    ActorUserId = actorUserId,
+                    ActorUserName = actorName,
+                    ActorRole = actorRole.ToString(),
+                    DetailsJson = JsonSerializer.Serialize(new
+                    {
+                        shelter.Name,
+                        dto.HouseholdName,
+                        dto.MembersCount,
+                        NewOccupancy = shelter.CurrentOccupancy,
+                        shelter.TotalCapacity
+                    })
+                }, cancellationToken);
+
+                await _unitOfWork.SaveChangesAsync(cancellationToken);
+            }, cancellationToken);
+        }
+        finally
+        {
+            ShelterAllocationLock.Release();
+        }
+
+        await _eventPublisher.PublishAsync(new ShelterAllocatedEvent(
+            Guid.NewGuid(),
+            DateTime.UtcNow,
+            dto.ShelterId,
+            allocatedShelterName,
+            dto.CitizenUserId,
+            dto.MembersCount
+        ), cancellationToken);
+
+        return allocation!;
+    }
+
+    public async Task<NotificationRecord> SendIdempotentNotificationAsync(
+        SendNotificationRequestDto dto,
+        CancellationToken cancellationToken = default)
+    {
+        if (!string.IsNullOrWhiteSpace(dto.IdempotencyKey))
+        {
+            var existing = await _unitOfWork.Notifications.FindAsync(
+                n => n.IdempotencyKey == dto.IdempotencyKey &&
+                     n.RecipientUserId == dto.RecipientUserId &&
+                     n.DeliveryStatus == NotificationDeliveryStatus.Sent,
+                cancellationToken);
+
+            if (existing.Any())
+            {
+                var duplicateAttemptRecord = new NotificationRecord
+                {
+                    RecipientUserId = dto.RecipientUserId,
+                    RecipientContact = dto.RecipientContact,
+                    Channel = dto.Channel,
+                    LanguageCode = dto.LanguageCode,
+                    Subject = dto.Subject,
+                    MessageBody = dto.MessageBody,
+                    IdempotencyKey = dto.IdempotencyKey,
+                    DeliveryStatus = NotificationDeliveryStatus.SkippedDuplicate,
+                    RetryAttempts = 0,
+                    ProviderResponse = $"Skipped duplicate delivery for IdempotencyKey={dto.IdempotencyKey}"
+                };
+                await _unitOfWork.Notifications.AddAsync(duplicateAttemptRecord, cancellationToken);
+                await _unitOfWork.SaveChangesAsync(cancellationToken);
+                return duplicateAttemptRecord;
+            }
+        }
+
+        var sender = _notificationFactory.CreateSender(dto.Channel);
+        var (success, providerResponse) = await sender.SendAsync(
+            dto.RecipientContact,
+            dto.Subject,
+            dto.MessageBody,
+            dto.LanguageCode,
+            cancellationToken);
+
+        var record = new NotificationRecord
+        {
+            RecipientUserId = dto.RecipientUserId,
+            RecipientContact = dto.RecipientContact,
+            Channel = dto.Channel,
+            LanguageCode = dto.LanguageCode,
+            Subject = dto.Subject,
+            MessageBody = dto.MessageBody,
+            IdempotencyKey = string.IsNullOrWhiteSpace(dto.IdempotencyKey) ? Guid.NewGuid().ToString("N") : dto.IdempotencyKey,
+            DeliveryStatus = success ? NotificationDeliveryStatus.Sent : NotificationDeliveryStatus.FailedPendingRetry,
 }
