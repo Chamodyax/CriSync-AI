@@ -69,7 +69,7 @@ export const AiGovernanceTab: React.FC<AiGovernanceTabProps> = ({
   const canApproveOrOverrideAi =
     userRole === 'EmergencyCoordinator' ||
     userRole === 'CaseManager' ||
-    
+    userRole === 'OrganizationAdmin' ||
     userRole === 'SystemAdmin';
 
   const handleReviewSubmit = async (e: React.FormEvent) => {
@@ -329,7 +329,7 @@ export const AiGovernanceTab: React.FC<AiGovernanceTabProps> = ({
 
                   <div className="flex flex-wrap items-center gap-2 text-[11px] font-bold">
                     <span className="px-2.5 py-1 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-300">
-                      AI Step
+                      1. AI Analyzed
                     </span>
                     <ArrowRight className="w-3 h-3 text-zinc-500" />
                     <span
