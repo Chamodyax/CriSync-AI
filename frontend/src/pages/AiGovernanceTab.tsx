@@ -162,5 +162,141 @@ export const AiGovernanceTab: React.FC<AiGovernanceTabProps> = ({
       <div className="overflow-x-auto rounded-2xl border border-white/[0.08]">
         <table className="w-full text-left text-xs">
           <thead>
+            <tr className="border-b border-white/[0.08] text-zinc-400 bg-white/[0.03] uppercase tracking-wider text-[11px] font-bold">
+              <th className="py-3.5 px-4">Aid Category</th>
+              <th className="py-3.5 px-4">Active Requests</th>
+              <th className="py-3.5 px-4">Currently Needed</th>
+              <th className="py-3.5 px-4">Predicted 48h Need</th>
+              <th className="py-3.5 px-4">Available in Warehouse</th>
+              <th className="py-3.5 px-4">Expected Shortage</th>
+              <th className="py-3.5 px-4">Supply Status</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-white/[0.06]">
+            {demandForecast.map((item, idx) => {
+              const hasShortfall = item.projectedDeficit > 0;
+              const coveragePct = Math.min(
+                100,
+                Math.round(
+                  (item.currentAvailableStock / Math.max(1, item.predictedNext48HoursDemand)) * 100
+                )
+              );
+              return (
+                <motion.tr
+                  initial={{ opacity: 0, x: -8 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.22, delay: Math.min(idx * 0.05, 0.25) }}
+                  key={item.categoryName}
+                  className="hover:bg-white/[0.03] transition-colors"
+                >
+                  <td className="py-3.5 px-4 font-extrabold text-white">{item.categoryName}</td>
+                  <td className="py-3.5 px-4 font-mono text-zinc-300">
+                    {item.historicalRequestsCount}
+                  </td>
+                  <td className="py-3.5 px-4 font-mono text-zinc-300">
+                    {item.currentRequestedUnits} units
+                  </td>
+                  <td className="py-3.5 px-4 font-mono text-indigo-300 font-extrabold">
+                    {item.predictedNext48HoursDemand} units
+                  </td>
+                  <td className="py-3.5 px-4 font-mono text-emerald-300 font-bold">
+                    <div>{item.currentAvailableStock} units</div>
+                    <div className="w-24 h-1.5 bg-white/10 rounded-full overflow-hidden mt-1.5">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${coveragePct}%` }}
+                        transition={{ duration: 0.65, ease: 'easeOut' }}
+                        className={`h-full rounded-full crisync-shimmer-bar ${
+                          hasShortfall
+                            ? 'bg-gradient-to-r from-rose-500 to-amber-500'
+                            : 'bg-gradient-to-r from-emerald-500 to-teal-400'
+                        }`}
+                      />
+                    </div>
+                  </td>
+                  <td className="py-3.5 px-4 font-mono text-rose-400 font-extrabold">
+                    {item.projectedDeficit > 0 ? `${item.projectedDeficit} units short` : 'No shortage'}
+                  </td>
+                  <td className="py-3.5 px-4">
+                    <span
+                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border ${
+                        hasShortfall
+                          ? 'bg-rose-500/20 text-rose-300 border-rose-500/40'
+                          : 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                      }`}
+                    >
+                      <AlertTriangle className="w-3.5 h-3.5" />
+                      {item.riskStatus}
+                    </span>
+                  </td>
+                </motion.tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+
+  if (!canApproveOrOverrideAi) {
+    return (
+      <div className="space-y-6">
+        {demandForecastSection}
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div className="lg:col-span-7 bento-glass rounded-3xl p-5 sm:p-6 space-y-4">
+          <div className="flex items-center gap-3 pb-4 border-b border-white/[0.08]">
+            <div className="w-10 h-10 rounded-2xl bg-purple-500/20 border border-purple-500/40 text-purple-300 flex items-center justify-center shrink-0">
+              <Sparkles className="w-5 h-5" />
+            </div>
+            <div>
+              <span className="text-xs font-bold uppercase tracking-wider text-purple-400">
+                Transparent AI Priority Scoring
+              </span>
+              <h2 className="text-lg font-extrabold text-white">
+                Why the AI Ranked Each Request & Score Breakdown
+              </h2>
+              <p className="text-xs text-zinc-400">
+                Review how points were calculated for each request. Staff always have the final say and can approve or adjust any score.
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            {recommendations.length === 0 && (
+              <div className="p-6 rounded-2xl bg-black/20 border border-dashed border-white/15 text-center text-xs text-zinc-400">
+                No AI priority recommendations yet. Recommendations are generated automatically whenever a Citizen submits a help request under an active Crisis Event.
+              </div>
+            )}
+            {recommendations.map((rec, index) => {
+              let factors: Record<string, number> = {};
+              try {
+                factors = JSON.parse(rec.explainableFactorsJson || '{}');
+              } catch {
+                factors = {};
+              }
+              const isSelected = selectedRecommendation?.id === rec.id;
+              const confidencePct = Math.round(rec.confidenceScore * 100);
+
+              return (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.22, delay: Math.min(index * 0.04, 0.2) }}
+                  key={rec.id}
+                  className={`p-5 rounded-3xl border space-y-3.5 transition-all ${
+                    isSelected
+                      ? 'bg-gradient-to-br from-indigo-500/15 via-purple-500/10 to-transparent border-2 border-indigo-500 shadow-glow'
+                      : 'bg-white/[0.025] border-white/[0.08] hover:border-white/20'
+                  }`}
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="flex items-center gap-3.5 min-w-0">
+                      <RadialConfidenceGauge percentage={confidencePct} size={62} />
   );
 };
