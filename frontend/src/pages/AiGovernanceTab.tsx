@@ -297,6 +297,132 @@ export const AiGovernanceTab: React.FC<AiGovernanceTabProps> = ({
                 >
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div className="flex items-center gap-3.5 min-w-0">
-                      <RadialConfidenceGauge percentage={confidencePct} size={62} />
+                      <span>{confidencePct}%</span>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full bg-indigo-500/20 border border-indigo-500/40 text-indigo-200">
+                          <Cpu className="w-3.5 h-3.5 text-indigo-400" />
+                          Suggested: {rec.recommendedUrgency} ({rec.recommendedCategory})
+                        </span>
+                        <span className="text-xs px-2.5 py-1 rounded-full font-bold bg-amber-500/15 border border-amber-500/30 text-amber-300">
+                          Status: {rec.governanceStatus}
+                        </span>
+                      </div>
+                    </div>
+
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.97 }}
+                      onClick={() => {
+                        onSelectRecommendation(rec);
+                        setCategory(rec.recommendedCategory);
+                        setUrgency(rec.recommendedUrgency);
+                        setTimeout(() => {
+                          reviewFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }, 80);
+                      }}
+                      className="keep-white px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-extrabold flex items-center gap-1.5 shadow-sm"
+                    >
+                      <Sliders className="w-3.5 h-3.5" />
+                      <span>Review or Adjust Score</span>
+                    </motion.button>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2 text-[11px] font-bold">
+                    <span className="px-2.5 py-1 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-300">
+                      1. AI Analyzed
+                    </span>
+                    <ArrowRight className="w-3 h-3 text-zinc-500" />
+                    <span
+                      className={`px-2.5 py-1 rounded-lg border ${
+                        rec.humanDecision
+                          ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-300'
+                          : 'bg-amber-500/15 border-amber-500/30 text-amber-300'
+                      }`}
+                    >
+                      2. {rec.humanDecision ? `Human ${rec.humanDecision.actionTaken}` : 'Pending Human Review'}
+                    </span>
+                    <ArrowRight className="w-3 h-3 text-zinc-500" />
+                    <span
+                      className={`px-2.5 py-1 rounded-lg border ${
+                        rec.humanDecision
+                          ? 'bg-indigo-500/15 border-indigo-500/30 text-indigo-300'
+                          : 'bg-white/[0.04] border-white/10 text-zinc-400'
+                      }`}
+                    >
+                      3. Immutable Audit Trail
+                    </span>
+                  </div>
+
+                  <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed">{rec.rationale}</p>
+
+                  <div>
+                    <p className="text-[11px] font-bold text-zinc-400 mb-2">
+                      How the AI calculated this priority score:
+                    </p>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                      {Object.entries(factors).map(([factorName, factorValue]) => {
+                        const barPct = Math.min(100, Math.max(15, Number(factorValue) * 3));
+                        return (
+                          <div
+                            key={factorName}
+                            className="bg-black/25 p-3 rounded-2xl border border-white/[0.07]"
+                          >
+                            <p className="text-[11px] font-semibold text-zinc-300 leading-tight">
+                              {getFriendlyFactorLabel(factorName)}
+                            </p>
+                            <p className="text-sm font-mono font-extrabold text-white mt-1">
+                              +{factorValue} <span className="text-[10px] text-zinc-400">points</span>
+                            </p>
+                            <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden mt-2">
+                              <motion.div
+                                initial={{ width: 0 }}
+                                animate={{ width: `${barPct}%` }}
+                                transition={{ duration: 0.6, ease: 'easeOut' }}
+                                className="h-full bg-gradient-to-r from-indigo-500 to-purple-400 rounded-full crisync-shimmer-bar"
+                              />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {rec.humanDecision && (
+                    <div className="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-xs space-y-1">
+                      <p className="font-extrabold text-emerald-300 flex items-center gap-1.5">
+                        <UserCheck className="w-4 h-4 text-emerald-400" />
+                        Reviewed by Staff: {rec.humanDecision.actionTaken} by {rec.humanDecision.responsibleUserName} ({rec.humanDecision.responsibleUserRole})
+                      </p>
+                      <p className="text-zinc-300 flex flex-wrap items-center gap-1.5 text-xs">
+                        <span>AI Suggested: {rec.humanDecision.originalAiRecommendationSummary}</span>
+                        <ArrowRight className="w-3.5 h-3.5 text-emerald-400" />
+                        <strong className="text-emerald-300">
+                          Final Staff Decision: {rec.humanDecision.finalHumanDecisionSummary}
+                        </strong>
+                      </p>
+                      <p className="text-zinc-400">
+                        Staff Note: {rec.humanDecision.overrideJustification}
+                      </p>
+                    </div>
+                  )}
+                </motion.div>
+              );
+            })}
+          </div>
+        </div>
+
+        <div ref={reviewFormRef} className="scroll-mt-24 lg:col-span-5 bento-glass rounded-3xl p-5 sm:p-6 h-fit lg:sticky lg:top-28 border border-indigo-500/30">
+          <div className="flex items-center gap-3 mb-4 pb-3.5 border-b border-white/[0.08]">
+            <div className="w-10 h-10 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 flex items-center justify-center shrink-0">
+              <ShieldCheck className="w-5 h-5" />
+            </div>
+            <div>
+              <span className="text-xs font-bold uppercase tracking-wider text-emerald-400">
+                Staff Final Decision
+              </span>
+              <h3 className="text-base sm:text-lg font-extrabold text-white">
+                Approve or Change AI Priority
+              </h3>
+            </div>
   );
 };
