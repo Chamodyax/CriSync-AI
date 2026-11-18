@@ -513,5 +513,218 @@ public class LogisticsSheltersVolunteersDonationsController : ControllerBase
         if (shelter == null)
         {
             return NotFound(new { message = "Shelter not found." });
+        }
+
+        if (string.IsNullOrWhiteSpace(dto.Name))
+        {
+            return BadRequest(new { message = "Shelter name is required." });
+        }
+
+        shelter.Name = dto.Name.Trim();
+        shelter.Address = dto.Address?.Trim() ?? string.Empty;
+        shelter.TotalCapacity = Math.Max(1, dto.TotalCapacity);
+        shelter.CurrentOccupancy = Math.Clamp(dto.CurrentOccupancy, 0, shelter.TotalCapacity);
+        shelter.IsWheelchairAccessible = dto.IsWheelchairAccessible;
+        shelter.HasMedicalFacility = dto.HasMedicalFacility;
+        shelter.HasPowerBackup = dto.HasPowerBackup;
+        shelter.Status = string.IsNullOrWhiteSpace(dto.Status) ? "Operational" : dto.Status.Trim();
+        shelter.Latitude = dto.Latitude;
+        shelter.Longitude = dto.Longitude;
+
+        await _unitOfWork.Shelters.UpdateAsync(shelter, cancellationToken);
+
+        var actorId = Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var uid) ? uid : (Guid?)null;
+        await _unitOfWork.AuditEvents.AddAsync(new AuditEventRecord
+        {
+            EventCategory = "Shelters",
+            ActionName = "Admin_UpdatedShelter",
+            EntityType = nameof(Shelter),
+            EntityId = shelter.Id.ToString(),
+            ActorUserId = actorId,
+            ActorUserName = User.FindFirstValue(ClaimTypes.Name) ?? "SystemAdmin",
+            ActorRole = User.FindFirstValue(ClaimTypes.Role) ?? "SystemAdmin",
+            DetailsJson = JsonSerializer.Serialize(new { shelter.Name, shelter.TotalCapacity, shelter.CurrentOccupancy, shelter.Status })
+        }, cancellationToken);
+
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        return Ok(shelter);
+    }
+
+    [HttpDelete("shelters/{id:guid}")]
+    [Authorize(Roles = "SystemAdmin,OrganizationAdmin")]
+    public async Task<ActionResult> DeleteShelter(Guid id, CancellationToken cancellationToken)
+    {
+        var shelter = await _unitOfWork.Shelters.GetByIdAsync(id, cancellationToken);
+        if (shelter == null)
+        {
+            return NotFound(new { message = "Shelter not found." });
+        }
+
+        var allocs = await _unitOfWork.ShelterAllocations.FindAsync(a => a.ShelterId == id, cancellationToken);
+        foreach (var alloc in allocs)
+        {
+            await _unitOfWork.ShelterAllocations.DeleteAsync(alloc, cancellationToken);
+        }
+
+        await _unitOfWork.Shelters.DeleteAsync(shelter, cancellationToken);
+
+        var actorId = Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var uid) ? uid : (Guid?)null;
+        await _unitOfWork.AuditEvents.AddAsync(new AuditEventRecord
+        {
+            EventCategory = "Shelters",
+            ActionName = "Admin_DeletedShelter",
+            EntityType = nameof(Shelter),
+            EntityId = shelter.Id.ToString(),
+            ActorUserId = actorId,
+            ActorUserName = User.FindFirstValue(ClaimTypes.Name) ?? "SystemAdmin",
+            ActorRole = User.FindFirstValue(ClaimTypes.Role) ?? "SystemAdmin",
+            DetailsJson = JsonSerializer.Serialize(new { shelter.Name, shelter.Address })
+        }, cancellationToken);
+
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        return Ok(new { deletedShelterId = id });
+    }
+
+    [HttpPost("shelters/allocate")]
+    [Authorize(Roles = "ShelterAdmin,EmergencyCoordinator,CaseManager,SystemAdmin,OrganizationAdmin")]
+    public async Task<ActionResult> AllocateShelter([FromBody] AllocateShelterRequestDto dto, CancellationToken cancellationToken)
+    {
+        var actorId = Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var uid) ? uid : Guid.Empty;
+        var actorName = User.FindFirstValue(ClaimTypes.Name) ?? "Shelter Administrator";
+        var roleStr = User.FindFirstValue(ClaimTypes.Role) ?? "ShelterAdmin";
+        Enum.TryParse<UserRole>(roleStr, out var actorRole);
+
+        var allocation = await _opsService.AllocateShelterAsync(actorId, actorName, actorRole, dto, cancellationToken);
+        return Ok(allocation);
+    }
+
+    [HttpPost("shelters/{id:guid}/request-supplies")]
+    [Authorize(Roles = "ShelterAdmin,EmergencyCoordinator,SystemAdmin,OrganizationAdmin")]
+    public async Task<ActionResult> RequestShelterSupplies(Guid id, [FromBody] RequestShelterSuppliesDto dto, CancellationToken cancellationToken)
+    {
+        var shelter = await _unitOfWork.Shelters.GetByIdAsync(id, cancellationToken);
+        if (shelter == null)
+        {
+            return NotFound(new { message = "Shelter not found." });
+        }
+
+        var supplyReq = new PartnerAidRequest
+        {
+            RequestingOrganisationId = shelter.ManagedByOrganisationId ?? Guid.Empty,
+            NeededCategory = dto.Category,
+            ResourceName = dto.ResourceName.Trim(),
+            QuantityNeeded = dto.QuantityNeeded,
+            Justification = $"Shelter '{shelter.Name}' supply request: {dto.Justification.Trim()}",
+            Status = "OpenShelterSupplyRequest"
+        };
+
+        await _unitOfWork.PartnerAidRequests.AddAsync(supplyReq, cancellationToken);
+        var actorId = Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var uid) ? uid : (Guid?)null;
+        await _unitOfWork.AuditEvents.AddAsync(new AuditEventRecord
+        {
+            EventCategory = "Shelters",
+            ActionName = "Shelter_RequestedAdditionalSupplies",
+            EntityType = nameof(PartnerAidRequest),
+            EntityId = supplyReq.Id.ToString(),
+            ActorUserId = actorId,
+            ActorUserName = User.FindFirstValue(ClaimTypes.Name) ?? "ShelterAdmin",
+            ActorRole = User.FindFirstValue(ClaimTypes.Role) ?? "ShelterAdmin",
+            IpAddress = GetClientIp(),
+            DetailsJson = JsonSerializer.Serialize(new { ShelterName = shelter.Name, supplyReq.ResourceName, supplyReq.QuantityNeeded })
+        }, cancellationToken);
+
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        return Ok(supplyReq);
+    }
+
+    [HttpGet("volunteers")]
+    [Authorize]
+    public async Task<ActionResult> GetVolunteers(CancellationToken cancellationToken)
+    {
+        var volunteers = await _unitOfWork.Volunteers.GetAllAsync(cancellationToken);
+        var assignments = await _unitOfWork.VolunteerAssignments.GetAllAsync(cancellationToken);
+        return Ok(new
+        {
+            Volunteers = volunteers,
+            Assignments = assignments
+        });
+    }
+
+    [HttpPost("volunteers")]
+    [Authorize]
+    public async Task<ActionResult> RegisterVolunteer([FromBody] CreateVolunteerProfileDto dto, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(dto.FullName))
+        {
+            return BadRequest(new { message = "Volunteer full name is required." });
+        }
+
+        var actorId = Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var uid) ? uid : Guid.Empty;
+        var callerRole = User.FindFirstValue(ClaimTypes.Role) ?? string.Empty;
+        bool autoVerified = callerRole != nameof(UserRole.Volunteer);
+        var volunteer = new VolunteerProfile
+        {
+            UserId = actorId,
+            FullName = dto.FullName.Trim(),
+            SkillsCsv = dto.SkillsCsv?.Trim() ?? string.Empty,
+            LanguagesCsv = string.IsNullOrWhiteSpace(dto.LanguagesCsv) ? "en" : dto.LanguagesCsv.Trim(),
+            IsVerified = autoVerified,
+            IsAvailable = true,
+            AvailabilitySchedule = string.IsNullOrWhiteSpace(dto.AvailabilitySchedule) ? "Available On-Call" : dto.AvailabilitySchedule.Trim(),
+            CurrentLatitude = dto.CurrentLatitude,
+            CurrentLongitude = dto.CurrentLongitude,
+            CompletedTasksCount = 0
+        };
+
+        await _unitOfWork.Volunteers.AddAsync(volunteer, cancellationToken);
+        await _unitOfWork.AuditEvents.AddAsync(new AuditEventRecord
+        {
+            EventCategory = "VolunteerOperations",
+            ActionName = "Volunteer_Registered",
+            EntityType = nameof(VolunteerProfile),
+            EntityId = volunteer.Id.ToString(),
+            ActorUserId = actorId,
+            ActorUserName = User.FindFirstValue(ClaimTypes.Name) ?? volunteer.FullName,
+            ActorRole = User.FindFirstValue(ClaimTypes.Role) ?? "Volunteer",
+            DetailsJson = JsonSerializer.Serialize(new { volunteer.FullName, volunteer.SkillsCsv, volunteer.IsVerified })
+        }, cancellationToken);
+
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        return Ok(volunteer);
+    }
+
+    [HttpPost("volunteers/{id:guid}/verify-activate")]
+    [Authorize(Roles = "VolunteerCoordinator,EmergencyCoordinator,SystemAdmin,OrganizationAdmin")]
+    public async Task<ActionResult> VerifyAndActivateVolunteer(Guid id, CancellationToken cancellationToken)
+    {
+        var volunteer = await _unitOfWork.Volunteers.GetByIdAsync(id, cancellationToken);
+        if (volunteer == null)
+        {
+            return NotFound(new { message = "Volunteer profile not found." });
+        }
+
+        volunteer.IsVerified = true;
+        volunteer.IsAvailable = true;
+        await _unitOfWork.Volunteers.UpdateAsync(volunteer, cancellationToken);
+
+        if (volunteer.UserId != Guid.Empty)
+        {
+            var linkedUser = await _unitOfWork.Users.GetByIdAsync(volunteer.UserId, cancellationToken);
+            if (linkedUser != null)
+            {
+                linkedUser.AccountStatus = "Active";
+                linkedUser.IsActive = true;
+                await _unitOfWork.Users.UpdateAsync(linkedUser, cancellationToken);
+            }
+        }
+
+        var actorId = Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var uid) ? uid : (Guid?)null;
+        await _unitOfWork.AuditEvents.AddAsync(new AuditEventRecord
+        {
+            EventCategory = "VolunteerOperations",
+            ActionName = "VolunteerCoordinator_VerifiedVolunteer",
+            EntityType = nameof(VolunteerProfile),
+            EntityId = volunteer.Id.ToString(),
+            ActorUserId = actorId,
     }
 }
