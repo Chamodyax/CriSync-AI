@@ -968,5 +968,248 @@ public class LogisticsSheltersVolunteersDonationsController : ControllerBase
         if (assignment.Status != "Completed")
         {
             assignment.Status = "Completed";
+            assignment.CompletionNotes = dto.CompletionNotes.Trim();
+            assignment.CompletedAtUtc = DateTime.UtcNow;
+            assignment.UpdatedAtUtc = DateTime.UtcNow;
+            await _unitOfWork.VolunteerAssignments.UpdateAsync(assignment, cancellationToken);
+
+            if (profile != null)
+            {
+                profile.CompletedTasksCount += 1;
+                profile.UpdatedAtUtc = DateTime.UtcNow;
+                await _unitOfWork.Volunteers.UpdateAsync(profile, cancellationToken);
+            }
+
+            await _unitOfWork.AuditEvents.AddAsync(new AuditEventRecord
+            {
+                EventCategory = "VolunteerOperations",
+                ActionName = "VolunteerAssignment_Completed",
+                EntityType = nameof(VolunteerTaskAssignment),
+                EntityId = assignment.Id.ToString(),
+                ActorUserId = callerId == Guid.Empty ? null : callerId,
+                ActorUserName = User.FindFirstValue(ClaimTypes.Name) ?? "Volunteer",
+                ActorRole = callerRole,
+                IpAddress = GetClientIp(),
+                DetailsJson = JsonSerializer.Serialize(new { assignment.TaskTitle, assignment.CompletionNotes, CompletedAt = assignment.CompletedAtUtc })
+            }, cancellationToken);
+
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+        }
+
+        return Ok(assignment);
+    }
+
+    [HttpGet("donations")]
+    [Authorize]
+    public async Task<ActionResult> GetDonations(CancellationToken cancellationToken)
+    {
+        var campaigns = await _unitOfWork.DonationCampaigns.GetAllAsync(cancellationToken);
+        var donations = await _unitOfWork.Donations.GetAllAsync(cancellationToken);
+        return Ok(new
+        {
+            Campaigns = campaigns,
+            Donations = donations
+        });
+    }
+
+    [HttpPost("donations/campaigns")]
+    [Authorize(Roles = "DonorOfficer,EmergencyCoordinator,SystemAdmin")]
+    public async Task<ActionResult> CreateDonationCampaign([FromBody] CreateDonationCampaignDto dto, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(dto.Title))
+        {
+            return BadRequest(new { message = "Campaign title is required." });
+        }
+
+        Guid crisisEventId = dto.CrisisEventId ?? Guid.Empty;
+        if (crisisEventId == Guid.Empty)
+        {
+            var crises = await _unitOfWork.CrisisEvents.GetAllAsync(cancellationToken);
+            crisisEventId = crises.OrderByDescending(c => c.CreatedAtUtc).FirstOrDefault()?.Id ?? Guid.Empty;
+        }
+
+        var campaign = new DonationCampaign
+        {
+            Title = dto.Title.Trim(),
+            CrisisEventId = crisisEventId,
+            TargetAmountUsd = dto.TargetAmountUsd > 0 ? dto.TargetAmountUsd : 50000m,
+            CollectedAmountUsd = 0m,
+            DisbursedAmountUsd = 0m,
+            IsActive = true
+        };
+
+        var actorId = Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var uid) ? uid : (Guid?)null;
+        await _unitOfWork.DonationCampaigns.AddAsync(campaign, cancellationToken);
+        await _unitOfWork.AuditEvents.AddAsync(new AuditEventRecord
+        {
+            EventCategory = "Donations",
+            ActionName = "DonationCampaign_Created",
+            EntityType = nameof(DonationCampaign),
+            EntityId = campaign.Id.ToString(),
+            ActorUserId = actorId,
+            ActorUserName = User.FindFirstValue(ClaimTypes.Name) ?? "Donor Officer",
+            ActorRole = User.FindFirstValue(ClaimTypes.Role) ?? "DonorOfficer",
+            DetailsJson = JsonSerializer.Serialize(new { campaign.Title, campaign.TargetAmountUsd, campaign.CrisisEventId })
+        }, cancellationToken);
+
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        return Ok(campaign);
+    }
+
+    [HttpDelete("donations/campaigns/{id:guid}")]
+    [Authorize(Roles = "DonorOfficer,SystemAdmin")]
+    public async Task<ActionResult> DeleteDonationCampaign(Guid id, CancellationToken cancellationToken)
+    {
+        var campaign = await _unitOfWork.DonationCampaigns.GetByIdAsync(id, cancellationToken);
+        if (campaign == null)
+        {
+            return NotFound(new { message = "Donation campaign not found." });
+        }
+
+        var donations = await _unitOfWork.Donations.FindAsync(d => d.CampaignId == id, cancellationToken);
+        foreach (var d in donations)
+        {
+            await _unitOfWork.Donations.DeleteAsync(d, cancellationToken);
+        }
+
+        var expenditures = await _unitOfWork.CampaignExpenditures.FindAsync(e => e.CampaignId == id, cancellationToken);
+        foreach (var exp in expenditures)
+        {
+            await _unitOfWork.CampaignExpenditures.DeleteAsync(exp, cancellationToken);
+        }
+
+        await _unitOfWork.DonationCampaigns.DeleteAsync(campaign, cancellationToken);
+
+        var actorId = Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var uid) ? uid : (Guid?)null;
+        await _unitOfWork.AuditEvents.AddAsync(new AuditEventRecord
+        {
+            EventCategory = "Donations",
+            ActionName = "Admin_DeletedCampaign",
+            EntityType = nameof(DonationCampaign),
+            EntityId = campaign.Id.ToString(),
+            ActorUserId = actorId,
+            ActorUserName = User.FindFirstValue(ClaimTypes.Name) ?? "SystemAdmin",
+            ActorRole = User.FindFirstValue(ClaimTypes.Role) ?? "SystemAdmin",
+            DetailsJson = JsonSerializer.Serialize(new { campaign.Title })
+        }, cancellationToken);
+
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        return Ok(new { deletedCampaignId = id });
+    }
+
+    [HttpPost("donations")]
+    [Authorize]
+    public async Task<ActionResult> RecordDonation([FromBody] CreateDonationDto dto, CancellationToken cancellationToken)
+    {
+        var actorId = Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var uid) ? uid : (Guid?)null;
+        var record = await _opsService.RecordDonationAsync(actorId, dto, cancellationToken);
+        return Ok(record);
+    }
+
+    [HttpPost("donations/{id:guid}/approve")]
+    [Authorize(Roles = "DonorOfficer,EmergencyCoordinator,SystemAdmin")]
+    public async Task<ActionResult> ApproveSuspiciousDonation(Guid id, CancellationToken cancellationToken)
+    {
+        var donation = await _unitOfWork.Donations.GetByIdAsync(id, cancellationToken);
+        if (donation == null)
+        {
+            return NotFound();
+        }
+
+        if (!donation.IsReviewedByHuman)
+        {
+            donation.IsReviewedByHuman = true;
+            donation.VerificationStatus = "HumanComplianceApproved";
+            await _unitOfWork.Donations.UpdateAsync(donation, cancellationToken);
+
+            var campaign = await _unitOfWork.DonationCampaigns.GetByIdAsync(donation.CampaignId, cancellationToken);
+            if (campaign != null && donation.MonetaryAmountUsd > 0)
+            {
+                campaign.CollectedAmountUsd += donation.MonetaryAmountUsd;
+                await _unitOfWork.DonationCampaigns.UpdateAsync(campaign, cancellationToken);
+            }
+
+            var actorId = Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var uid) ? uid : (Guid?)null;
+            await _unitOfWork.AuditEvents.AddAsync(new AuditEventRecord
+            {
+                EventCategory = "DonationCompliance",
+                ActionName = "Donation_HumanComplianceApproved",
+                EntityType = nameof(DonationRecord),
+                EntityId = donation.Id.ToString(),
+                ActorUserId = actorId,
+                ActorUserName = User.FindFirstValue(ClaimTypes.Name) ?? "DonorOfficer",
+                ActorRole = User.FindFirstValue(ClaimTypes.Role) ?? "DonorOfficer",
+                IpAddress = GetClientIp(),
+                DetailsJson = JsonSerializer.Serialize(new { donation.DonorName, donation.MonetaryAmountUsd, donation.CampaignId })
+            }, cancellationToken);
+
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+        }
+
+        return Ok(donation);
+    }
+
+    [HttpPost("donations/{id:guid}/reject")]
+    [Authorize(Roles = "DonorOfficer,EmergencyCoordinator,SystemAdmin")]
+    public async Task<ActionResult> RejectSuspiciousDonation(Guid id, CancellationToken cancellationToken)
+    {
+        var donation = await _unitOfWork.Donations.GetByIdAsync(id, cancellationToken);
+        if (donation == null)
+        {
+            return NotFound();
+        }
+
+        donation.IsReviewedByHuman = true;
+        donation.VerificationStatus = "ComplianceRejected";
+        await _unitOfWork.Donations.UpdateAsync(donation, cancellationToken);
+
+        var actorId = Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var uid) ? uid : (Guid?)null;
+        await _unitOfWork.AuditEvents.AddAsync(new AuditEventRecord
+        {
+            EventCategory = "DonationCompliance",
+            ActionName = "Donation_ComplianceRejected",
+            EntityType = nameof(DonationRecord),
+            EntityId = donation.Id.ToString(),
+            ActorUserId = actorId,
+            ActorUserName = User.FindFirstValue(ClaimTypes.Name) ?? "DonorOfficer",
+            ActorRole = User.FindFirstValue(ClaimTypes.Role) ?? "DonorOfficer",
+            IpAddress = GetClientIp(),
+            DetailsJson = JsonSerializer.Serialize(new { donation.DonorName, donation.MonetaryAmountUsd, donation.CampaignId })
+        }, cancellationToken);
+
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        return Ok(donation);
+    }
+
+    [HttpPost("donations/campaigns/{campaignId:guid}/expenditures")]
+    [Authorize(Roles = "DonorOfficer,EmergencyCoordinator,SystemAdmin")]
+    public async Task<ActionResult> RecordCampaignExpenditure(
+        Guid campaignId,
+        [FromBody] CreateCampaignExpenditureDto dto,
+        CancellationToken cancellationToken)
+    {
+        if (dto.AmountUsd <= 0)
+        {
+            return BadRequest(new { message = "Expenditure amount must be greater than zero." });
+        }
+
+        var actorId = Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var uid) ? uid : Guid.Empty;
+        var actorName = User.FindFirstValue(ClaimTypes.Name) ?? "Donor Officer";
+        var actorRole = User.FindFirstValue(ClaimTypes.Role) ?? "DonorOfficer";
+
+        CampaignExpenditure? expenditure = null;
+        await _unitOfWork.ExecuteInTransactionAsync(async () =>
+        {
+            var campaign = await _unitOfWork.DonationCampaigns.GetByIdAsync(campaignId, cancellationToken)
+                ?? throw new KeyNotFoundException("Donation campaign not found.");
+
+            decimal remainingBalance = campaign.CollectedAmountUsd - campaign.DisbursedAmountUsd;
+            if (dto.AmountUsd > remainingBalance)
+            {
+                throw new InvalidOperationException($"Insufficient verified campaign funds: only ${remainingBalance:N2} USD remains unallocated in '{campaign.Title}'.");
+            }
+
+            expenditure = new CampaignExpenditure
+            {
     }
 }
