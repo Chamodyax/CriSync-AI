@@ -93,7 +93,7 @@ export const LogisticsTab: React.FC<LogisticsTabProps> = ({
     userRole === 'LogisticsManager' ||
     userRole === 'EmergencyCoordinator' ||
     userRole === 'PartnerOfficer' ||
-    userRole === 'OrganizationAdmin' ||
+    
     userRole === 'SystemAdmin';
 
   const handleCreateResource = async (e: React.FormEvent) => {
@@ -608,5 +608,241 @@ export const LogisticsTab: React.FC<LogisticsTabProps> = ({
                     type="number"
                     step="0.0001"
                     value={warehouseLat}
+                    onChange={(e) => setWarehouseLat(Number(e.target.value))}
+                    className="rsvp-input font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-zinc-300 mb-1">Warehouse Lon</label>
+                  <input
+                    type="number"
+                    step="0.0001"
+                    value={warehouseLon}
+                    onChange={(e) => setWarehouseLon(Number(e.target.value))}
+                    className="rsvp-input font-mono"
+                  />
+                </div>
+              </div>
+              <p className="text-[11px] text-zinc-400/75 opacity-75 -mt-1 font-normal">
+                Example: GPS coordinates (6.9271, 79.8612) used for distance-based dispatch matching
+              </p>
+              <label className="flex items-center gap-2.5 text-zinc-200 font-semibold cursor-pointer p-3 rounded-2xl bg-black/20 border border-white/10">
+                <input
+                  type="checkbox"
+                  checked={coldChain}
+                  onChange={(e) => setColdChain(e.target.checked)}
+                  className="w-4 h-4 rounded border-white/20 bg-black/40 text-cyan-500"
+                />
+                <Snowflake className="w-4 h-4 text-cyan-400" />
+                Requires Refrigerated Cold-Storage
+              </label>
+              <motion.button
+                whileTap={{ scale: 0.98 }}
+                type="submit"
+                className="keep-white w-full py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-sm shadow-sm flex items-center justify-center gap-1.5 transition"
+              >
+                <PackagePlus className="w-4 h-4" />
+                <span>Add Stock to Warehouse</span>
+              </motion.button>
+            </form>
+          </div>
+        )}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div className="lg:col-span-6 bento-glass rounded-3xl p-5 sm:p-6 space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-white/[0.08]">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-2xl bg-indigo-500/20 border border-indigo-500/40 text-indigo-300 flex items-center justify-center shrink-0">
+                <Truck className="w-4 h-4" />
+              </div>
+              <div>
+                <h3 className="text-base font-extrabold text-white">
+                  Active Dispatch Convoys &amp; Deliveries
+                </h3>
+                <p className="text-xs text-zinc-400">
+                  Track vehicle routes and confirm physical handoff at field drop points
+                </p>
+              </div>
+            </div>
+            <span className="px-3 py-1 rounded-full bg-indigo-500/15 border border-indigo-500/30 text-xs font-bold text-indigo-300">
+              {dispatches.length} Convoys
+            </span>
+          </div>
+          {dispatches.length === 0 ? (
+            <p className="text-xs text-zinc-400">
+              No active dispatches yet. Confirm a delivery plan above to launch a convoy.
+            </p>
+          ) : (
+            <div className="space-y-2.5 text-xs max-h-72 overflow-y-auto pr-1 content-scroll">
+              {dispatches.map((d) => (
+                <div
+                  key={d.id}
+                  className="p-3.5 rounded-2xl bg-white/[0.025] border border-white/[0.08] flex flex-wrap items-center justify-between gap-2"
+                >
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono font-extrabold text-white">{d.vehicleRegistration}</span>
+                      <span
+                        className={`px-2 py-0.5 rounded-full font-bold text-[11px] border ${
+                          d.dispatchStatus === 'Delivered'
+                            ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300'
+                            : 'bg-amber-500/20 border-amber-500/40 text-amber-300'
+                        }`}
+                      >
+                        {d.dispatchStatus}
+                      </span>
+                    </div>
+                    <p className="text-zinc-300">{d.routeSummary}</p>
+                    <p className="text-zinc-400 font-mono text-[11px]">
+                      {d.distanceKm} km • ETA {d.estimatedTravelMinutes} mins
+                    </p>
+                  </div>
+                  {canDispatch && onMarkDispatchDelivered && d.dispatchStatus !== 'Delivered' && (
+                    <button
+                      type="button"
+                      onClick={() => onMarkDispatchDelivered(d.id)}
+                      className="keep-white px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold inline-flex items-center gap-1.5 shadow-sm"
+                    >
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      <span>Mark Delivered</span>
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="lg:col-span-6 bento-glass rounded-3xl p-5 sm:p-6 space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-white/[0.08]">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-2xl bg-amber-500/20 border border-amber-500/40 text-amber-300 flex items-center justify-center shrink-0">
+                <Handshake className="w-4 h-4" />
+              </div>
+              <div>
+                <h3 className="text-base font-extrabold text-white">
+                  Cross-Organisation Partner Aid Requests
+                </h3>
+                <p className="text-xs text-zinc-400">
+                  Escalate stock shortages and coordinate mutual aid across NGOs &amp; shelters
+                </p>
+              </div>
+            </div>
+            <span className="px-3 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-xs font-bold text-amber-300">
+              {partnerAidRequests.length} Requests
+            </span>
+          </div>
+
+          {onCreatePartnerAidRequest && (
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
+                if (!partnerResourceName.trim()) return;
+                await onCreatePartnerAidRequest({
+                  neededCategory: partnerCategory,
+                  resourceName: partnerResourceName,
+                  quantityNeeded: Number(partnerQty),
+                  justification: partnerJustification,
+                  targetPartnerOrganisationId: targetPartnerOrgId || null
+                });
+                setPartnerResourceName('');
+                setPartnerJustification('');
+              }}
+              className="grid grid-cols-1 sm:grid-cols-4 gap-2 text-xs p-3 rounded-2xl bg-black/20 border border-white/10"
+            >
+              <select
+                value={partnerCategory}
+                onChange={(e) => setPartnerCategory(e.target.value)}
+                className="rsvp-input"
+              >
+                <option value="Medicine">Medicine</option>
+                <option value="Food">Food</option>
+                <option value="WaterAndSanitation">Clean Water</option>
+                <option value="TemporaryShelter">Shelter Supplies</option>
+                <option value="AccessibilityAssistance">Accessibility</option>
+              </select>
+              <input
+                type="text"
+                required
+                value={partnerResourceName}
+                onChange={(e) => setPartnerResourceName(e.target.value)}
+                placeholder="Needed item name"
+                className="rsvp-input sm:col-span-2"
+              />
+              <input
+                type="number"
+                min={1}
+                required
+                value={partnerQty}
+                onChange={(e) => setPartnerQty(Number(e.target.value))}
+                className="rsvp-input font-mono"
+              />
+              <select
+                value={targetPartnerOrgId}
+                onChange={(e) => setTargetPartnerOrgId(e.target.value)}
+                className="rsvp-input sm:col-span-2"
+              >
+                <option value="">Broadcast to All Verified Partners</option>
+                {organisations.map((org) => (
+                  <option key={org.id} value={org.id}>{org.name}</option>
+                ))}
+              </select>
+              <input
+                type="text"
+                required
+                value={partnerJustification}
+                onChange={(e) => setPartnerJustification(e.target.value)}
+                placeholder="Urgent mutual-aid reason"
+                className="rsvp-input sm:col-span-1"
+              />
+              <button
+                type="submit"
+                className="keep-white py-2 px-3 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-extrabold"
+              >
+                Post Aid Request
+              </button>
+            </form>
+          )}
+
+          <div className="space-y-2.5 text-xs max-h-64 overflow-y-auto pr-1 content-scroll">
+            {partnerAidRequests.length === 0 ? (
+              <p className="text-zinc-400">
+                No cross-organisation partner aid requests open right now.
+              </p>
+            ) : (
+              partnerAidRequests.map((pr) => (
+                <div
+                  key={pr.id}
+                  className="p-3.5 rounded-2xl bg-white/[0.025] border border-white/[0.08] flex flex-wrap items-center justify-between gap-2"
+                >
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-extrabold text-white">
+                        {pr.quantityNeeded} × {pr.resourceName}
+                      </span>
+                      <span className="px-2 py-0.5 rounded-full bg-indigo-500/20 border border-indigo-500/30 text-indigo-300 font-bold text-[10px]">
+                        {pr.status}
+                      </span>
+                    </div>
+                    <p className="text-zinc-400">{pr.justification}</p>
+                  </div>
+                  {canDispatch && onFulfillPartnerAidRequest && pr.status !== 'FulfilledByPartner' && (
+                    <button
+                      type="button"
+                      onClick={() => onFulfillPartnerAidRequest(pr.id, 'Partner transfer confirmed')}
+                      className="keep-white px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold inline-flex items-center gap-1.5 shadow-sm"
+                    >
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      <span>Fulfill Request</span>
+                    </button>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
