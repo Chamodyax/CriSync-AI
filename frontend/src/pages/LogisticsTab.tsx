@@ -1,0 +1,298 @@
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  Truck,
+  Eye,
+  PackagePlus,
+  Warehouse,
+  Snowflake,
+  Calendar,
+  CheckCircle2,
+  AlertTriangle,
+  Sliders,
+  MapPin,
+  Zap,
+  Plus,
+  Handshake
+} from 'lucide-react';
+
+interface LogisticsTabProps {
+  userRole: string;
+  requests: any[];
+  resources: any[];
+  dispatches?: any[];
+  partnerAidRequests?: any[];
+  organisations?: any[];
+  selectedStrategy: string;
+  selectedCompetingIds: string[];
+  allocationPlanResult: any | null;
+  onChangeStrategy: (strategy: string) => void;
+  onToggleCompetingRequest: (id: string) => void;
+  onRunAllocation: (commitToDb: boolean) => void;
+  onAddResource: (payload: any) => Promise<void>;
+  onReplenishResource?: (id: string, addedQuantity: number, sourceNote?: string) => Promise<void>;
+  onMarkDispatchDelivered?: (id: string) => Promise<void>;
+  onCreatePartnerAidRequest?: (payload: any) => Promise<void>;
+  onFulfillPartnerAidRequest?: (id: string, notes?: string) => Promise<void>;
+}
+
+const strategyCards = [
+  {
+    id: 'MultiConstraintOptimal',
+    title: 'Best Overall Match (Recommended)',
+    desc: 'Balances road distance, stock levels, expiry dates & cold-storage needs'
+  },
+  {
+    id: 'ShortageProportionalContention',
+    title: 'Fair Split During Shortages',
+    desc: 'Shares limited supplies fairly across families based on urgency score'
+  },
+  {
+    id: 'ProximityFirst',
+    title: 'Closest Warehouse First',
+    desc: 'Picks the nearest relief warehouse for the fastest possible delivery'
+  }
+];
+
+export const LogisticsTab: React.FC<LogisticsTabProps> = ({
+  userRole,
+  requests,
+  resources,
+  dispatches = [],
+  partnerAidRequests = [],
+  organisations = [],
+  selectedStrategy,
+  selectedCompetingIds,
+  allocationPlanResult,
+  onChangeStrategy,
+  onToggleCompetingRequest,
+  onRunAllocation,
+  onAddResource,
+  onReplenishResource,
+  onMarkDispatchDelivered,
+  onCreatePartnerAidRequest,
+  onFulfillPartnerAidRequest
+}) => {
+  const [itemName, setItemName] = useState('');
+  const [itemCategory, setItemCategory] = useState('Medicine');
+  const [warehouseName, setWarehouseName] = useState('');
+  const [warehouseLat, setWarehouseLat] = useState(6.9271);
+  const [warehouseLon, setWarehouseLon] = useState(79.8612);
+  const [totalQty, setTotalQty] = useState(100);
+  const [unit, setUnit] = useState('Units');
+  const [coldChain, setColdChain] = useState(false);
+
+  const [replenishAmounts, setReplenishAmounts] = useState<Record<string, number>>({});
+  const [partnerCategory, setPartnerCategory] = useState('Medicine');
+  const [partnerResourceName, setPartnerResourceName] = useState('');
+  const [partnerQty, setPartnerQty] = useState(25);
+  const [partnerJustification, setPartnerJustification] = useState('');
+  const [targetPartnerOrgId, setTargetPartnerOrgId] = useState('');
+
+  const canDispatch =
+    userRole === 'LogisticsManager' ||
+    userRole === 'EmergencyCoordinator' ||
+    userRole === 'PartnerOfficer' ||
+    userRole === 'OrganizationAdmin' ||
+    userRole === 'SystemAdmin';
+
+  const handleCreateResource = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await onAddResource({
+      name: itemName,
+      category: itemCategory,
+      warehouseName,
+      warehouseLatitude: Number(warehouseLat),
+      warehouseLongitude: Number(warehouseLon),
+      totalQuantity: Number(totalQty),
+      availableQuantity: Number(totalQty),
+      unit,
+      supportsColdChain: coldChain,
+      expiryDateUtc: new Date(Date.now() + 45 * 86400000).toISOString()
+    });
+    setItemName('');
+    setWarehouseName('');
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="rounded-3xl overflow-hidden relative min-h-[148px] sm:min-h-[172px] border border-white/10 shadow-lg group">
+        <img
+          src="/images/logistics-depot.jpg"
+          alt="Humanitarian logistics warehouse with cold-chain medical supplies and relief trucks"
+          className="absolute inset-0 w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700"
+        />
+        <div className="crisync-photo-scrim-side absolute inset-0" />
+        <div className="keep-white relative z-10 p-5 sm:p-7 flex flex-wrap items-end justify-between gap-4 min-h-[148px] sm:min-h-[172px]">
+          <div className="space-y-1.5 max-w-xl">
+            <span className="crisync-photo-pill-indigo inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-extrabold text-white">
+              <Warehouse className="w-3.5 h-3.5" />
+              Global Relief Supply Hub
+            </span>
+            <h2 className="crisync-photo-text text-lg sm:text-xl font-black text-white tracking-tight">
+              Cold-Chain Medical Stock &amp; Dispatch Network
+            </h2>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="crisync-photo-pill px-3 py-1.5 rounded-xl text-xs font-extrabold text-white">
+              {resources.length} Active Stock Batches
+            </span>
+            <span className="crisync-photo-pill-emerald px-3 py-1.5 rounded-xl text-xs font-extrabold text-white">
+              Cold-Chain Dispatch Ready
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div className="lg:col-span-6 bento-glass rounded-3xl p-5 sm:p-6 space-y-5">
+          <div className="flex items-center gap-3 pb-4 border-b border-white/[0.08]">
+            <div className="w-10 h-10 rounded-2xl bg-indigo-500/20 border border-indigo-500/40 text-indigo-300 flex items-center justify-center shrink-0">
+              <Sliders className="w-5 h-5" />
+            </div>
+            <div>
+              <span className="text-xs font-bold uppercase tracking-wider text-indigo-400">
+                Smart Supply Allocation & Dispatch Planner
+              </span>
+              <h2 className="text-lg font-extrabold text-white">
+                Plan & Dispatch Warehouse Relief Supplies
+              </h2>
+              <p className="text-xs text-zinc-400">
+                Choose a distribution rule, select the requests you want to fulfill, and preview the delivery plan before dispatching.
+              </p>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-zinc-300 mb-2">
+              Step 1: How should supplies be distributed?
+            </label>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+              {strategyCards.map((st) => {
+                const active = selectedStrategy === st.id;
+                return (
+                  <button
+                    key={st.id}
+                    type="button"
+                    onClick={() => onChangeStrategy(st.id)}
+                    className={`p-3.5 rounded-2xl border text-left transition-all flex flex-col justify-between ${
+                      active
+                        ? 'bg-gradient-to-br from-indigo-500/25 to-purple-500/15 border-2 border-indigo-500 text-white shadow-glow'
+                        : 'bg-white/[0.025] border-white/10 text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.05]'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-1.5">
+                      <Zap className={`w-4 h-4 ${active ? 'text-indigo-400' : 'text-zinc-500'}`} />
+                      {active && <CheckCircle2 className="w-4 h-4 text-indigo-400" />}
+                    </div>
+                    <p className="text-xs font-extrabold text-white leading-snug">{st.title}</p>
+                    <p className="text-[11px] text-zinc-400 mt-1 leading-relaxed">{st.desc}</p>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-xs font-bold text-zinc-300">
+                Step 2: Check the requests to include in this delivery run
+              </label>
+              <span className="text-xs font-bold text-indigo-300 bg-indigo-500/15 px-3 py-0.5 rounded-full border border-indigo-500/30">
+                {selectedCompetingIds.length} Selected
+              </span>
+            </div>
+            <div className="content-scroll space-y-2 max-h-56 overflow-y-auto pr-1">
+              {requests
+                .filter((r) => r.status !== 'MergedAsDuplicate')
+                .map((r) => {
+                  const isChecked = selectedCompetingIds.includes(r.id);
+                  return (
+                    <label
+                      key={r.id}
+                      className={`flex items-center justify-between p-3.5 rounded-2xl border text-xs cursor-pointer transition-all ${
+                        isChecked
+                          ? 'bg-indigo-500/15 border-indigo-500/60 text-white'
+                          : 'bg-white/[0.02] border-white/[0.07] text-zinc-300 hover:bg-white/[0.05]'
+                      }`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={() => onToggleCompetingRequest(r.id)}
+                          className="mt-0.5 w-4 h-4 rounded border-white/20 bg-black/40 text-indigo-500"
+                        />
+                        <div>
+                          <span className="font-mono font-bold text-indigo-300">{r.referenceCode}</span> —{' '}
+                          <span className="font-bold text-white">{r.title}</span>
+                          <p className="text-[11px] text-zinc-400 mt-0.5">
+                            {r.category} • Urgency: <strong className="text-zinc-200">{r.finalApprovedUrgency}</strong> • Quantity Needed:{' '}
+                            <strong className="font-mono text-emerald-300">{r.requestedQuantity} units</strong>
+                          </p>
+                        </div>
+                      </div>
+                    </label>
+                  );
+                })}
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-3 pt-1">
+            <motion.button
+              whileHover={{ scale: 1.01 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => onRunAllocation(false)}
+              className="flex-1 py-3 px-4 rounded-2xl bg-indigo-500/20 hover:bg-indigo-500/30 border border-indigo-500/40 text-indigo-300 font-extrabold text-xs sm:text-sm flex items-center justify-center gap-2 transition"
+            >
+              <Eye className="w-4 h-4 text-indigo-400" />
+              <span>1. Preview Delivery Plan</span>
+            </motion.button>
+            {canDispatch && (
+              <motion.button
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => onRunAllocation(true)}
+                className="keep-white flex-1 py-3 px-4 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs sm:text-sm shadow-md flex items-center justify-center gap-2 transition"
+              >
+                <Truck className="w-4 h-4" />
+                <span>2. Confirm & Dispatch Supplies</span>
+              </motion.button>
+            )}
+          </div>
+        </div>
+
+        <div className="lg:col-span-6 bento-glass rounded-3xl p-5 sm:p-6">
+          <div className="flex items-center justify-between mb-4 pb-4 border-b border-white/[0.08]">
+            <div className="flex items-center gap-2.5">
+              <div className="w-10 h-10 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 flex items-center justify-center">
+                <Truck className="w-5 h-5" />
+              </div>
+              <div>
+                <span className="text-xs font-bold uppercase tracking-wider text-emerald-400">
+                  Recommended Delivery Breakdown
+                </span>
+                <h3 className="text-lg font-extrabold text-white">Supply Allocation Plan Results</h3>
+              </div>
+            </div>
+            {allocationPlanResult && (
+              <span className="text-xs font-bold px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-300">
+                {allocationPlanResult.strategyUsed}
+              </span>
+            )}
+          </div>
+
+          <AnimatePresence mode="wait">
+            {allocationPlanResult ? (
+              <motion.div
+                key={allocationPlanResult.strategyUsed + allocationPlanResult.totalAllocatedAcrossCases}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                className="space-y-4 text-xs"
+              >
+                <div className="p-4 rounded-2xl bg-indigo-500/10 border border-indigo-500/30 space-y-2">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <p className="font-extrabold text-white text-sm">
+  );
+};
