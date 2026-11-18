@@ -294,5 +294,319 @@ export const LogisticsTab: React.FC<LogisticsTabProps> = ({
                 <div className="p-4 rounded-2xl bg-indigo-500/10 border border-indigo-500/30 space-y-2">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <p className="font-extrabold text-white text-sm">
+                      Rule Used: {allocationPlanResult.strategyUsed}
+                    </p>
+                    <span
+                      className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold border ${
+                        allocationPlanResult.shortageEncountered
+                          ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                          : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                      }`}
+                    >
+                      {allocationPlanResult.shortageEncountered ? (
+                        <AlertTriangle className="w-3.5 h-3.5" />
+                      ) : (
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                      )}
+                      {allocationPlanResult.shortageEncountered ? 'Stock Shortage Handled' : 'Full Stock Available'}
+                    </span>
+                  </div>
+                  <p className="text-zinc-300 leading-relaxed">
+                    {allocationPlanResult.architecturalExplanation}
+                  </p>
+                  <div className="grid grid-cols-3 gap-2.5 pt-2">
+                    <div className="bg-black/25 p-3 rounded-xl border border-white/10">
+                      <span className="text-[11px] font-bold text-zinc-400 block">Total Requested</span>
+                      <strong className="font-mono text-base text-white">
+                        {allocationPlanResult.totalRequestedAcrossCases} units
+                      </strong>
+                    </div>
+                    <div className="bg-black/25 p-3 rounded-xl border border-emerald-500/30">
+                      <span className="text-[11px] font-bold text-emerald-400 block">Ready to Send</span>
+                      <strong className="font-mono text-base text-emerald-300">
+                        {allocationPlanResult.totalAllocatedAcrossCases} units
+                      </strong>
+                    </div>
+                    <div className="bg-black/25 p-3 rounded-xl border border-rose-500/30">
+                      <span className="text-[11px] font-bold text-rose-400 block">Remaining Shortage</span>
+                      <strong className="font-mono text-base text-rose-400">
+                        {allocationPlanResult.totalUnmetShortfall} units
+                      </strong>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-2.5 max-h-64 overflow-y-auto pr-1 content-scroll">
+                  {allocationPlanResult.allocations.map((item: any) => {
+                    const fillPct = Math.min(
+                      100,
+                      Math.round((item.allocatedQuantity / Math.max(1, item.requestedQuantity)) * 100)
+                    );
+                    return (
+                      <div
+                        key={item.assistanceRequestId}
+                        className="p-4 rounded-2xl bg-white/[0.03] border border-white/[0.08] space-y-2"
+                      >
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <span className="font-extrabold text-white font-mono text-sm">
+                            {item.requestReferenceCode}{' '}
+                            <span className="font-sans text-xs font-bold text-indigo-300">
+                              (Urgency: {item.urgency})
+                            </span>
+                          </span>
+                          <span className="px-2.5 py-0.5 rounded-full font-mono font-bold bg-emerald-500/20 border border-emerald-500/40 text-emerald-300">
+                            Sending {item.allocatedQuantity} of {item.requestedQuantity} units ({fillPct}%)
+                          </span>
+                        </div>
+                        <div className="relative pt-2.5 pb-1">
+                          <motion.div
+                            initial={{ left: '0%' }}
+                            animate={{ left: `calc(${Math.max(4, fillPct)}% - 12px)` }}
+                            transition={{ duration: 0.85, ease: [0.22, 1, 0.36, 1] as const }}
+                            className="absolute -top-0.5 w-6 h-6 rounded-full bg-indigo-600 border border-indigo-300/70 shadow-md flex items-center justify-center keep-white z-10"
+                          >
+                            <Truck className="w-3 h-3 text-white" />
+                          </motion.div>
+                          <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
+                            <motion.div
+                              initial={{ width: 0 }}
+                              animate={{ width: `${fillPct}%` }}
+                              transition={{ duration: 0.85, ease: [0.22, 1, 0.36, 1] as const }}
+                              className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full crisync-shimmer-bar"
+                            />
+                          </div>
+                        </div>
+                        <p className="text-zinc-400 flex flex-wrap items-center gap-2">
+                          <span className="inline-flex items-center gap-1">
+                            <MapPin className="w-3.5 h-3.5 text-indigo-400" />
+                            From Warehouse: <strong className="text-zinc-200">{item.warehouseName}</strong> ({item.distanceKm} km away)
+                          </span>
+                        </p>
+                        <p className="text-amber-200 font-semibold bg-amber-500/15 px-3 py-1.5 rounded-xl border border-amber-500/30">
+                          Next Step: {item.alternativeRecommendation}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </motion.div>
+            ) : (
+              <div className="p-8 rounded-2xl bg-black/20 border border-dashed border-white/15 text-center space-y-3">
+                <Eye className="w-7 h-7 text-indigo-400 mx-auto" />
+                <p className="text-xs text-zinc-300 leading-relaxed">
+                  Click <strong>"1. Preview Delivery Plan"</strong> on the left (or below) to see how supplies will be divided across your selected requests before dispatching.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => onRunAllocation(false)}
+                  className="keep-white px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition shadow-sm"
+                >
+                  Generate Preview Plan Now
+                </button>
+              </div>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div className="lg:col-span-8 bento-glass rounded-3xl p-5 sm:p-6">
+          <div className="flex items-center justify-between mb-4 pb-4 border-b border-white/[0.08]">
+            <div>
+              <h3 className="text-base sm:text-lg font-extrabold text-white flex items-center gap-2.5">
+                <Warehouse className="w-5 h-5 text-indigo-400" />
+                Current Warehouse Stock & Cold-Storage Inventory
+              </h3>
+              <p className="text-xs text-zinc-400 mt-0.5">
+                Live inventory levels across regional relief depots, including refrigerated medicine stock.
+              </p>
+            </div>
+            <span className="px-3 py-1 rounded-full bg-indigo-500/15 border border-indigo-500/30 text-xs font-bold text-indigo-300">
+              {resources.length} Items in Stock
+            </span>
+          </div>
+          <div className="overflow-x-auto rounded-2xl border border-white/[0.08]">
+            <table className="w-full text-left text-xs">
+              <thead>
+                <tr className="border-b border-white/[0.08] text-zinc-400 bg-white/[0.03] uppercase tracking-wider text-[11px] font-bold">
+                  <th className="py-3.5 px-4">Supply Item</th>
+                  <th className="py-3.5 px-4">Category</th>
+                  <th className="py-3.5 px-4">Warehouse Location</th>
+                  <th className="py-3.5 px-4">Available / Total</th>
+                  <th className="py-3.5 px-4">Storage Type</th>
+                  <th className="py-3.5 px-4">Expiry Date</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/[0.06]">
+                {resources.length === 0 && (
+                  <tr>
+                    <td colSpan={6} className="py-6 px-4 text-center text-xs text-zinc-400">
+                      No relief warehouse inventory added yet. Add incoming medical, food, water, or shelter stock using the panel on the right.
+                    </td>
+                  </tr>
+                )}
+                {resources.map((r) => (
+                  <tr key={r.id} className="hover:bg-white/[0.03] transition-colors">
+                    <td className="py-3.5 px-4 font-bold text-white">{r.name}</td>
+                    <td className="py-3.5 px-4">
+                      <span className="px-2.5 py-0.5 rounded-full bg-white/10 text-zinc-200 font-semibold">
+                        {r.category}
+                      </span>
+                    </td>
+                    <td className="py-3.5 px-4 text-zinc-300">{r.warehouseName}</td>
+                    <td className="py-3.5 px-4 font-mono">
+                      <div>
+                        <span className="font-extrabold text-emerald-300">{r.availableQuantity}</span> /{' '}
+                        {r.totalQuantity} <span className="font-sans text-zinc-400">{r.unit}</span>
+                      </div>
+                      {canDispatch && onReplenishResource && (
+                        <div className="flex items-center gap-1.5 mt-1.5">
+                          <input
+                            type="number"
+                            min={1}
+                            value={replenishAmounts[r.id] ?? 25}
+                            onChange={(e) =>
+                              setReplenishAmounts((prev) => ({
+                                ...prev,
+                                [r.id]: Math.max(1, Number(e.target.value) || 1)
+                              }))
+                            }
+                            className="w-16 px-2 py-0.5 rounded-lg bg-black/30 border border-white/15 text-xs text-white font-mono"
+                          />
+                          <button
+                            type="button"
+                            onClick={() =>
+                              onReplenishResource(
+                                r.id,
+                                replenishAmounts[r.id] ?? 25,
+                                'Warehouse stock replenishment'
+                              )
+                            }
+                            className="keep-white px-2 py-0.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-sans font-bold text-[11px] inline-flex items-center gap-1"
+                          >
+                            <Plus className="w-3 h-3" />
+                            <span>Restock</span>
+                          </button>
+                        </div>
+                      )}
+                    </td>
+                    <td className="py-3.5 px-4">
+                      {r.supportsColdChain ? (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-cyan-500/15 border border-cyan-500/30 text-cyan-300 font-semibold">
+                          <Snowflake className="w-3.5 h-3.5" />
+                          Refrigerated
+                        </span>
+                      ) : (
+                        <span className="text-zinc-400">Room Temp</span>
+                      )}
+                    </td>
+                    <td className="py-3.5 px-4 font-mono text-zinc-400">
+                      <span className="inline-flex items-center gap-1">
+                        <Calendar className="w-3.5 h-3.5 text-zinc-500" />
+                        {r.expiryDateUtc ? new Date(r.expiryDateUtc).toLocaleDateString() : 'N/A'}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {canDispatch && (
+          <div className="lg:col-span-4 bento-glass rounded-3xl p-5 sm:p-6 h-fit">
+            <div className="flex items-center gap-2.5 mb-4 pb-3 border-b border-white/[0.08]">
+              <div className="w-9 h-9 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 flex items-center justify-center shrink-0">
+                <PackagePlus className="w-4 h-4" />
+              </div>
+              <div>
+                <h3 className="text-base font-extrabold text-white">
+                  Add New Stock to Warehouse
+                </h3>
+                <p className="text-xs text-zinc-400">
+                  Record incoming supplies or partner donations
+                </p>
+              </div>
+            </div>
+
+            <form onSubmit={handleCreateResource} className="space-y-3.5 text-xs">
+              <div>
+                <label className="block font-bold text-zinc-300 mb-1">Supply Item Name</label>
+                <input
+                  type="text"
+                  required
+                  value={itemName}
+                  onChange={(e) => setItemName(e.target.value)}
+                  placeholder="Enter exact supply description"
+                  className="rsvp-input"
+                />
+                <p className="text-[11px] text-zinc-400/75 opacity-75 mt-1 font-normal">
+                  Example: Bottled Drinking Water (5L Packs) or Cold-Chain Insulin Vials
+                </p>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                <div>
+                  <label className="block font-bold text-zinc-300 mb-1">Category</label>
+                  <select
+                    value={itemCategory}
+                    onChange={(e) => setItemCategory(e.target.value)}
+                    className="rsvp-input"
+                  >
+                    <option value="Medicine">Medicine</option>
+                    <option value="Food">Food</option>
+                    <option value="WaterAndSanitation">Clean Water &amp; Sanitation</option>
+                    <option value="TemporaryShelter">Shelter Supplies</option>
+                    <option value="Transportation">Emergency Transportation</option>
+                    <option value="AccessibilityAssistance">Accessibility &amp; Mobility Aids</option>
+                    <option value="SearchAndRescue">Search &amp; Rescue Gear</option>
+                    <option value="MedicalEvacuation">Medical Evacuation</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block font-bold text-zinc-300 mb-1">Quantity</label>
+                  <input
+                    type="number"
+                    min={1}
+                    value={totalQty}
+                    onChange={(e) => setTotalQty(Number(e.target.value))}
+                    className="rsvp-input font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-zinc-300 mb-1">Unit</label>
+                  <input
+                    type="text"
+                    required
+                    value={unit}
+                    onChange={(e) => setUnit(e.target.value)}
+                    placeholder="Units / Vials / Packs"
+                    className="rsvp-input"
+                  />
+                  <p className="text-[11px] text-zinc-400/75 opacity-75 mt-1 font-normal">
+                    Example: Kits, Packs
+                  </p>
+                </div>
+              </div>
+              <div>
+                <label className="block font-bold text-zinc-300 mb-1">Warehouse Location Name</label>
+                <input
+                  type="text"
+                  required
+                  value={warehouseName}
+                  onChange={(e) => setWarehouseName(e.target.value)}
+                  placeholder="Depot or storage facility name"
+                  className="rsvp-input"
+                />
+                <p className="text-[11px] text-zinc-400/75 opacity-75 mt-1 font-normal">
+                  Example: Central Port Relief Depot / District Cold Storage
+                </p>
+              </div>
+              <div className="grid grid-cols-2 gap-2.5">
+                <div>
+                  <label className="block font-bold text-zinc-300 mb-1">Warehouse Lat</label>
+                  <input
+                    type="number"
+                    step="0.0001"
+                    value={warehouseLat}
   );
 };
