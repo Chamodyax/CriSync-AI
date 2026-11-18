@@ -1797,5 +1797,685 @@ export const DonationsTab: React.FC<{
                       {(c.expenditures || []).map((exp: any) => (
                         <div key={exp.id} className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-zinc-300 bg-black/20 px-3 py-2 rounded-xl border border-white/[0.06]">
                           <span>
+                            <strong className="text-emerald-300">[{exp.category}]</strong> {exp.description}
+                          </span>
+                          <span className="font-mono font-bold text-white">
+                            -${Number(exp.amountUsd).toLocaleString()} USD • {exp.recordedByUserName}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+
+          {canApproveCompliance && onRecordExpenditure && campaigns.length > 0 && (
+            <div className="lg:col-span-4 bento-glass rounded-3xl p-5 sm:p-6 h-fit space-y-3.5 text-xs">
+              <div className="pb-3 border-b border-white/[0.08]">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-indigo-400 block">
+                  Disbursement Audit Control
+                </span>
+                <h3 className="text-base font-extrabold text-white">
+                  Record Relief Expenditure
+                </h3>
+              </div>
+              <form
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  const targetCamp = expCampaignId || campaigns[0]?.id;
+                  if (!targetCamp || !expDescription.trim()) return;
+                  await onRecordExpenditure(targetCamp, {
+                    amountUsd: Number(expAmountUsd),
+                    category: expCategory,
+                    description: expDescription
+                  });
+                  setExpDescription('');
+                }}
+                className="space-y-3"
+              >
+                <div>
+                  <label className="block font-bold text-zinc-300 mb-1">Campaign</label>
+                  <select
+                    value={expCampaignId || campaigns[0]?.id || ''}
+                    onChange={(e) => setExpCampaignId(e.target.value)}
+                    className="rsvp-input"
+                  >
+                    {campaigns.map((c: any) => (
+                      <option key={c.id} value={c.id}>{c.title}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block font-bold text-zinc-300 mb-1">Category</label>
+                    <select
+                      value={expCategory}
+                      onChange={(e) => setExpCategory(e.target.value)}
+                      className="rsvp-input"
+                    >
+                      <option value="MedicalSupplies">Medical Supplies</option>
+                      <option value="FoodAndWaterLogistics">Food &amp; Water</option>
+                      <option value="ShelterOperations">Shelter Operations</option>
+                      <option value="SearchAndRescue">Search &amp; Rescue</option>
+                      <option value="ReliefOperations">Relief Operations</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block font-bold text-zinc-300 mb-1">Amount (USD)</label>
+                    <input
+                      type="number"
+                      min={1}
+                      required
+                      value={expAmountUsd}
+                      onChange={(e) => setExpAmountUsd(Number(e.target.value))}
+                      className="rsvp-input font-mono"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block font-bold text-zinc-300 mb-1">Expenditure Description</label>
+                  <textarea
+                    rows={2}
+                    required
+                    value={expDescription}
+                    onChange={(e) => setExpDescription(e.target.value)}
+                    placeholder="Supplier invoice or field distribution purpose"
+                    className="rsvp-input resize-none"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="keep-white w-full py-2.5 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold shadow-sm"
+                >
+                  Approve &amp; Record Disbursement
+                </button>
+              </form>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+const ADMIN_EDITABLE_ROLES = [
+  'Citizen',
+  'Donor',
+  'Volunteer',
+  'EmergencyCoordinator',
+  'CaseManager',
+  'LogisticsManager',
+  'ShelterAdmin',
+  'VolunteerCoordinator',
+  'DonorOfficer',
+  'PartnerOfficer',
+  'OrganizationAdmin',
+  'SystemAdmin'
+];
+
+const CRISIS_TYPES = ['Flood', 'Landslide', 'Earthquake', 'SevereStorm', 'DiseaseOutbreak', 'MassDisplacement', 'Other'];
+const CRISIS_SEVERITIES = ['Low', 'Moderate', 'High', 'Critical', 'Catastrophic'];
+const RESOURCE_CATEGORIES = ['Food', 'Medicine', 'TemporaryShelter', 'Transportation', 'AccessibilityAssistance', 'WaterAndSanitation', 'SearchAndRescue', 'MedicalEvacuation'];
+const SHELTER_STATUSES = ['Operational', 'AtCapacity', 'Maintenance', 'Closed'];
+
+const SystemAdminControlCenter: React.FC<{
+  userRole: string;
+  adminUsers: any[];
+  currentUserId?: string;
+  organisations: any[];
+  crises: any[];
+  shelters: any[];
+  resources: any[];
+  requests: any[];
+  volunteers: any[];
+  campaigns: any[];
+  adminPartnerships?: any[];
+  rolePermissions?: any[];
+  systemConfig?: any;
+  serviceSettings?: any;
+  onAdminCreateUser?: (payload: any) => Promise<any>;
+  onInviteStaff?: (payload: any) => Promise<any>;
+  onAdminUpdateUser?: (id: string, payload: any) => Promise<void>;
+  onAdminDeleteUser?: (id: string, label: string) => Promise<void>;
+  onApprovePartnership?: (orgId: string, orgName: string) => Promise<void>;
+  onRejectPartnership?: (orgId: string, orgName: string) => Promise<void>;
+  onAddRolePermission?: (payload: any) => Promise<void>;
+  onDeleteRolePermission?: (id: string) => Promise<void>;
+  onUpdateSystemConfig?: (payload: any) => Promise<void>;
+  onUpdateServiceSettings?: (payload: any) => Promise<void>;
+  onAdminUpdateCrisis?: (id: string, payload: any) => Promise<void>;
+  onAdminDeleteCrisis?: (id: string, label: string) => Promise<void>;
+  onAdminUpdateShelter?: (id: string, payload: any) => Promise<void>;
+  onAdminDeleteShelter?: (id: string, label: string) => Promise<void>;
+  onAdminUpdateResource?: (id: string, payload: any) => Promise<void>;
+  onAdminDeleteResource?: (id: string, label: string) => Promise<void>;
+  onAdminDeleteRequest?: (id: string, label: string) => Promise<void>;
+  onAdminDeleteVolunteer?: (id: string, label: string) => Promise<void>;
+  onAdminDeleteCampaign?: (id: string, label: string) => Promise<void>;
+}> = ({
+  userRole,
+  adminUsers,
+  currentUserId,
+  organisations,
+  crises,
+  shelters,
+  resources,
+  requests,
+  volunteers,
+  campaigns,
+  adminPartnerships = [],
+  rolePermissions = [],
+  systemConfig,
+  serviceSettings,
+  onAdminCreateUser,
+  onInviteStaff,
+  onAdminUpdateUser,
+  onAdminDeleteUser,
+  onApprovePartnership,
+  onRejectPartnership,
+  onAddRolePermission,
+  onDeleteRolePermission,
+  onUpdateSystemConfig,
+  onUpdateServiceSettings,
+  onAdminUpdateCrisis,
+  onAdminDeleteCrisis,
+  onAdminUpdateShelter,
+  onAdminDeleteShelter,
+  onAdminUpdateResource,
+  onAdminDeleteResource,
+  onAdminDeleteRequest,
+  onAdminDeleteVolunteer,
+  onAdminDeleteCampaign
+}) => {
+  const isGlobalAdmin = userRole === 'SystemAdmin';
+  const assignableRoles = ADMIN_EDITABLE_ROLES.filter(
+    (r) => isGlobalAdmin || (r !== 'SystemAdmin' && r !== 'OrganizationAdmin' && r !== 'DonorOfficer')
+  );
+
+  const [adminTab, setAdminTab] = useState<
+    'users' | 'partnerships' | 'permissions' | 'integrations' | 'config' | 'crises' | 'shelters' | 'resources' | 'requests' | 'volunteers' | 'campaigns'
+  >('users');
+  const [editingUserId, setEditingUserId] = useState<string | null>(null);
+  const [userDraft, setUserDraft] = useState<any>({});
+  const [createUserForm, setCreateUserForm] = useState({
+    fullName: '',
+    email: '',
+    phoneNumber: '',
+    password: '',
+    role: isGlobalAdmin ? 'CaseManager' : 'CaseManager',
+    organisationId: '',
+    preferredLanguage: 'en'
+  });
+  const [sharedCredentials, setSharedCredentials] = useState<{
+    fullName: string;
+    email: string;
+    password: string;
+    role: string;
+    invitationCode?: string;
+  } | null>(null);
+  const [copiedCredentials, setCopiedCredentials] = useState(false);
+  const [permForm, setPermForm] = useState({
+    role: 'CaseManager',
+    permissionCode: '',
+    description: ''
+  });
+  const [configDraft, setConfigDraft] = useState<any>({
+    minGlobalAdmins: 2,
+    maxGlobalAdmins: 3,
+    maxOrganizationAdmins: 3,
+    requireVolunteerCoordinatorVerification: true,
+    requirePartnerAdminApproval: true,
+    highValueDonationThresholdUsd: 50000
+  });
+  const [serviceDraft, setServiceDraft] = useState<any>({
+    aiProviderName: 'Azure OpenAI / Local Rule Fallback',
+    aiModelName: 'crisync-triage-v2',
+    aiConfidenceThreshold: 0.72,
+    simulateExternalAiFailure: false,
+    smsProviderName: 'Twilio Humanitarian Gateway',
+    smsSenderId: 'CRISYNC',
+    smsIdempotencyWindowMinutes: 60,
+    simulateExternalNotificationFailure: false,
+    emailSmtpProvider: 'SendGrid Relief Relay',
+    emailSenderAddress: 'alerts@crisync.org',
+    emailAlertsEnabled: true,
+    mappingProviderName: 'OpenStreetMap / OSRM Routing',
+    geocodingProviderName: 'Nominatim Disaster Geocode',
+    simulateExternalMappingFailure: false
+  });
+  const [editingEntityKey, setEditingEntityKey] = useState<string | null>(null);
+  const [entityDraft, setEntityDraft] = useState<any>({});
+  const [confirmDeleteKey, setConfirmDeleteKey] = useState<string | null>(null);
+  const [busyKey, setBusyKey] = useState<string | null>(null);
+  const [unlockedAdminFields, setUnlockedAdminFields] = useState<Record<string, boolean>>({});
+  const unlockAdminField = (fieldKey: string) => {
+    setUnlockedAdminFields((prev) => (prev[fieldKey] ? prev : { ...prev, [fieldKey]: true }));
+  };
+
+  useEffect(() => {
+    if (systemConfig) {
+      setConfigDraft(systemConfig);
+    }
+  }, [systemConfig]);
+
+  useEffect(() => {
+    if (serviceSettings) {
+      setServiceDraft(serviceSettings);
+    }
+  }, [serviceSettings]);
+
+  const activeGlobalAdminsCount = adminUsers.filter((u) => u.role === 'SystemAdmin' && u.isActive).length;
+  const activeOrgAdminsCount = adminUsers.filter((u) => u.role === 'OrganizationAdmin' && u.isActive).length;
+  const pendingPartnershipsCount = adminPartnerships.filter((p) => p.partnershipStatus === 'Pending').length;
+
+  const runBusy = async (key: string, fn: () => Promise<void>) => {
+    setBusyKey(key);
+    try {
+      await fn();
+    } finally {
+      setBusyKey(null);
+    }
+  };
+
+  const renderDeleteButton = (key: string, onConfirm: () => Promise<void>) => {
+    if (confirmDeleteKey === key) {
+      return (
+        <div className="flex items-center gap-1.5">
+          <button
+            type="button"
+            disabled={busyKey === key}
+            onClick={() =>
+              runBusy(key, async () => {
+                await onConfirm();
+                setConfirmDeleteKey(null);
+              })
+            }
+            className="keep-white px-2.5 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-[11px] font-extrabold transition"
+          >
+            Confirm Remove
+          </button>
+          <button
+            type="button"
+            onClick={() => setConfirmDeleteKey(null)}
+            className="px-2.5 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-zinc-300 text-[11px] font-bold transition"
+          >
+            Cancel
+          </button>
+        </div>
+      );
+    }
+    return (
+      <button
+        type="button"
+        onClick={() => setConfirmDeleteKey(key)}
+        className="px-2.5 py-1.5 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-300 text-[11px] font-bold inline-flex items-center gap-1 transition"
+      >
+        <Trash2 className="w-3.5 h-3.5" />
+        <span>Remove</span>
+      </button>
+    );
+  };
+
+  const tabs = [
+    { id: 'users' as const, label: `Users & Staff (${adminUsers.length})` },
+    { id: 'partnerships' as const, label: `Partnerships (${pendingPartnershipsCount} Pending)` },
+    { id: 'permissions' as const, label: `Roles & Permissions (${rolePermissions.length})` },
+    { id: 'integrations' as const, label: 'AI, SMS, Email & Maps' },
+    { id: 'config' as const, label: 'Core Config' },
+    { id: 'crises' as const, label: `Crises (${crises.length})` },
+    { id: 'shelters' as const, label: `Shelters (${shelters.length})` },
+    { id: 'resources' as const, label: `Inventory (${resources.length})` },
+    { id: 'requests' as const, label: `Requests (${requests.length})` },
+    { id: 'volunteers' as const, label: `Volunteers (${volunteers.length})` },
+    { id: 'campaigns' as const, label: `Campaigns (${campaigns.length})` }
+  ];
+
+  return (
+    <div className="bento-glass rounded-3xl p-5 sm:p-6 space-y-5 border border-indigo-500/25">
+      <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-white/[0.08]">
+        <div>
+          <span className="text-xs font-bold uppercase tracking-wider text-indigo-400 flex items-center gap-1.5">
+            <UserCog className="w-4 h-4" />
+            {isGlobalAdmin ? 'Global System Administrator Control Center' : 'Organization Admin Control Center'}
+          </span>
+          <h2 className="text-lg font-extrabold text-white mt-0.5">
+            Staff Accounts, Partnerships, Role Permissions & System Integrations
+          </h2>
+          <p className="text-xs text-zinc-400 mt-0.5">
+            Manage operational staff, approve Partner Organizations, enforce the Small Admin Count Policy, configure roles/permissions, and manage AI, SMS, Email & Mapping services.
+          </p>
+        </div>
+        <span className="px-3 py-1.5 rounded-full bg-violet-500/15 border border-violet-500/35 text-xs font-bold text-violet-300 inline-flex items-center gap-1.5">
+          <Database className="w-3.5 h-3.5" />
+          {userRole}
+        </span>
+      </div>
+
+      <div className="p-3.5 rounded-2xl bg-indigo-500/10 border border-indigo-500/30 grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+        <div>
+          <p className="font-extrabold text-white">Small Number of Admins Policy</p>
+          <p className="text-[11px] text-zinc-300 mt-0.5">
+            Maintains at least {configDraft.minGlobalAdmins} active Global Admins so control is never lost during an emergency, while capping admins at {configDraft.maxGlobalAdmins} Global / {configDraft.maxOrganizationAdmins} Org Admins to minimize security attack risks.
+          </p>
+        </div>
+        <div className="p-2.5 rounded-xl bg-black/25 border border-white/10 flex items-center justify-between">
+          <span className="font-bold text-zinc-300">Global System Admins</span>
+          <span className="font-mono font-extrabold text-emerald-300">
+            {activeGlobalAdminsCount} / {configDraft.maxGlobalAdmins} (Min {configDraft.minGlobalAdmins})
+          </span>
+        </div>
+        <div className="p-2.5 rounded-xl bg-black/25 border border-white/10 flex items-center justify-between">
+          <span className="font-bold text-zinc-300">Organization Admins</span>
+          <span className="font-mono font-extrabold text-fuchsia-300">
+            {activeOrgAdminsCount} / {configDraft.maxOrganizationAdmins}
+          </span>
+        </div>
+      </div>
+
+      <div className="flex flex-wrap gap-1.5 p-1.5 rounded-2xl bg-black/25 border border-white/[0.08]">
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            onClick={() => {
+              setAdminTab(tab.id);
+              setConfirmDeleteKey(null);
+            }}
+            className={`px-3.5 py-2 rounded-xl text-xs font-extrabold transition ${
+              adminTab === tab.id
+                ? 'bg-indigo-600 text-white keep-white shadow-sm'
+                : 'text-zinc-400 hover:text-white hover:bg-white/[0.05]'
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {adminTab === 'users' && (
+        <div className="space-y-4">
+          {onAdminCreateUser && (
+            <div className="p-4 sm:p-5 rounded-2xl bg-violet-500/[0.08] border border-violet-500/30 space-y-3.5 text-xs">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <h3 className="text-sm font-extrabold text-white flex items-center gap-2">
+                    <UserPlus className="w-4 h-4 text-violet-400" />
+                    <span>Create New System Administrator or Role Account (Shareable Credentials)</span>
+                  </h3>
+                  <p className="text-[11px] text-zinc-400 mt-0.5">
+                    Provision a new System Administrator or operational staff/citizen account and copy its credentials to share securely with another person.
+                  </p>
+                </div>
+              </div>
+
+              <div
+                aria-hidden="true"
+                className="pointer-events-none fixed -left-[9999px] top-0 h-px w-px opacity-0 overflow-hidden"
+              >
+                <input type="text" name="prevent_admin_create_autofill_user" autoComplete="username" tabIndex={-1} defaultValue="" />
+                <input type="password" name="prevent_admin_create_autofill_pass" autoComplete="current-password" tabIndex={-1} defaultValue="" />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div>
+                  <label className="block font-bold text-zinc-300 mb-1">Full Name</label>
+                  <input
+                    type="text"
+                    name="crisync_admin_create_fullname"
+                    autoComplete="off"
+                    value={createUserForm.fullName}
+                    onChange={(e) => setCreateUserForm({ ...createUserForm, fullName: e.target.value })}
+                    placeholder="Enter person's full name"
+                    className="rsvp-input"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-zinc-300 mb-1">Email / Username</label>
+                  <input
+                    type="email"
+                    name="crisync_admin_create_email"
+                    autoComplete="off"
+                    readOnly={!unlockedAdminFields.createEmail}
+                    onFocus={() => unlockAdminField('createEmail')}
+                    onMouseDown={() => unlockAdminField('createEmail')}
+                    onKeyDown={() => unlockAdminField('createEmail')}
+                    value={createUserForm.email}
+                    onChange={(e) => setCreateUserForm({ ...createUserForm, email: e.target.value })}
+                    placeholder="new.admin@crisync.org"
+                    className="rsvp-input"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-zinc-300 mb-1">Phone Number</label>
+                  <input
+                    type="text"
+                    name="crisync_admin_create_phone"
+                    autoComplete="off"
+                    value={createUserForm.phoneNumber}
+                    onChange={(e) => setCreateUserForm({ ...createUserForm, phoneNumber: e.target.value })}
+                    placeholder="+94 77 123 4567"
+                    className="rsvp-input"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-zinc-300 mb-1">Initial Password</label>
+                  <input
+                    type="text"
+                    name="crisync_admin_create_password"
+                    autoComplete="new-password"
+                    readOnly={!unlockedAdminFields.createPassword}
+                    onFocus={() => unlockAdminField('createPassword')}
+                    onMouseDown={() => unlockAdminField('createPassword')}
+                    onKeyDown={() => unlockAdminField('createPassword')}
+                    value={createUserForm.password}
+                    onChange={(e) => setCreateUserForm({ ...createUserForm, password: e.target.value })}
+                    placeholder="Minimum 6 characters"
+                    className="rsvp-input font-mono"
+                  />
+                  <p className="text-[11px] text-zinc-400/75 opacity-75 mt-1 font-normal">
+                    Example: Use a strong temporary password to share with the recipient
+                  </p>
+                </div>
+                <div>
+                  <label className="block font-bold text-zinc-300 mb-1">Account Role</label>
+                  <select
+                    value={createUserForm.role}
+                    onChange={(e) => setCreateUserForm({ ...createUserForm, role: e.target.value })}
+                    className="rsvp-input"
+                  >
+                    {assignableRoles.map((r) => (
+                      <option key={r} value={r}>
+                        {r === 'SystemAdmin'
+                          ? 'Global System Admin (Max 3)'
+                          : r === 'OrganizationAdmin'
+                            ? 'Organization Admin'
+                            : r === 'DonorOfficer'
+                              ? 'Donor / Funding Officer (Global Admin Only)'
+                              : r}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block font-bold text-zinc-300 mb-1">Organisation</label>
+                  <select
+                    value={createUserForm.organisationId}
+                    onChange={(e) => setCreateUserForm({ ...createUserForm, organisationId: e.target.value })}
+                    disabled={createUserForm.role === 'Citizen' || createUserForm.role === 'Donor'}
+                    className="rsvp-input disabled:opacity-50"
+                  >
+                    <option value="">Independent / None</option>
+                    {organisations.map((org) => (
+                      <option key={org.id} value={org.id}>
+                        {org.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+                <span className="text-[11px] text-zinc-400">
+                  {isGlobalAdmin
+                    ? 'Global System Admin can invite operational staff, appoint Donor / Funding Officers (financial access), and manage Two-Tier Admins under the small-count policy.'
+                    : 'Organization Admin can manage staff accounts for invited operational roles; only Global System Admin can appoint Donor / Funding Officers or new Admins.'}
+                </span>
+                <button
+                  type="button"
+                  disabled={
+                    busyKey === 'create-admin-user' ||
+                    !createUserForm.fullName.trim() ||
+                    !createUserForm.email.trim() ||
+                    createUserForm.password.trim().length < 6
+                  }
+                  onClick={() =>
+                    runBusy('create-admin-user', async () => {
+                      const capturedPassword = createUserForm.password;
+                      const isInvitedOperational = ['CaseManager', 'ShelterAdmin', 'LogisticsManager', 'VolunteerCoordinator', 'DonorOfficer', 'EmergencyCoordinator'].includes(createUserForm.role);
+                      const created = isInvitedOperational && onInviteStaff
+                        ? await onInviteStaff({
+                            fullName: createUserForm.fullName.trim(),
+                            email: createUserForm.email.trim(),
+                            phoneNumber: createUserForm.phoneNumber.trim(),
+                            temporaryPassword: capturedPassword,
+                            role: createUserForm.role,
+                            organisationId: createUserForm.organisationId || null,
+                            preferredLanguage: createUserForm.preferredLanguage
+                          })
+                        : await onAdminCreateUser({
+                            fullName: createUserForm.fullName.trim(),
+                            email: createUserForm.email.trim(),
+                            phoneNumber: createUserForm.phoneNumber.trim(),
+                            password: capturedPassword,
+                            role: createUserForm.role,
+                            organisationId:
+                              createUserForm.role === 'Citizen' || createUserForm.role === 'Donor' || !createUserForm.organisationId
+                                ? null
+                                : createUserForm.organisationId,
+                            preferredLanguage: createUserForm.preferredLanguage
+                          });
+                      if (created) {
+                        setSharedCredentials({
+                          fullName: created.fullName,
+                          email: created.email,
+                          password: capturedPassword,
+                          role: created.role,
+                          invitationCode: created.invitationCode
+                        });
+                        setCopiedCredentials(false);
+                        setCreateUserForm({
+                          fullName: '',
+                          email: '',
+                          phoneNumber: '',
+                          password: '',
+                          role: 'CaseManager',
+                          organisationId: '',
+                          preferredLanguage: 'en'
+                        });
+                      }
+                    })
+                  }
+                  className="keep-white px-4 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-extrabold inline-flex items-center gap-1.5 shadow-sm disabled:opacity-50"
+                >
+                  <UserPlus className="w-3.5 h-3.5" />
+                  <span>{busyKey === 'create-admin-user' ? 'Creating Account...' : 'Create Account & Generate Credentials'}</span>
+                </button>
+              </div>
+
+              {sharedCredentials && (
+                <div className="p-3.5 rounded-2xl bg-emerald-500/15 border border-emerald-500/35 flex flex-wrap items-center justify-between gap-3">
+                  <div className="space-y-0.5 text-xs">
+                    <p className="font-extrabold text-emerald-300">
+                      Shareable Account Credentials Ready ({sharedCredentials.role})
+                    </p>
+                    <p className="text-zinc-200 font-mono">
+                      Name: {sharedCredentials.fullName} • Email: {sharedCredentials.email} • Password: {sharedCredentials.password}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const textToCopy = `Crisync Account Credentials\nRole: ${sharedCredentials.role}\nName: ${sharedCredentials.fullName}\nEmail: ${sharedCredentials.email}\nPassword: ${sharedCredentials.password}`;
+                      if (typeof navigator !== 'undefined' && navigator.clipboard) {
+                        navigator.clipboard.writeText(textToCopy).catch(() => {});
+                      }
+                      setCopiedCredentials(true);
+                    }}
+                    className="keep-white px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold inline-flex items-center gap-1.5 shrink-0"
+                  >
+                    {copiedCredentials ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                    <span>{copiedCredentials ? 'Copied!' : 'Copy Credentials to Send'}</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {adminUsers.length === 0 ? (
+            <p className="text-xs text-zinc-400 py-4 text-center">No registered accounts found yet.</p>
+          ) : (
+            adminUsers.map((u) => {
+              const isDefaultAdmin = u.email?.toLowerCase() === 'admin@crisync.org';
+              const isCurrentUser = Boolean(currentUserId && u.id === currentUserId);
+              const isEditing = editingUserId === u.id;
+              return (
+                <div
+                  key={u.id}
+                  className="p-4 rounded-2xl bg-white/[0.03] border border-white/[0.08] space-y-3"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="text-sm font-extrabold text-white">{u.fullName}</p>
+                        <span className="px-2.5 py-0.5 rounded-full bg-indigo-500/15 border border-indigo-500/30 text-[11px] font-bold text-indigo-300">
+                          {u.role}
+                        </span>
+                        <span
+                          className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${
+                            u.isActive
+                              ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-300'
+                              : 'bg-rose-500/15 border-rose-500/30 text-rose-300'
+                          }`}
+                        >
+                          {u.isActive ? u.accountStatus || 'Active' : 'Deactivated'}
+                        </span>
+                        {u.invitationCode && (
+                          <span className="px-2 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-[10px] font-mono text-amber-300">
+                            {u.invitationCode}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-zinc-400 mt-1">
+                        {u.email} • {u.phoneNumber || 'No phone'} • {u.organisationName}
+                        {u.invitedByUserName ? ` • By: ${u.invitedByUserName}` : ''}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (isEditing) {
+                            setEditingUserId(null);
+                          } else {
+                            setUnlockedAdminFields((prev) => ({ ...prev, [`resetPass:${u.id}`]: false }));
+                            setEditingUserId(u.id);
+                            setUserDraft({
+                              fullName: u.fullName || '',
+                              email: u.email || '',
+                              phoneNumber: u.phoneNumber || '',
+                              role: u.role || 'Citizen',
+                              organisationId: u.organisationId || '',
+                              isActive: Boolean(u.isActive),
+                              newPassword: ''
+                            });
+                          }
+                        }}
+                        className="px-3 py-1.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 text-zinc-200 text-[11px] font-bold inline-flex items-center gap-1 transition"
+                      >
+                        {isEditing ? <X className="w-3.5 h-3.5" /> : <Pencil className="w-3.5 h-3.5" />}
+                        <span>{isEditing ? 'Close' : 'Edit User'}</span>
+                      </button>
   );
 };
