@@ -41,3 +41,39 @@ public class ServiceResilienceMonitor : IServiceResilienceMonitor
             SimulateExternalNotificationFailure,
             AiCircuitTripCount,
             MappingCircuitTripCount,
+            NotificationCircuitTripCount,
+            aiMode,
+            mappingMode,
+            notificationMode
+        );
+    }
+}
+
+public class GovernanceConfigProvider : IGovernanceConfigProvider
+{
+    private readonly object _configLock = new();
+    private SystemGovernanceConfigDto _config = new(
+        MinGlobalAdmins: 2,
+        MaxGlobalAdmins: 3,
+        MaxOrganizationAdmins: 3,
+        RequireVolunteerCoordinatorVerification: true,
+        RequirePartnerAdminApproval: true,
+        HighValueDonationThresholdUsd: 50000m
+    );
+
+    public SystemGovernanceConfigDto GetConfig()
+    {
+        lock (_configLock)
+        {
+            return _config;
+        }
+    }
+
+    public void UpdateConfig(SystemGovernanceConfigDto config)
+    {
+        lock (_configLock)
+        {
+            _config = config;
+        }
+    }
+}
