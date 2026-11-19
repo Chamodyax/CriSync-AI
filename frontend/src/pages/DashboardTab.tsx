@@ -24,9 +24,13 @@ import {
   PlusCircle,
   Send,
   UserPlus,
-  KeyRound
+  KeyRound,
+  X,
+  ZoomIn,
+  Camera
 } from 'lucide-react';
 import { LANGUAGE_OPTIONS, SupportedLanguage, TRANSLATIONS } from '../i18n';
+import { resolveEvidencePhoto } from '../utils/fieldPhotos';
 
 function AnimatedCounter({ value }: { value: number }) {
   const [displayValue, setDisplayValue] = useState(0);
@@ -160,6 +164,12 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
   const [crisisLon, setCrisisLon] = useState(79.8612);
   const [crisisRadiusKm, setCrisisRadiusKm] = useState(15);
   const [commandSubmitting, setCommandSubmitting] = useState(false);
+  const [lightboxPhoto, setLightboxPhoto] = useState<{
+    src: string;
+    title: string;
+    caption: string;
+    fileName?: string;
+  } | null>(null);
 
   const activeAlertCrisisId = alertCrisisId || crises[0]?.id || '';
 
@@ -926,9 +936,29 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          className="lg:col-span-6 bento-glass rounded-3xl p-5 sm:p-6 relative overflow-hidden flex flex-col justify-between"
+          className="lg:col-span-6 bento-glass rounded-3xl p-5 sm:p-6 relative overflow-hidden flex flex-col justify-between group"
         >
           <div>
+            <div className="-mx-5 -mt-5 sm:-mx-6 sm:-mt-6 mb-4 h-36 sm:h-44 relative overflow-hidden">
+              <img
+                src="/images/hero-relief.jpg"
+                alt="Active humanitarian emergency field operation"
+                className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700"
+              />
+              <div className="crisync-photo-scrim absolute inset-0" />
+              <div className="keep-white absolute bottom-3 left-4 right-4 flex flex-wrap items-center justify-between gap-2">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-600/80 border border-rose-400/50 text-[10px] font-extrabold text-white backdrop-blur-md">
+                  <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
+                  Live Field Operation • Active Response
+                </span>
+                {crises[0] && (
+                  <span className="px-2.5 py-1 rounded-lg bg-slate-950/60 border border-white/20 text-[10px] font-bold text-zinc-100 backdrop-blur-sm">
+                    {crises[0].region || crises[0].country || 'Sri Lanka'} • {crises[0].severity || 'Active'}
+                  </span>
+                )}
+              </div>
+            </div>
+
             <div className="flex flex-wrap items-center justify-between gap-3 mb-4 pb-3.5 border-b border-white/[0.08]">
               <div className="flex items-center gap-2.5">
                 <div className="w-9 h-9 rounded-2xl bg-indigo-500/20 border border-indigo-500/40 text-indigo-300 flex items-center justify-center shrink-0">
@@ -1270,6 +1300,54 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                     {req.description}
                   </p>
 
+                  {req.supportingEvidenceFileName && (() => {
+                    const evidencePhoto = resolveEvidencePhoto(
+                      req.supportingEvidenceFileName,
+                      req.category
+                    );
+                    return (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setLightboxPhoto({
+                            src: evidencePhoto.src,
+                            title: req.title,
+                            caption: evidencePhoto.caption,
+                            fileName: req.supportingEvidenceFileName
+                          })
+                        }
+                        className="mb-3.5 w-full text-left p-2.5 rounded-2xl bg-black/25 hover:bg-indigo-500/10 border border-white/[0.08] hover:border-indigo-400/40 transition-all flex items-center gap-3 group/photo"
+                      >
+                        <div className="relative h-20 w-32 sm:h-24 sm:w-40 rounded-xl overflow-hidden shrink-0 border border-white/10">
+                          <img
+                            src={evidencePhoto.src}
+                            alt={evidencePhoto.caption}
+                            className="w-full h-full object-cover group-hover/photo:scale-105 transition-transform duration-500"
+                          />
+                          <div className="keep-white absolute inset-0 bg-slate-950/25 opacity-0 group-hover/photo:opacity-100 transition-opacity flex items-center justify-center">
+                            <ZoomIn className="w-5 h-5 text-white drop-shadow" />
+                          </div>
+                        </div>
+                        <div className="min-w-0 flex-1 space-y-1">
+                          <span className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-wider text-indigo-300">
+                            <Camera className="w-3 h-3" />
+                            <span>Verified Field Photo</span>
+                          </span>
+                          <p className="text-xs font-bold text-white truncate">
+                            {evidencePhoto.caption}
+                          </p>
+                          <p className="text-[11px] font-mono text-zinc-400 truncate">
+                            {req.supportingEvidenceFileName}
+                          </p>
+                          <span className="inline-flex items-center gap-1 text-[11px] font-bold text-cyan-300">
+                            <ZoomIn className="w-3 h-3" />
+                            <span>Click to Enlarge</span>
+                          </span>
+                        </div>
+                      </button>
+                    );
+                  })()}
+
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 p-3 rounded-2xl bg-black/20 border border-white/[0.06] text-xs">
                     <div className="flex items-center gap-1.5 text-zinc-300 truncate">
                       <MapPin className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
@@ -1408,6 +1486,56 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
           })}
         </div>
       </div>
+
+      <AnimatePresence>
+        {lightboxPhoto && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setLightboxPhoto(null)}
+            className="crisync-lightbox-backdrop fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6"
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.94, y: 14 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 12 }}
+              transition={{ type: 'spring', stiffness: 320, damping: 28 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bento-glass rounded-3xl max-w-4xl w-full overflow-hidden border border-indigo-400/35 shadow-2xl"
+            >
+              <div className="relative bg-slate-950">
+                <img
+                  src={lightboxPhoto.src}
+                  alt={lightboxPhoto.caption}
+                  className="w-full max-h-[72dvh] object-contain mx-auto"
+                />
+                <button
+                  type="button"
+                  onClick={() => setLightboxPhoto(null)}
+                  className="keep-white absolute top-3 right-3 px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-extrabold inline-flex items-center gap-1.5 shadow-lg transition"
+                >
+                  <X className="w-4 h-4" />
+                  <span>Close</span>
+                </button>
+              </div>
+              <div className="p-4 sm:p-5 flex flex-wrap items-center justify-between gap-3 border-t border-white/10">
+                <div>
+                  <h3 className="text-sm sm:text-base font-extrabold text-white">
+                    {lightboxPhoto.title}
+                  </h3>
+                  <p className="text-xs text-zinc-300 mt-0.5">{lightboxPhoto.caption}</p>
+                </div>
+                {lightboxPhoto.fileName && (
+                  <span className="px-3 py-1 rounded-xl bg-white/[0.06] border border-white/10 font-mono text-[11px] text-indigo-300">
+                    {lightboxPhoto.fileName}
+                  </span>
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

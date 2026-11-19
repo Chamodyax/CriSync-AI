@@ -92,6 +92,34 @@ export const LogisticsTab: React.FC<LogisticsTabProps> = ({
 
   return (
     <div className="space-y-6">
+      <div className="rounded-3xl overflow-hidden relative min-h-[148px] sm:min-h-[172px] border border-white/10 shadow-lg group">
+        <img
+          src="/images/logistics-depot.jpg"
+          alt="Humanitarian logistics warehouse with cold-chain medical supplies and relief trucks"
+          className="absolute inset-0 w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700"
+        />
+        <div className="crisync-photo-scrim-side absolute inset-0" />
+        <div className="keep-white relative z-10 p-5 sm:p-7 flex flex-wrap items-end justify-between gap-4 min-h-[148px] sm:min-h-[172px]">
+          <div className="space-y-1.5 max-w-xl">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/30 border border-indigo-400/50 text-[11px] font-extrabold text-white backdrop-blur-md">
+              <Warehouse className="w-3.5 h-3.5" />
+              Global Relief Supply Hub
+            </span>
+            <h2 className="text-lg sm:text-xl font-black text-white tracking-tight">
+              Cold-Chain Medical Stock & Dispatch Network
+            </h2>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="px-3 py-1.5 rounded-xl bg-white/15 border border-white/25 text-xs font-extrabold text-white backdrop-blur-sm">
+              {resources.length} Active Stock Batches
+            </span>
+            <span className="px-3 py-1.5 rounded-xl bg-emerald-500/25 border border-emerald-400/50 text-xs font-extrabold text-white backdrop-blur-sm">
+              Cold-Chain Dispatch Ready
+            </span>
+          </div>
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         <div className="lg:col-span-6 bento-glass rounded-3xl p-5 sm:p-6 space-y-5">
           <div className="flex items-center gap-3 pb-4 border-b border-white/[0.08]">

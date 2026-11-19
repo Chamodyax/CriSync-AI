@@ -237,6 +237,42 @@ export const CitizenPortalTab: React.FC<CitizenPortalTabProps> = ({
 
   return (
     <div className="space-y-6" dir={t.dir}>
+      <div className="rounded-3xl overflow-hidden relative min-h-[168px] sm:min-h-[196px] border border-white/10 shadow-lg group">
+        <img
+          src="/images/hero-relief.jpg"
+          alt="Humanitarian emergency relief teams assisting families"
+          className="absolute inset-0 w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700"
+        />
+        <div className="crisync-photo-scrim-side absolute inset-0" />
+        <div className="keep-white relative z-10 p-5 sm:p-7 flex flex-col justify-between min-h-[168px] sm:min-h-[196px]">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/25 border border-emerald-400/50 text-[11px] font-extrabold text-white backdrop-blur-md">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              24/7 Humanitarian Support • You Are Safe Here
+            </span>
+          </div>
+          <div className="mt-4 space-y-2 max-w-2xl">
+            <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight leading-snug">
+              {t.citizen.portalTitle}
+            </h2>
+            <p className="text-xs sm:text-sm text-zinc-100 leading-relaxed">
+              {t.citizen.portalSubtitle}
+            </p>
+            <div className="flex flex-wrap items-center gap-2 pt-1">
+              <span className="px-2.5 py-1 rounded-lg bg-white/15 border border-white/25 text-[11px] font-bold text-white backdrop-blur-sm">
+                {shelters.length} Safe Shelters Open
+              </span>
+              <span className="px-2.5 py-1 rounded-lg bg-white/15 border border-white/25 text-[11px] font-bold text-white backdrop-blur-sm">
+                6 Languages Supported
+              </span>
+              <span className="px-2.5 py-1 rounded-lg bg-white/15 border border-white/25 text-[11px] font-bold text-white backdrop-blur-sm">
+                Instant AI & Human Aid
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className="bento-glass rounded-3xl p-4 sm:p-5 space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>

@@ -118,6 +118,34 @@ export const SheltersTab: React.FC<{
 
   return (
     <div className="space-y-6">
+      <div className="rounded-3xl overflow-hidden relative min-h-[148px] sm:min-h-[172px] border border-white/10 shadow-lg group">
+        <img
+          src="/images/shelter-center.jpg"
+          alt="Safe community evacuation shelter center with accessibility support"
+          className="absolute inset-0 w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700"
+        />
+        <div className="crisync-photo-scrim-side absolute inset-0" />
+        <div className="keep-white relative z-10 p-5 sm:p-7 flex flex-wrap items-end justify-between gap-4 min-h-[148px] sm:min-h-[172px]">
+          <div className="space-y-1.5 max-w-xl">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/25 border border-emerald-400/50 text-[11px] font-extrabold text-white backdrop-blur-md">
+              <Home className="w-3.5 h-3.5" />
+              Verified Emergency Shelters
+            </span>
+            <h2 className="text-lg sm:text-xl font-black text-white tracking-tight">
+              Safe Accommodation, Clean Water & First-Aid Support
+            </h2>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="px-3 py-1.5 rounded-xl bg-white/15 border border-white/25 text-xs font-extrabold text-white backdrop-blur-sm">
+              {shelters.length} Safe Centers Open
+            </span>
+            <span className="px-3 py-1.5 rounded-xl bg-sky-500/25 border border-sky-400/50 text-xs font-extrabold text-white backdrop-blur-sm">
+              Wheelchair & Medical Support
+            </span>
+          </div>
+        </div>
+      </div>
+
       <div className="bento-glass rounded-3xl p-5 sm:p-6 space-y-4 border border-indigo-500/25">
         <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-white/[0.08]">
           <div className="flex items-center gap-3">
@@ -1163,40 +1191,55 @@ export const DonationsTab: React.FC<{
                   whileHover={{ y: -2 }}
                   key={c.id}
                   onClick={() => setSelectedCampaignId(c.id)}
-                  className={`cursor-pointer p-5 rounded-3xl bg-gradient-to-br from-indigo-500/15 via-purple-500/10 to-transparent border space-y-3 text-xs transition-all ${
+                  className={`cursor-pointer overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-500/15 via-purple-500/10 to-transparent border text-xs transition-all group ${
                     activeCampaignId === c.id
                       ? 'border-indigo-400 ring-2 ring-indigo-500/40'
                       : 'border-indigo-500/30'
                   }`}
                 >
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="font-extrabold text-white text-base">{c.title}</p>
-                    <span className="px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 font-mono font-bold">
-                      {pct}% Funded
-                    </span>
-                  </div>
-                  <p className="text-zinc-300 leading-relaxed">{c.description}</p>
-                  <div className="w-full bg-white/10 h-3 rounded-full overflow-hidden">
-                    <motion.div
-                      initial={{ width: 0 }}
-                      animate={{ width: `${pct}%` }}
-                      transition={{ duration: 0.65, ease: 'easeOut' }}
-                      className="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-full crisync-shimmer-bar"
+                  <div className="relative h-40 sm:h-44 overflow-hidden">
+                    <img
+                      src="/images/appeal-fundraising.jpg"
+                      alt={`${c.title} community relief campaign`}
+                      className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700"
                     />
+                    <div className="crisync-photo-scrim absolute inset-0" />
+                    <div className="keep-white absolute top-3 left-3 right-3 flex items-center justify-between gap-2">
+                      <span className="px-2.5 py-1 rounded-full bg-indigo-600/80 border border-indigo-400/50 text-[10px] font-extrabold text-white backdrop-blur-md">
+                        Verified Relief Appeal
+                      </span>
+                      <span className="px-3 py-1 rounded-full bg-emerald-600/85 border border-emerald-400/50 text-white font-mono font-bold backdrop-blur-md">
+                        {pct}% Funded
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex justify-between font-bold text-zinc-200 pt-1">
-                    <span>
-                      Raised So Far:{' '}
-                      <strong className="font-mono text-emerald-300 text-sm">
-                        ${(c.collectedAmountUsd || 0).toLocaleString()} USD
-                      </strong>
-                    </span>
-                    <span>
-                      Target Goal:{' '}
-                      <strong className="font-mono text-white text-sm">
-                        ${(c.targetAmountUsd || 0).toLocaleString()} USD
-                      </strong>
-                    </span>
+                  <div className="p-5 space-y-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="font-extrabold text-white text-base">{c.title}</p>
+                    </div>
+                    <p className="text-zinc-300 leading-relaxed">{c.description}</p>
+                    <div className="w-full bg-white/10 h-3 rounded-full overflow-hidden">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${pct}%` }}
+                        transition={{ duration: 0.65, ease: 'easeOut' }}
+                        className="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-full crisync-shimmer-bar"
+                      />
+                    </div>
+                    <div className="flex justify-between font-bold text-zinc-200 pt-1">
+                      <span>
+                        Raised So Far:{' '}
+                        <strong className="font-mono text-emerald-300 text-sm">
+                          ${(c.collectedAmountUsd || 0).toLocaleString()} USD
+                        </strong>
+                      </span>
+                      <span>
+                        Target Goal:{' '}
+                        <strong className="font-mono text-white text-sm">
+                          ${(c.targetAmountUsd || 0).toLocaleString()} USD
+                        </strong>
+                      </span>
+                    </div>
                   </div>
                 </motion.div>
               );
