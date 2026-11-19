@@ -379,5 +379,56 @@ public class ResilientMappingProviderService : IMappingProviderService
             nearest.Label,
             nearest.Dist,
             latitude,
+            longitude,
+            suffix);
+
+        return new GeocodingResultDto(formatted, Math.Round(latitude, 4), Math.Round(longitude, 4), providerName);
     }
+
+    private static RouteCalculationDto BuildHaversineFallbackRoute(double haversineKm)
+    {
+        double fallbackRoadKm = Math.Round(haversineKm * 1.28, 2);
+        int fallbackMinutes = Math.Max(8, (int)Math.Ceiling(fallbackRoadKm * 1.65));
+        return new RouteCalculationDto(
+            fallbackRoadKm,
+            fallbackMinutes,
+            $"[OFFLINE GEOSPATIAL FALLBACK] Estimated terrain corridor ({fallbackRoadKm} km, ~{fallbackMinutes} mins)",
+            "LocalHaversineFallbackEngine"
+        );
+    }
+
+    private static GeocodingResultDto ResolveOfflineGazetteer(string? address)
+    {
+        var baseMatch = ResolveLocalKnownAddress(address, "OfflineGazetteerFallback");
+        return baseMatch with
+        {
+            FormattedAddress = $"{baseMatch.FormattedAddress} (Resolved via Offline Gazetteer)"
+        };
+    }
+
+    private static GeocodingResultDto ResolveLocalKnownAddress(string? address, string providerName)
+    {
+        string lower = (address ?? string.Empty).ToLowerInvariant();
+        if (lower.Contains("ratnapura"))
+        {
+            return new GeocodingResultDto("Ratnapura Flood Operations Zone, Sri Lanka", 6.6828, 80.3992, providerName);
+        }
+        if (lower.Contains("kalutara"))
+        {
+            return new GeocodingResultDto("Kalutara River Basin Sector, Sri Lanka", 6.5854, 79.9607, providerName);
+        }
+        if (lower.Contains("badulla"))
+        {
+            return new GeocodingResultDto("Badulla Highland Landslide Zone, Sri Lanka", 6.9934, 81.0550, providerName);
+        }
+
+        return new GeocodingResultDto(
+            string.IsNullOrWhiteSpace(address) ? "Colombo Central Humanitarian Hub, Sri Lanka" : address,
+            6.9271,
+            79.8612,
+            providerName
+        );
+    }
+
+    private static double DegreesToRadians(double deg) => deg * (Math.PI / 180.0);
 }
