@@ -30,6 +30,7 @@ import {
 import { apiFetch } from './api';
 import { LANGUAGE_OPTIONS, SupportedLanguage, TRANSLATIONS } from './i18n';
 import { LoginPage } from './pages/LoginPage';
+import { GlobalEarthBackdrop } from './components/GlobalEarthBackdrop';
 import { DashboardTab } from './pages/DashboardTab';
 import { CitizenPortalTab } from './pages/CitizenPortalTab';
 import { AiGovernanceTab } from './pages/AiGovernanceTab';
@@ -1617,6 +1618,30 @@ export default function App() {
       ) : (
         <div className="min-h-[100dvh] w-full bg-[#07090e] text-zinc-100 flex flex-col relative overflow-x-hidden">
       <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(rgba(148,163,184,0.12)_1px,transparent_1px)] [background-size:24px_24px] opacity-35" />
+      <div className="pointer-events-none fixed inset-0 overflow-hidden z-0">
+        <motion.div
+          animate={{ scale: [1, 1.14, 1], x: [0, 30, 0], y: [0, -20, 0] }}
+          transition={{ duration: 14, repeat: Infinity, ease: 'easeInOut' }}
+          className={`absolute -top-28 -left-24 w-[480px] h-[480px] rounded-full blur-3xl ${
+            theme === 'light' ? 'bg-indigo-400/25' : 'bg-indigo-600/15'
+          }`}
+        />
+        <motion.div
+          animate={{ scale: [1.08, 0.94, 1.08], x: [0, -35, 0], y: [0, 28, 0] }}
+          transition={{ duration: 16, repeat: Infinity, ease: 'easeInOut' }}
+          className={`absolute -bottom-32 right-[-90px] w-[520px] h-[520px] rounded-full blur-3xl ${
+            theme === 'light' ? 'bg-cyan-400/25' : 'bg-cyan-500/12'
+          }`}
+        />
+        <motion.div
+          animate={{ scale: [0.95, 1.12, 0.95], x: [0, 22, 0], y: [0, 22, 0] }}
+          transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut' }}
+          className={`absolute top-1/2 left-1/3 w-[380px] h-[380px] rounded-full blur-3xl ${
+            theme === 'light' ? 'bg-rose-300/20' : 'bg-rose-500/8'
+          }`}
+        />
+      </div>
+      <GlobalEarthBackdrop theme={theme} variant="workspace" />
 
       <header className="sticky top-0 z-30 backdrop-blur-2xl bg-[#07090e]/85 border-b border-white/[0.08]">
         <div className="max-w-[1480px] mx-auto px-3 sm:px-6 py-2 sm:py-3 flex flex-wrap items-center justify-between gap-2">

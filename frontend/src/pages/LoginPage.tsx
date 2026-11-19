@@ -29,6 +29,7 @@ import {
   KeyRound
 } from 'lucide-react';
 import { LANGUAGE_OPTIONS } from '../i18n';
+import { GlobalEarthBackdrop } from '../components/GlobalEarthBackdrop';
 
 export interface RegisterAccountPayload {
   fullName: string;
@@ -343,16 +344,28 @@ export const LoginPage: React.FC<LoginPageProps> = ({
   return (
     <div className="min-h-[100dvh] bg-[#07090e] text-zinc-100 flex flex-col justify-between relative overflow-x-hidden">
       <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(rgba(148,163,184,0.12)_1px,transparent_1px)] [background-size:24px_24px] opacity-40" />
+      <GlobalEarthBackdrop theme={theme} variant="login" />
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
         <motion.div
-          animate={{ scale: [1, 1.18, 1], opacity: [0.22, 0.38, 0.22], x: [0, 35, 0], y: [0, -25, 0] }}
+          animate={{ scale: [1, 1.18, 1], opacity: theme === 'light' ? [0.42, 0.62, 0.42] : [0.22, 0.38, 0.22], x: [0, 35, 0], y: [0, -25, 0] }}
           transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
-          className="absolute -top-32 -left-24 w-[460px] h-[460px] rounded-full bg-indigo-600/20 blur-3xl"
+          className={`absolute -top-32 -left-24 w-[480px] h-[480px] rounded-full blur-3xl ${
+            theme === 'light' ? 'bg-indigo-400/35' : 'bg-indigo-600/20'
+          }`}
         />
         <motion.div
-          animate={{ scale: [1.1, 0.92, 1.1], opacity: [0.18, 0.34, 0.18], x: [0, -40, 0], y: [0, 30, 0] }}
+          animate={{ scale: [1.1, 0.92, 1.1], opacity: theme === 'light' ? [0.38, 0.58, 0.38] : [0.18, 0.34, 0.18], x: [0, -40, 0], y: [0, 30, 0] }}
           transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut' }}
-          className="absolute bottom-[-140px] right-[-100px] w-[520px] h-[520px] rounded-full bg-cyan-500/15 blur-3xl"
+          className={`absolute bottom-[-140px] right-[-100px] w-[540px] h-[540px] rounded-full blur-3xl ${
+            theme === 'light' ? 'bg-cyan-400/35' : 'bg-cyan-500/15'
+          }`}
+        />
+        <motion.div
+          animate={{ scale: [0.95, 1.15, 0.95], opacity: theme === 'light' ? [0.32, 0.5, 0.32] : [0.1, 0.18, 0.1] }}
+          transition={{ duration: 15, repeat: Infinity, ease: 'easeInOut' }}
+          className={`absolute bottom-16 -left-20 w-[400px] h-[400px] rounded-full blur-3xl ${
+            theme === 'light' ? 'bg-rose-300/30' : 'bg-rose-500/10'
+          }`}
         />
         <motion.div
           animate={{ scale: [0.8, 1.45], opacity: [0.28, 0] }}
@@ -426,6 +439,28 @@ export const LoginPage: React.FC<LoginPageProps> = ({
           </span>
         </div>
       </header>
+
+      <div className="relative z-10 w-full border-y border-white/[0.06] bg-white/[0.02] backdrop-blur-md overflow-hidden py-2">
+        <div className="crisync-ticker-track items-center gap-8 text-[11px] font-bold">
+          {[
+            { dot: 'bg-rose-400', label: activeCrisisTitle ? `Active Response: ${activeCrisisTitle}` : 'Global Emergency Readiness Active' },
+            { dot: 'bg-cyan-400', label: '3D Global Aid Network: UN Geneva • Singapore • Nairobi • Colombo Synced' },
+            { dot: 'bg-emerald-400', label: 'Evacuation Shelters Open • Wheelchair & Medical Support Available' },
+            { dot: 'bg-indigo-400', label: '6-Language Citizen Help Portal: EN • SI • TA • AR • FR • ES' },
+            { dot: 'bg-amber-400', label: 'Cold-Chain Medical Stock & Relief Dispatch Ready' },
+            { dot: 'bg-rose-400', label: activeCrisisTitle ? `Active Response: ${activeCrisisTitle}` : 'Global Emergency Readiness Active' },
+            { dot: 'bg-cyan-400', label: '3D Global Aid Network: UN Geneva • Singapore • Nairobi • Colombo Synced' },
+            { dot: 'bg-emerald-400', label: 'Evacuation Shelters Open • Wheelchair & Medical Support Available' },
+            { dot: 'bg-indigo-400', label: '6-Language Citizen Help Portal: EN • SI • TA • AR • FR • ES' },
+            { dot: 'bg-amber-400', label: 'Cold-Chain Medical Stock & Relief Dispatch Ready' }
+          ].map((item, idx) => (
+            <span key={idx} className="inline-flex items-center gap-2 text-zinc-300 shrink-0 px-3">
+              <span className={`w-1.5 h-1.5 rounded-full ${item.dot} shrink-0`} />
+              <span>{item.label}</span>
+            </span>
+          ))}
+        </div>
+      </div>
 
       <main className="relative z-10 max-w-7xl mx-auto w-full px-4 sm:px-8 py-4 sm:py-6 flex-1 flex items-center">
         <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-start">
@@ -1092,7 +1127,24 @@ export const LoginPage: React.FC<LoginPageProps> = ({
               )}
             </div>
 
-            <div className="bento-glass rounded-3xl p-5 sm:p-6 relative overflow-hidden">
+            <div className="bento-glass rounded-3xl p-5 sm:p-6 relative overflow-hidden group">
+              <div className="-mx-5 -mt-5 sm:-mx-6 sm:-mt-6 mb-4 h-40 sm:h-44 relative overflow-hidden">
+                <img
+                  src="/images/hero-relief.jpg"
+                  alt="Humanitarian relief workers assisting families during flood response"
+                  className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700"
+                />
+                <div className="crisync-photo-scrim absolute inset-0" />
+                <div className="keep-white absolute bottom-3 left-4 right-4 flex items-end justify-between gap-2">
+                  <div>
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/25 border border-emerald-400/50 text-[10px] font-extrabold text-white backdrop-blur-md">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                      Global Humanitarian Aid Network • Active
+                    </span>
+                  </div>
+                </div>
+              </div>
+
               <div className="flex items-center gap-3.5 mb-3">
                 <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-indigo-500 to-rose-500 flex items-center justify-center shadow-md shrink-0 keep-white">
                   <Radio className="w-5 h-5 text-white keep-white" />
