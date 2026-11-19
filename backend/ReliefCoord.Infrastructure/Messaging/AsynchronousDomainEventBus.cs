@@ -98,5 +98,104 @@ public class AsynchronousDomainEventWorker : BackgroundService
                     $"EVT-SUBMIT-{submitted.RequestId}"
                 ), stoppingToken);
             }
+            else if (domainEvent is ResourceAllocatedEvent allocated)
+            {
+                var (contact, lang) = await ResolveRecipientAsync(uow, allocated.CitizenUserId, "en", stoppingToken);
+                await opsService.SendIdempotentNotificationAsync(new SendNotificationRequestDto(
+                    allocated.CitizenUserId,
+                    contact,
+                    NotificationChannel.Sms,
+                    lang,
+                    $"Aid Dispatched: {allocated.ResourceName}",
+                    $"Allocated {allocated.AllocatedQuantity} units of {allocated.ResourceName} to your request.",
+                    $"EVT-ALLOC-{allocated.AllocationId}"
+                ), stoppingToken);
+            }
+            else if (domainEvent is ShelterAllocatedEvent shelterEvt)
+            {
+                var (contact, lang) = await ResolveRecipientAsync(uow, shelterEvt.CitizenUserId, "en", stoppingToken);
+                await opsService.SendIdempotentNotificationAsync(new SendNotificationRequestDto(
+                    shelterEvt.CitizenUserId,
+                    contact,
+                    NotificationChannel.Sms,
+                    lang,
+                    $"Shelter Confirmed: {shelterEvt.ShelterName}",
+                    $"Your household ({shelterEvt.AllocatedMembersCount} members) has been allocated space at {shelterEvt.ShelterName}.",
+                    $"EVT-SHELTER-{shelterEvt.ShelterId}-{shelterEvt.CitizenUserId}"
+                ), stoppingToken);
+            }
+            else if (domainEvent is RequestStatusChangedEvent statusEvt)
+            {
+                var (contact, lang) = await ResolveRecipientAsync(uow, statusEvt.CitizenUserId, statusEvt.PreferredLanguage, stoppingToken);
+                await opsService.SendIdempotentNotificationAsync(new SendNotificationRequestDto(
+                    statusEvt.CitizenUserId,
+                    contact,
+                    NotificationChannel.InApp,
+                    lang,
+                    $"Request {statusEvt.ReferenceCode} Status: {statusEvt.NewStatus}",
+                    $"Your case {statusEvt.ReferenceCode} moved to '{statusEvt.NewStatus}'. {statusEvt.Note}",
+                    $"EVT-REQSTATUS-{statusEvt.RequestId}-{statusEvt.NewStatus}-{statusEvt.EventId:N}"
+                ), stoppingToken);
+            }
+            else if (domainEvent is VolunteerAssignedEvent volEvt)
+            {
+                var (contact, lang) = await ResolveRecipientAsync(uow, volEvt.VolunteerUserId, "en", stoppingToken);
+                await opsService.SendIdempotentNotificationAsync(new SendNotificationRequestDto(
+                    volEvt.VolunteerUserId,
+                    contact,
+                    NotificationChannel.Push,
+                    lang,
+                    $"New Volunteer Mission Assigned: {volEvt.TaskTitle}",
+                    $"Hello {volEvt.VolunteerName}, you have been assigned to '{volEvt.TaskTitle}'. Please review and accept or decline in Volunteers.",
+                    $"EVT-VOLASSIGN-{volEvt.AssignmentId}"
+                ), stoppingToken);
+            }
+            else if (domainEvent is PublicAlertBroadcastEvent alertEvt)
+            {
+                var citizens = await uow.Users.FindAsync(u => u.Role == UserRole.Citizen && u.IsActive, stoppingToken);
+                foreach (var citizen in citizens)
+                {
+                    string contact = !string.IsNullOrWhiteSpace(citizen.PhoneNumber) ? citizen.PhoneNumber : citizen.Email;
+                    string lang = string.IsNullOrWhiteSpace(citizen.PreferredLanguage) ? "en" : citizen.PreferredLanguage;
+                    await opsService.SendIdempotentNotificationAsync(new SendNotificationRequestDto(
+                        citizen.Id,
+                        contact,
+                        NotificationChannel.InApp,
+                        lang,
+                        $"[{alertEvt.SeverityLevel}] {alertEvt.Title}",
+                        alertEvt.Message,
+                        $"EVT-ALERT-{alertEvt.AlertId}-{citizen.Id}"
+                    ), stoppingToken);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error processing domain event {EventType}", domainEvent.EventType);
+        }
+    }
+
+    private async Task RunPeriodicNotificationRetryLoopAsync(CancellationToken stoppingToken)
+    {
+        using var timer = new PeriodicTimer(TimeSpan.FromSeconds(15));
+        try
+        {
+            while (await timer.WaitForNextTickAsync(stoppingToken))
+            {
+                try
+                {
+                    using var scope = _scopeFactory.CreateScope();
+                    var opsService = scope.ServiceProvider.GetRequiredService<HumanitarianOperationsService>();
+                    await opsService.RetryFailedNotificationsAsync(stoppingToken);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error during scheduled notification retry sweep");
+                }
+            }
+        }
+        catch (OperationCanceledException)
+        {
+        }
     }
 }
