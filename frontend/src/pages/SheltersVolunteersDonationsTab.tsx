@@ -2957,5 +2957,485 @@ const SystemAdminControlCenter: React.FC<{
                 className="rsvp-input font-mono"
               />
             </div>
+            <div>
+              <label className="block font-bold text-zinc-300 mb-1">Maximum Global Admins (Attack Surface Limit)</label>
+              <input
+                type="number"
+                min={2}
+                max={4}
+                value={configDraft.maxGlobalAdmins}
+                onChange={(e) => setConfigDraft({ ...configDraft, maxGlobalAdmins: Number(e.target.value) })}
+                className="rsvp-input font-mono"
+              />
+            </div>
+            <div>
+              <label className="block font-bold text-zinc-300 mb-1">Maximum Organization Admins</label>
+              <input
+                type="number"
+                min={1}
+                max={5}
+                value={configDraft.maxOrganizationAdmins}
+                onChange={(e) => setConfigDraft({ ...configDraft, maxOrganizationAdmins: Number(e.target.value) })}
+                className="rsvp-input font-mono"
+              />
+            </div>
+            <div>
+              <label className="block font-bold text-zinc-300 mb-1">High-Value Donation Compliance Threshold (USD)</label>
+              <input
+                type="number"
+                min={1000}
+                value={configDraft.highValueDonationThresholdUsd}
+                onChange={(e) => setConfigDraft({ ...configDraft, highValueDonationThresholdUsd: Number(e.target.value) })}
+                className="rsvp-input font-mono"
+              />
+            </div>
+            <div className="flex items-end pb-1">
+              <label className="flex items-center gap-2 font-bold text-zinc-200 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={Boolean(configDraft.requireVolunteerCoordinatorVerification)}
+                  onChange={(e) => setConfigDraft({ ...configDraft, requireVolunteerCoordinatorVerification: e.target.checked })}
+                  className="w-4 h-4 rounded"
+                />
+                Require Volunteer Coordinator Verification
+              </label>
+            </div>
+            <div className="flex items-end pb-1">
+              <label className="flex items-center gap-2 font-bold text-zinc-200 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={Boolean(configDraft.requirePartnerAdminApproval)}
+                  onChange={(e) => setConfigDraft({ ...configDraft, requirePartnerAdminApproval: e.target.checked })}
+                  className="w-4 h-4 rounded"
+                />
+                Require Admin Approval for Partner Organizations
+              </label>
+            </div>
+          </div>
+          {onUpdateSystemConfig && (
+            <div className="flex justify-end">
+              <button
+                type="button"
+                onClick={() => runBusy('save-sysconfig', () => onUpdateSystemConfig(configDraft))}
+                className="keep-white px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold inline-flex items-center gap-1.5 shadow-sm"
+              >
+                <Save className="w-4 h-4" />
+                <span>Save Core Governance Configuration</span>
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {adminTab === 'crises' && (
+        <div className="space-y-3">
+          {crises.length === 0 ? (
+            <p className="text-xs text-zinc-400 py-4 text-center">No crises recorded yet.</p>
+          ) : (
+            crises.map((c) => {
+              const editKey = `crisis:${c.id}`;
+              const isEditing = editingEntityKey === editKey;
+              return (
+                <div key={c.id} className="p-4 rounded-2xl bg-white/[0.03] border border-white/[0.08] space-y-3">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-extrabold text-white">{c.title}</p>
+                      <p className="text-xs text-zinc-400 mt-0.5">
+                        {c.crisisType} • Severity: {c.severity} • Region: {c.region || 'Unset'} • {c.isActive ? 'Active' : 'Closed'}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (isEditing) {
+                            setEditingEntityKey(null);
+                          } else {
+                            setEditingEntityKey(editKey);
+                            setEntityDraft({
+                              title: c.title || '',
+                              crisisType: c.crisisType || 'Flood',
+                              severity: c.severity || 'High',
+                              region: c.region || '',
+                              description: c.description || '',
+                              centerLatitude: c.centerLatitude ?? 6.9271,
+                              centerLongitude: c.centerLongitude ?? 79.8612,
+                              radiusKm: c.radiusKm ?? 25,
+                              isActive: Boolean(c.isActive)
+                            });
+                          }
+                        }}
+                        className="px-3 py-1.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 text-zinc-200 text-[11px] font-bold inline-flex items-center gap-1"
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                        <span>{isEditing ? 'Close' : 'Edit'}</span>
+                      </button>
+                      {onAdminDeleteCrisis && renderDeleteButton(editKey, () => onAdminDeleteCrisis(c.id, c.title))}
+                    </div>
+                  </div>
+                  {isEditing && onAdminUpdateCrisis && (
+                    <div className="pt-3 border-t border-white/[0.08] grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+                      <div className="md:col-span-2">
+                        <label className="block font-bold text-zinc-300 mb-1">Crisis Title</label>
+                        <input
+                          type="text"
+                          value={entityDraft.title}
+                          onChange={(e) => setEntityDraft({ ...entityDraft, title: e.target.value })}
+                          className="rsvp-input"
+                        />
+                      </div>
+                      <div>
+                        <label className="block font-bold text-zinc-300 mb-1">Region</label>
+                        <input
+                          type="text"
+                          value={entityDraft.region}
+                          onChange={(e) => setEntityDraft({ ...entityDraft, region: e.target.value })}
+                          className="rsvp-input"
+                        />
+                      </div>
+                      <div>
+                        <label className="block font-bold text-zinc-300 mb-1">Type</label>
+                        <select
+                          value={entityDraft.crisisType}
+                          onChange={(e) => setEntityDraft({ ...entityDraft, crisisType: e.target.value })}
+                          className="rsvp-input"
+                        >
+                          {CRISIS_TYPES.map((tOpt) => (
+                            <option key={tOpt} value={tOpt}>{tOpt}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block font-bold text-zinc-300 mb-1">Severity</label>
+                        <select
+                          value={entityDraft.severity}
+                          onChange={(e) => setEntityDraft({ ...entityDraft, severity: e.target.value })}
+                          className="rsvp-input"
+                        >
+                          {CRISIS_SEVERITIES.map((sOpt) => (
+                            <option key={sOpt} value={sOpt}>{sOpt}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="flex items-end pb-1">
+                        <label className="flex items-center gap-2 font-bold text-zinc-200 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={entityDraft.isActive}
+                            onChange={(e) => setEntityDraft({ ...entityDraft, isActive: e.target.checked })}
+                            className="w-4 h-4 rounded"
+                          />
+                          Crisis Active
+                        </label>
+                      </div>
+                      <div className="md:col-span-3">
+                        <label className="block font-bold text-zinc-300 mb-1">Description</label>
+                        <input
+                          type="text"
+                          value={entityDraft.description}
+                          onChange={(e) => setEntityDraft({ ...entityDraft, description: e.target.value })}
+                          className="rsvp-input"
+                        />
+                      </div>
+                      <div>
+                        <label className="block font-bold text-zinc-300 mb-1">Latitude</label>
+                        <input
+                          type="number"
+                          step="0.0001"
+                          value={entityDraft.centerLatitude}
+                          onChange={(e) => setEntityDraft({ ...entityDraft, centerLatitude: Number(e.target.value) })}
+                          className="rsvp-input font-mono"
+                        />
+                      </div>
+                      <div>
+                        <label className="block font-bold text-zinc-300 mb-1">Longitude</label>
+                        <input
+                          type="number"
+                          step="0.0001"
+                          value={entityDraft.centerLongitude}
+                          onChange={(e) => setEntityDraft({ ...entityDraft, centerLongitude: Number(e.target.value) })}
+                          className="rsvp-input font-mono"
+                        />
+                      </div>
+                      <div className="flex items-end justify-end">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            runBusy(editKey, async () => {
+                              await onAdminUpdateCrisis(c.id, entityDraft);
+                              setEditingEntityKey(null);
+                            })
+                          }
+                          className="keep-white px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold inline-flex items-center gap-1.5"
+                        >
+                          <Save className="w-3.5 h-3.5" />
+                          <span>Save Crisis</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })
+          )}
+        </div>
+      )}
+
+      {adminTab === 'shelters' && (
+        <div className="space-y-3">
+          {shelters.length === 0 ? (
+            <p className="text-xs text-zinc-400 py-4 text-center">No shelters registered yet.</p>
+          ) : (
+            shelters.map((s) => {
+              const editKey = `shelter:${s.id}`;
+              const isEditing = editingEntityKey === editKey;
+              return (
+                <div key={s.id} className="p-4 rounded-2xl bg-white/[0.03] border border-white/[0.08] space-y-3">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-extrabold text-white">{s.name}</p>
+                      <p className="text-xs text-zinc-400 mt-0.5">
+                        {s.address} • Occupancy: {s.currentOccupancy}/{s.totalCapacity} • Status: {s.status}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (isEditing) {
+                            setEditingEntityKey(null);
+                          } else {
+                            setEditingEntityKey(editKey);
+                            setEntityDraft({
+                              name: s.name || '',
+                              address: s.address || '',
+                              totalCapacity: s.totalCapacity ?? 100,
+                              currentOccupancy: s.currentOccupancy ?? 0,
+                              isWheelchairAccessible: Boolean(s.isWheelchairAccessible),
+                              hasMedicalFacility: Boolean(s.hasMedicalFacility),
+                              hasPowerBackup: Boolean(s.hasPowerBackup),
+                              status: s.status || 'Operational',
+                              latitude: s.latitude ?? 6.9271,
+                              longitude: s.longitude ?? 79.8612
+                            });
+                          }
+                        }}
+                        className="px-3 py-1.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 text-zinc-200 text-[11px] font-bold inline-flex items-center gap-1"
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                        <span>{isEditing ? 'Close' : 'Edit'}</span>
+                      </button>
+                      {onAdminDeleteShelter && renderDeleteButton(editKey, () => onAdminDeleteShelter(s.id, s.name))}
+                    </div>
+                  </div>
+                  {isEditing && onAdminUpdateShelter && (
+                    <div className="pt-3 border-t border-white/[0.08] grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+                      <div>
+                        <label className="block font-bold text-zinc-300 mb-1">Shelter Name</label>
+                        <input
+                          type="text"
+                          value={entityDraft.name}
+                          onChange={(e) => setEntityDraft({ ...entityDraft, name: e.target.value })}
+                          className="rsvp-input"
+                        />
+                      </div>
+                      <div className="md:col-span-2">
+                        <label className="block font-bold text-zinc-300 mb-1">Address</label>
+                        <input
+                          type="text"
+                          value={entityDraft.address}
+                          onChange={(e) => setEntityDraft({ ...entityDraft, address: e.target.value })}
+                          className="rsvp-input"
+                        />
+                      </div>
+                      <div>
+                        <label className="block font-bold text-zinc-300 mb-1">Total Capacity</label>
+                        <input
+                          type="number"
+                          min={1}
+                          value={entityDraft.totalCapacity}
+                          onChange={(e) => setEntityDraft({ ...entityDraft, totalCapacity: Number(e.target.value) })}
+                          className="rsvp-input font-mono"
+                        />
+                      </div>
+                      <div>
+                        <label className="block font-bold text-zinc-300 mb-1">Current Occupancy</label>
+                        <input
+                          type="number"
+                          min={0}
+                          value={entityDraft.currentOccupancy}
+                          onChange={(e) => setEntityDraft({ ...entityDraft, currentOccupancy: Number(e.target.value) })}
+                          className="rsvp-input font-mono"
+                        />
+                      </div>
+                      <div>
+                        <label className="block font-bold text-zinc-300 mb-1">Status</label>
+                        <select
+                          value={entityDraft.status}
+                          onChange={(e) => setEntityDraft({ ...entityDraft, status: e.target.value })}
+                          className="rsvp-input"
+                        >
+                          {SHELTER_STATUSES.map((st) => (
+                            <option key={st} value={st}>{st}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="md:col-span-2 flex flex-wrap items-center gap-4">
+                        <label className="flex items-center gap-1.5 text-zinc-200 font-semibold cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={entityDraft.isWheelchairAccessible}
+                            onChange={(e) => setEntityDraft({ ...entityDraft, isWheelchairAccessible: e.target.checked })}
+                            className="w-4 h-4 rounded"
+                          />
+                          Wheelchair Access
+                        </label>
+                        <label className="flex items-center gap-1.5 text-zinc-200 font-semibold cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={entityDraft.hasMedicalFacility}
+                            onChange={(e) => setEntityDraft({ ...entityDraft, hasMedicalFacility: e.target.checked })}
+                            className="w-4 h-4 rounded"
+                          />
+                          Medical Bay
+                        </label>
+                        <label className="flex items-center gap-1.5 text-zinc-200 font-semibold cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={entityDraft.hasPowerBackup}
+                            onChange={(e) => setEntityDraft({ ...entityDraft, hasPowerBackup: e.target.checked })}
+                            className="w-4 h-4 rounded"
+                          />
+                          Power Backup
+                        </label>
+                      </div>
+                      <div className="flex items-end justify-end">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            runBusy(editKey, async () => {
+                              await onAdminUpdateShelter(s.id, entityDraft);
+                              setEditingEntityKey(null);
+                            })
+                          }
+                          className="keep-white px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold inline-flex items-center gap-1.5"
+                        >
+                          <Save className="w-3.5 h-3.5" />
+                          <span>Save Shelter</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })
+          )}
+        </div>
+      )}
+
+      {adminTab === 'resources' && (
+        <div className="space-y-3">
+          {resources.length === 0 ? (
+            <p className="text-xs text-zinc-400 py-4 text-center">No warehouse inventory items added yet.</p>
+          ) : (
+            resources.map((r) => {
+              const editKey = `resource:${r.id}`;
+              const isEditing = editingEntityKey === editKey;
+              return (
+                <div key={r.id} className="p-4 rounded-2xl bg-white/[0.03] border border-white/[0.08] space-y-3">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-extrabold text-white">{r.name}</p>
+                      <p className="text-xs text-zinc-400 mt-0.5">
+                        {r.category} • {r.warehouseName} • Available: {r.availableQuantity}/{r.totalQuantity} {r.unit}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (isEditing) {
+                            setEditingEntityKey(null);
+                          } else {
+                            setEditingEntityKey(editKey);
+                            setEntityDraft({
+                              name: r.name || '',
+                              category: r.category || 'Food',
+                              warehouseName: r.warehouseName || '',
+                              unit: r.unit || 'Units',
+                              totalQuantity: r.totalQuantity ?? 0,
+                              availableQuantity: r.availableQuantity ?? 0,
+                              reorderThreshold: r.reorderThreshold ?? 20,
+                              warehouseLatitude: r.warehouseLatitude ?? 6.9271,
+                              warehouseLongitude: r.warehouseLongitude ?? 79.8612
+                            });
+                          }
+                        }}
+                        className="px-3 py-1.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 text-zinc-200 text-[11px] font-bold inline-flex items-center gap-1"
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                        <span>{isEditing ? 'Close' : 'Edit'}</span>
+                      </button>
+                      {onAdminDeleteResource && renderDeleteButton(editKey, () => onAdminDeleteResource(r.id, r.name))}
+                    </div>
+                  </div>
+                  {isEditing && onAdminUpdateResource && (
+                    <div className="pt-3 border-t border-white/[0.08] grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+                      <div>
+                        <label className="block font-bold text-zinc-300 mb-1">Item Name</label>
+                        <input
+                          type="text"
+                          value={entityDraft.name}
+                          onChange={(e) => setEntityDraft({ ...entityDraft, name: e.target.value })}
+                          className="rsvp-input"
+                        />
+                      </div>
+                      <div>
+                        <label className="block font-bold text-zinc-300 mb-1">Category</label>
+                        <select
+                          value={entityDraft.category}
+                          onChange={(e) => setEntityDraft({ ...entityDraft, category: e.target.value })}
+                          className="rsvp-input"
+                        >
+                          {RESOURCE_CATEGORIES.map((cat) => (
+                            <option key={cat} value={cat}>{cat}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block font-bold text-zinc-300 mb-1">Warehouse</label>
+                        <input
+                          type="text"
+                          value={entityDraft.warehouseName}
+                          onChange={(e) => setEntityDraft({ ...entityDraft, warehouseName: e.target.value })}
+                          className="rsvp-input"
+                        />
+                      </div>
+                      <div>
+                        <label className="block font-bold text-zinc-300 mb-1">Total Quantity</label>
+                        <input
+                          type="number"
+                          min={0}
+                          value={entityDraft.totalQuantity}
+                          onChange={(e) => setEntityDraft({ ...entityDraft, totalQuantity: Number(e.target.value) })}
+                          className="rsvp-input font-mono"
+                        />
+                      </div>
+                      <div>
+                        <label className="block font-bold text-zinc-300 mb-1">Available Quantity</label>
+                        <input
+                          type="number"
+                          min={0}
+                          value={entityDraft.availableQuantity}
+                          onChange={(e) => setEntityDraft({ ...entityDraft, availableQuantity: Number(e.target.value) })}
+                          className="rsvp-input font-mono"
+                        />
+                      </div>
+                      <div className="flex items-end justify-end">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            runBusy(editKey, async () => {
+                              await onAdminUpdateResource(r.id, entityDraft);
   );
 };
