@@ -1404,5 +1404,674 @@ export default function App() {
         {
           method: 'POST',
           body: JSON.stringify({ ...payload, crisisEventId: targetCrisisId })
+        },
+        authUser?.token
+      );
+      notify(
+        'success',
+        `Help request ${created.referenceCode} submitted! Priority Score: ${created.priorityScore}/100`
+      );
+      await loadAllData();
+      return true;
+    } catch (err: any) {
+      notify('error', err.message);
+      return false;
+    }
+  };
+
+  const handleSaveHousehold = async (payload: any) => {
+    try {
+      const saved = await apiFetch<any>(
+        '/users/households',
+        {
+          method: 'POST',
+          body: JSON.stringify(payload)
+        },
+        authUser?.token
+      );
+      setHousehold(saved);
+      notify('success', 'Your family profile has been saved.');
+    } catch (err: any) {
+      notify('error', err.message);
+    }
+  };
+
+  const handleSubmitCitizenFeedback = async (payload: {
+    assistanceRequestId: string;
+    rating: number;
+    comments: string;
+    wasAidTimely: boolean;
+    wasQuantitySufficient: boolean;
+  }) => {
+    try {
+      await apiFetch<any>(
+        '/requests/feedback',
+        {
+          method: 'POST',
+          body: JSON.stringify(payload)
+        },
+        authUser?.token
+      );
+      notify('success', 'Thank you! Your delivery feedback and star rating have been saved.');
+      await loadAllData();
+    } catch (err: any) {
+      notify('error', err.message);
+    }
+  };
+
+  const handleUpdateRequestStatus = async (
+    id: string,
+    newStatus: string,
+    note: string,
+    assignedOrganisationId?: string | null
+  ) => {
+    try {
+      await apiFetch<any>(
+        `/requests/${id}/status`,
+        {
+          method: 'PUT',
+          body: JSON.stringify({
+            newStatus,
+            assignedOrganisationId: assignedOrganisationId || null,
+            actionNote: note
+          })
+        },
+        authUser?.token
+      );
+      notify('success', `Request status updated to '${newStatus}'.`);
+      await loadAllData();
+    } catch (err: any) {
+      notify('error', err.message);
+    }
+  };
+
+  const handleCreateOperationalArea = async (crisisId: string, payload: any) =>
+    runAdminMutation(`/crises/${crisisId}/operational-areas`, 'POST', payload, `Operational area '${payload.zoneName}' added.`);
+
+  const handleReplenishResource = async (id: string, addedQuantity: number, sourceNote?: string) =>
+    runAdminMutation(`/logistics/resources/${id}/replenish`, 'POST', { addedQuantity, sourceNote }, `Added +${addedQuantity} units to warehouse stock.`);
+
+  const handleMarkDispatchDelivered = async (id: string) =>
+    runAdminMutation(`/logistics/dispatches/${id}/deliver`, 'POST', null, 'Supply convoy marked as Delivered.');
+
+  const handleCreatePartnerAidRequest = async (payload: any) =>
+    runAdminMutation('/logistics/partner-aid-requests', 'POST', payload, `Mutual aid request posted for '${payload.resourceName}'.`);
+
+  const handleFulfillPartnerAidRequest = async (id: string, fulfillmentNotes?: string) =>
+    runAdminMutation(`/logistics/partner-aid-requests/${id}/fulfill`, 'POST', { fulfillmentNotes }, 'Partner aid request marked as Fulfilled.');
+
+  const handleRequestShelterSupplies = async (shelterId: string, payload: any) =>
+    runAdminMutation(`/shelters/${shelterId}/request-supplies`, 'POST', payload, `Supply escalation submitted for '${payload.resourceName}'.`);
+
+  const handleUpdateMyAvailability = async (payload: { isAvailable: boolean; availabilitySchedule: string }) =>
+    runAdminMutation('/volunteers/me/availability', 'PUT', payload, 'Updated your volunteer availability and shift schedule.');
+
+  const handleRespondAssignment = async (assignmentId: string, decision: string, notes?: string) =>
+    runAdminMutation(`/volunteers/assignments/${assignmentId}/respond`, 'POST', { decision, notes }, `Mission response recorded: ${decision}.`);
+
+  const handleCompleteAssignment = async (assignmentId: string, completionNotes: string) =>
+    runAdminMutation(`/volunteers/assignments/${assignmentId}/complete`, 'POST', { completionNotes }, 'Volunteer task completed and logged.');
+
+  const handleRecordExpenditure = async (campaignId: string, payload: { amountUsd: number; category: string; description: string }) =>
+    runAdminMutation(`/donations/campaigns/${campaignId}/expenditures`, 'POST', payload, `Recorded $${payload.amountUsd.toLocaleString()} USD expenditure (${payload.category}).`);
+
+  const handleRejectFlaggedDonation = async (id: string) =>
+    runAdminMutation(`/donations/${id}/reject`, 'POST', null, 'Flagged contribution rejected by compliance.');
+
+  const handleRetryFailedNotifications = async () => {
+    try {
+      const res = await apiFetch<any>('/notifications/retry-failed', { method: 'POST' }, authUser?.token);
+      notify('success', `Notification retry sweep finished. Recovered ${res.recoveredCount} queued alerts.`);
+      await loadAllData();
+    } catch (err: any) {
+      notify('error', err.message || 'Retry failed.');
+    }
+  };
+
+  const handleGovernanceReviewSubmit = async (payload: any) => {
+    try {
+      await apiFetch<any>('/ai-governance/review', { method: 'POST', body: JSON.stringify(payload) }, authUser?.token);
+      notify('success', `Staff review decision (${payload.decisionStatus}) saved.`);
+      setSelectedRecommendation(null);
+      await loadAllData();
+    } catch (err: any) {
+      notify('error', err.message);
+    }
+  };
+
+  const handleMergeDuplicate = async (duplicateReq: any) => {
+    if (!duplicateReq.potentialDuplicateOfRequestId) return;
+    try {
+      await apiFetch<any>(
+        '/requests/merge-duplicate',
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            primaryRequestId: duplicateReq.potentialDuplicateOfRequestId,
+            duplicateRequestId: duplicateReq.id,
+            mergeJustification: `Merged duplicate request (${Math.round(duplicateReq.duplicateSimilarityScore * 100)}% match) into primary request.`
+          })
+        },
+        authUser?.token
+      );
+      notify('success', `Duplicate request ${duplicateReq.referenceCode} merged into primary case.`);
+      await loadAllData();
+    } catch (err: any) {
+      notify('error', err.message);
+    }
+  };
+
+  const handleSimulateOrExecuteAllocation = async (commitToDatabase: boolean) => {
+    try {
+      const endpoint = commitToDatabase ? '/logistics/execute-allocation' : '/logistics/simulate-allocation';
+      const result = await apiFetch<any>(
+        endpoint,
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            resourceItemId: resources[0]?.id || '55555555-5555-5555-5555-555555555501',
+            competingRequestIds: selectedCompetingIds,
+            strategyName: selectedStrategy
+          })
+        },
+        authUser?.token
+      );
+      setAllocationPlanResult(result);
+      notify(
+        'success',
+        commitToDatabase
+          ? `Supplies allocated and dispatched from warehouse (${result.strategyUsed}).`
+          : `Delivery preview generated (${result.strategyUsed}). Review the plan below.`
+      );
+      if (commitToDatabase) {
+        await loadAllData();
+      }
+    } catch (err: any) {
+      notify('error', err.message);
+    }
+  };
+
+  const handleAddResource = async (payload: any) => {
+    try {
+      await apiFetch<any>(
+        '/logistics/resources',
+        {
+          method: 'POST',
+          body: JSON.stringify(payload)
+        },
+        authUser?.token
+      );
+      notify('success', `Added '${payload.name}' to warehouse inventory.`);
+      await loadAllData();
+    } catch (err: any) {
+      notify('error', err.message);
+    }
+  };
+
+  const handleCreateShelter = async (payload: any) => {
+    try {
+      await apiFetch<any>(
+        '/shelters',
+        {
+          method: 'POST',
+          body: JSON.stringify(payload)
+        },
+        authUser?.token
+      );
+      notify('success', `Registered shelter '${payload.name}'.`);
+      await loadAllData();
+    } catch (err: any) {
+      notify('error', err.message);
+    }
+  };
+
+  const handleCreateCrisisEvent = async (payload: {
+    title: string;
+    crisisType: string;
+    severity: string;
+    country: string;
+    region: string;
+    description: string;
+    centerLatitude: number;
+    centerLongitude: number;
+    radiusKm: number;
+  }) => {
+    try {
+      await apiFetch<any>(
+        '/crises',
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            ...payload,
+            isActive: true,
+            operationalAreas: []
+          })
+        },
+        authUser?.token
+      );
+      notify('success', `Crisis event '${payload.title}' declared and activated.`);
+      await loadAllData();
+    } catch (err: any) {
+      notify('error', err.message);
+    }
+  };
+
+  const handleCreatePublicAlert = async (payload: {
+    crisisEventId: string;
+    title: string;
+    message: string;
+    severityLevel: string;
+    safetyGuidance: string;
+  }) => {
+    try {
+      await apiFetch<any>(
+        '/crises/alerts',
+        {
+          method: 'POST',
+          body: JSON.stringify(payload)
+        },
+        authUser?.token
+      );
+      notify('success', `Public alert '${payload.title}' broadcast to all active channels.`);
+      await loadAllData();
+    } catch (err: any) {
+      notify('error', err.message);
+    }
+  };
+
+  const handleRecommendShelters = async (requestId: string): Promise<any[]> => {
+    try {
+      const candidates = await apiFetch<any[]>(
+        `/shelters/recommendations/${encodeURIComponent(requestId)}`,
+        {},
+        authUser?.token
+      );
+      notify('info', `Found ${candidates.length} AI-ranked shelter recommendations.`);
+      return candidates;
+    } catch (err: any) {
+      notify('error', err.message || 'Unable to generate shelter recommendations.');
+      return [];
+    }
+  };
+
+  const handleRegisterVolunteer = async (payload: {
+    fullName: string;
+    skillsCsv: string;
+    languagesCsv: string;
+    availabilitySchedule: string;
+    baseTown: string;
+    baseLatitude?: number;
+    baseLongitude?: number;
+  }) => {
+    try {
+      const created = await apiFetch<any>(
+        '/volunteers',
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            fullName: payload.fullName.trim(),
+            skillsCsv: payload.skillsCsv.trim(),
+            languagesCsv: payload.languagesCsv.trim() || 'English',
+            availabilitySchedule: payload.availabilitySchedule.trim() || 'Available On-Call',
+            currentLatitude: Number(payload.baseLatitude) || 6.9271,
+            currentLongitude: Number(payload.baseLongitude) || 79.8612
+          })
+        },
+        authUser?.token
+      );
+      notify('success', `Volunteer '${created.fullName}' registered in database field roster.`);
+      await loadAllData();
+    } catch (err: any) {
+      notify('error', err.message || 'Unable to register volunteer.');
+    }
+  };
+
+  const handleCreateCampaign = async (payload: {
+    title: string;
+    crisisEventId?: string;
+    targetAmountUsd: number;
+  }) => {
+    try {
+      const created = await apiFetch<any>(
+        '/donations/campaigns',
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            title: payload.title.trim(),
+            crisisEventId: payload.crisisEventId || crises[0]?.id || null,
+            targetAmountUsd: Number(payload.targetAmountUsd) || 50000
+          })
+        },
+        authUser?.token
+      );
+      notify('success', `Fundraising campaign '${created.title}' created.`);
+      await loadAllData();
+    } catch (err: any) {
+      notify('error', err.message || 'Unable to create fundraising campaign.');
+    }
+  };
+
+  const runAdminMutation = async (url: string, method: 'POST' | 'PUT' | 'DELETE', body: any, successMsg: string) => {
+    try {
+      await apiFetch<any>(
+        url,
+        body !== null ? { method, body: JSON.stringify(body) } : { method },
+        authUser?.token
+      );
+      notify('success', successMsg);
+      await loadAllData();
+    } catch (err: any) {
+      notify('error', err.message || 'Administrator action failed.');
+    }
+  };
+
+  const handleAdminCreateUser = async (payload: any) => {
+    try {
+      const created = await apiFetch<any>(
+        '/admin/users',
+        { method: 'POST', body: JSON.stringify(payload) },
+        authUser?.token
+      );
+      notify('success', `Created ${created.role} account for '${created.fullName}' (${created.email}).`);
+      await loadAllData();
+      return created;
+    } catch (err: any) {
+      notify('error', err.message || 'Unable to create account.');
+      throw err;
+    }
+  };
+
+  const handleRegisterCitizenOnBehalf = async (payload: any) => {
+    try {
+      const created = await apiFetch<any>(
+        '/users/register-citizen-behalf',
+        { method: 'POST', body: JSON.stringify(payload) },
+        authUser?.token
+      );
+      notify('success', `Registered Citizen '${created.fullName}' (${created.email}) on their behalf.`);
+      await loadAllData();
+      return created;
+    } catch (err: any) {
+      notify('error', err.message || 'Unable to register citizen on their behalf.');
+      throw err;
+    }
+  };
+
+  const handleInviteStaff = async (payload: any) => {
+    try {
+      const created = await apiFetch<any>(
+        '/invitations/invite-staff',
+        { method: 'POST', body: JSON.stringify(payload) },
+        authUser?.token
+      );
+      notify('success', `Invited '${created.fullName}' as ${created.role} (${created.invitationCode}).`);
+      await loadAllData();
+      return created;
+    } catch (err: any) {
+      notify('error', err.message || 'Unable to invite staff role.');
+      throw err;
+    }
+  };
+
+  const handleVerifyActivateVolunteer = async (volunteerId: string, fullName: string) => {
+    try {
+      await apiFetch<any>(`/volunteers/${volunteerId}/verify-activate`, { method: 'POST' }, authUser?.token);
+      notify('success', `Verified and activated volunteer account for '${fullName}'.`);
+      await loadAllData();
+    } catch (err: any) {
+      notify('error', err.message || 'Unable to verify volunteer.');
+    }
+  };
+
+  const handleApprovePartnership = (orgId: string, orgName: string) =>
+    runAdminMutation(`/admin/partnerships/${orgId}/approve`, 'POST', null, `Approved partnership for '${orgName}'.`);
+
+  const handleRejectPartnership = (orgId: string, orgName: string) =>
+    runAdminMutation(`/admin/partnerships/${orgId}/reject`, 'POST', null, `Updated partnership status to Rejected for '${orgName}'.`);
+
+  const handleAddRolePermission = (payload: any) =>
+    runAdminMutation('/admin/role-permissions', 'POST', payload, `Added permission '${payload.permissionCode}' to ${payload.role}.`);
+
+  const handleDeleteRolePermission = (id: string) =>
+    runAdminMutation(`/admin/role-permissions/${id}`, 'DELETE', null, 'Removed role permission.');
+
+  const handleUpdateSystemConfig = (payload: any) =>
+    runAdminMutation('/admin/system-config', 'PUT', payload, 'Updated core system governance configuration.');
+
+  const handleUpdateServiceSettings = (payload: any) =>
+    runAdminMutation('/admin/service-settings', 'PUT', payload, 'Updated AI, SMS, Email & Mapping service settings.');
+
+  const handleAdminUpdateUser = (id: string, payload: any) =>
+    runAdminMutation(`/admin/users/${id}`, 'PUT', payload, `Updated user '${payload.fullName}'.`);
+
+  const handleAdminDeleteUser = (id: string, label: string) =>
+    runAdminMutation(`/admin/users/${id}`, 'DELETE', null, `Removed user '${label}'.`);
+
+  const handleAdminUpdateCrisis = (id: string, payload: any) =>
+    runAdminMutation(`/crises/${id}`, 'PUT', payload, `Updated crisis '${payload.title}'.`);
+
+  const handleAdminDeleteCrisis = (id: string, label: string) =>
+    runAdminMutation(`/crises/${id}`, 'DELETE', null, `Removed crisis '${label}'.`);
+
+  const handleAdminUpdateShelter = (id: string, payload: any) =>
+    runAdminMutation(`/shelters/${id}`, 'PUT', payload, `Updated shelter '${payload.name}'.`);
+
+  const handleAdminDeleteShelter = (id: string, label: string) =>
+    runAdminMutation(`/shelters/${id}`, 'DELETE', null, `Removed shelter '${label}'.`);
+
+  const handleAdminUpdateResource = (id: string, payload: any) =>
+    runAdminMutation(`/logistics/resources/${id}`, 'PUT', payload, `Updated stock item '${payload.name}'.`);
+
+  const handleAdminDeleteResource = (id: string, label: string) =>
+    runAdminMutation(`/logistics/resources/${id}`, 'DELETE', null, `Removed stock item '${label}'.`);
+
+  const handleAdminDeleteRequest = (id: string, label: string) =>
+    runAdminMutation(`/requests/${id}`, 'DELETE', null, `Removed request '${label}'.`);
+
+  const handleAdminDeleteVolunteer = (id: string, label: string) =>
+    runAdminMutation(`/volunteers/${id}`, 'DELETE', null, `Removed volunteer '${label}'.`);
+
+  const handleAdminDeleteCampaign = (id: string, label: string) =>
+    runAdminMutation(`/donations/campaigns/${id}`, 'DELETE', null, `Removed campaign '${label}'.`);
+
+  const currentLang = (briefingLang as SupportedLanguage) || 'en';
+  const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+
+  const getLocalizedTabLabel = (id: TabKey, fallback: string): string => {
+    switch (id) {
+      case 'dashboard':
+        return t.nav.dashboard;
+      case 'citizen':
+        return t.nav.citizen;
+      case 'ai-governance':
+        return t.nav.aiGovernance;
+      case 'logistics':
+        return t.nav.logistics;
+      case 'shelters':
+        return t.nav.shelters;
+      case 'volunteers':
+        return t.nav.volunteers;
+      case 'donations':
+        return t.nav.donations;
+      case 'map-resilience':
+        return t.nav.mapResilience;
+      default:
+        return fallback;
+    }
+  };
+
+  const allOperationalAreas = crises.flatMap((c: any) => c.operationalAreas || []);
+  const menuItems = authUser ? getRoleMenuItems(authUser.role) : [];
+  const activeMenuItem = menuItems.find((m) => m.id === activeTab) || menuItems[0];
+  const activeLanguageOption = LANGUAGE_OPTIONS.find((l) => l.code === briefingLang) || LANGUAGE_OPTIONS[0];
+  const mobileBottomTabs = menuItems.slice(0, 4);
+
+  return (
+    <>
+      <AnimatePresence mode="wait">
+        {showBrandIntro && (
+          <CriSyncBrandIntroOverlay
+            key={`intro-${introRunId}`}
+            phase={introPhase}
+            theme={theme}
+            onSkip={() => setShowBrandIntro(false)}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence mode="wait">
+        {loginTransitionUser && (
+          <CrisyncLaunchOverlay
+            user={loginTransitionUser}
+            stageIndex={loginStageIndex}
+            theme={theme}
+          />
+        )}
+      </AnimatePresence>
+
+      {!authUser ? (
+        <LoginPage
+          organisations={organisations}
+          activeCrisisTitle={crises[0]?.title}
+          onLogin={handleLogin}
+          onQuickUnlockSuccess={handleQuickUnlockSession}
+          onRegister={handleRegister}
+          onReplayIntro={triggerBrandIntro}
+          errorMessage={loginError}
+          theme={theme}
+          onToggleTheme={toggleTheme}
+        />
+      ) : (
+        <div className="min-h-[100dvh] w-full bg-[#07090e] text-zinc-100 flex flex-col relative overflow-x-hidden">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[100] focus:px-4 focus:py-2 focus:rounded-xl focus:bg-indigo-600 focus:text-white focus:font-bold"
+      >
+        Skip to main content
+      </a>
+      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(rgba(148,163,184,0.12)_1px,transparent_1px)] [background-size:24px_24px] opacity-35" />
+      <div className="pointer-events-none fixed inset-0 overflow-hidden z-0">
+        <motion.div
+          animate={{ scale: [1, 1.14, 1], x: [0, 30, 0], y: [0, -20, 0] }}
+          transition={{ duration: 14, repeat: Infinity, ease: 'easeInOut' }}
+          className={`absolute -top-28 -left-24 w-[480px] h-[480px] rounded-full blur-3xl ${
+            theme === 'light' ? 'bg-indigo-400/25' : 'bg-indigo-600/15'
+          }`}
+        />
+        <motion.div
+          animate={{ scale: [1.08, 0.94, 1.08], x: [0, -35, 0], y: [0, 28, 0] }}
+          transition={{ duration: 16, repeat: Infinity, ease: 'easeInOut' }}
+          className={`absolute -bottom-32 right-[-90px] w-[520px] h-[520px] rounded-full blur-3xl ${
+            theme === 'light' ? 'bg-cyan-400/25' : 'bg-cyan-500/12'
+          }`}
+        />
+        <motion.div
+          animate={{ scale: [0.95, 1.12, 0.95], x: [0, 22, 0], y: [0, 22, 0] }}
+          transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut' }}
+          className={`absolute top-1/2 left-1/3 w-[380px] h-[380px] rounded-full blur-3xl ${
+            theme === 'light' ? 'bg-rose-300/20' : 'bg-rose-500/8'
+          }`}
+        />
+      </div>
+      <GlobalEarthBackdrop theme={theme} variant="workspace" />
+
+      <header className="sticky top-0 z-30 backdrop-blur-2xl bg-[#07090e]/85 border-b border-white/[0.08]">
+        <div className="max-w-[1480px] mx-auto px-3 sm:px-6 py-2 sm:py-3 flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-2.5 sm:gap-3.5 min-w-0">
+            <button
+              type="button"
+              onClick={() => setMobileNavDrawerOpen(true)}
+              className="xl:hidden w-10 h-10 rounded-xl bg-white/[0.05] hover:bg-white/10 border border-white/10 text-zinc-200 flex items-center justify-center transition shrink-0"
+              aria-label="Open Navigation Menu"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+
+            <button
+              type="button"
+              onClick={triggerBrandIntro}
+              title="Replay Crisis + Sync → CriSync Intro Animation"
+              className="flex items-center gap-2.5 sm:gap-3.5 min-w-0 text-left group"
+            >
+              <img
+                src="/crisync-logo.png"
+                alt="CriSync Logo"
+                className="w-10 h-10 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl object-cover crisync-logo-frame shrink-0"
+              />
+
+              <div className="min-w-0">
+                <div className="flex items-center gap-2.5">
+                  <span className="crisync-wordmark text-xl sm:text-2xl lg:text-[26px]">
+                    <span className="crisync-wordmark-primary">Cri</span>
+                    <span className="crisync-wordmark-accent">Sync</span>
+                  </span>
+                  <span
+                    className={`hidden 2xl:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
+                      crises.length > 0
+                        ? 'bg-rose-500/15 border-rose-500/30 text-rose-300'
+                        : 'bg-emerald-500/15 border-emerald-500/30 text-emerald-300'
+                    }`}
+                  >
+                    <span
+                      className={`w-1.5 h-1.5 rounded-full animate-ping ${
+                        crises.length > 0 ? 'bg-rose-400' : 'bg-emerald-400'
+                      }`}
+                    />
+                    {crises[0]?.title || 'No Active Crisis Declared'}
+                  </span>
+                </div>
+                <p className="hidden sm:block text-[11px] font-medium text-zinc-400 truncate max-w-[160px] sm:max-w-[260px] mt-0.5">
+                  {authUser.organisationName}
+                </p>
+              </div>
+            </button>
+          </div>
+
+          <nav className="hidden md:flex order-3 xl:order-2 w-full xl:w-auto mobile-tabs-scroll items-center gap-1.5 overflow-x-auto py-1 px-1.5 rounded-2xl bg-white/[0.03] border border-white/[0.08]">
+            {menuItems.map((item) => {
+              const isActive = activeTab === item.id;
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => setActiveTab(item.id)}
+                  className={`relative shrink-0 px-3 sm:px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-colors ${
+                    isActive
+                      ? 'text-white keep-white'
+                      : 'text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.04]'
+                  }`}
+                >
+                  {isActive && (
+                    <motion.div
+                      layoutId="floatingNavDock"
+                      transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                      className="absolute inset-0 rounded-xl bg-indigo-600 shadow-sm z-0"
+                    />
+                  )}
+                  <span className={`relative z-10 flex items-center gap-1.5 ${isActive ? 'keep-white' : ''}`}>
+                    {getModuleIcon(item.id, 'w-3.5 h-3.5')}
+                    <span>{getLocalizedTabLabel(item.id, item.label)}</span>
+                  </span>
+                </button>
+              );
+            })}
+          </nav>
+
+          <div className="order-2 xl:order-3 flex items-center gap-1.5 sm:gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={() => setCommandPaletteOpen(true)}
+              title="Quick Search & Command Palette (Ctrl+K)"
+              className="w-9 h-9 sm:w-auto sm:px-3 sm:py-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 text-zinc-200 text-xs font-bold flex items-center justify-center gap-1.5 transition"
+            >
+              <Search className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+              <span className="hidden lg:inline">Search</span>
+              <kbd className="hidden xl:inline-block px-1.5 py-0.5 text-[10px] font-mono rounded bg-white/10 text-zinc-300">
+                Ctrl K
+              </kbd>
+            </button>
+
+            <button
+              type="button"
   return null;
 }
