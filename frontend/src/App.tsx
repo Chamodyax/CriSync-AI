@@ -734,3 +734,675 @@ export default function App() {
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
         if (authUser) {
           event.preventDefault();
+          setCommandPaletteOpen((prev) => !prev);
+        }
+        return;
+      }
+      if (event.key === 'Escape') {
+        if (commandPaletteOpen) setCommandPaletteOpen(false);
+        if (profileModalOpen) setProfileModalOpen(false);
+        if (languageMenuOpen) setLanguageMenuOpen(false);
+        if (mobileNavDrawerOpen) setMobileNavDrawerOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [authUser, commandPaletteOpen, profileModalOpen, languageMenuOpen, mobileNavDrawerOpen]);
+
+  useEffect(() => {
+    if (!statusBanner) return;
+    const timer = setTimeout(() => {
+      setStatusBanner(null);
+    }, 5500);
+    return () => clearTimeout(timer);
+  }, [statusBanner]);
+
+  const toggleTheme = () => {
+    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
+  };
+
+  const notify = (type: 'success' | 'error' | 'info', text: string) => {
+    setStatusBanner({ type, text });
+  };
+
+  useEffect(() => {
+    const onUnauthorized = () => {
+      setAuthUser(null);
+      setAdminUsers([]);
+      setAdminPartnerships([]);
+      setRolePermissions([]);
+      setSystemConfig(null);
+      setServiceSettings(null);
+      setMyNotifications([]);
+      setTransparencyReport(null);
+      setStatusBanner(null);
+      setProfileModalOpen(false);
+      setMobileNavDrawerOpen(false);
+      setCommandPaletteOpen(false);
+      setLoginError('Your session expired. Please sign in again.');
+    };
+    window.addEventListener('crisync:unauthorized', onUnauthorized);
+    return () => window.removeEventListener('crisync:unauthorized', onUnauthorized);
+  }, []);
+
+  useEffect(() => {
+    Promise.all([
+      apiFetch<any[]>('/organisations').catch(() => []),
+      apiFetch<any[]>('/crises').catch(() => [])
+    ]).then(([orgs, publicCrises]) => {
+      setOrganisations(orgs);
+      if (Array.isArray(publicCrises)) {
+        setCrises(publicCrises);
+      }
+    });
+  }, []);
+
+  const loadAllData = async (tokenOverride?: string | null, langOverride?: string, roleOverride?: string) => {
+    const activeToken = tokenOverride !== undefined ? tokenOverride : authUser?.token;
+    if (!activeToken) {
+      return;
+    }
+    const activeLang = langOverride || briefingLang;
+    const activeRole = roleOverride || authUser?.role;
+    const isAdminTier = activeRole === 'SystemAdmin' || activeRole === 'OrganizationAdmin';
+    const canViewAuditLogs =
+      activeRole === 'SystemAdmin' ||
+      activeRole === 'OrganizationAdmin' ||
+      activeRole === 'EmergencyCoordinator';
+    setLoading(true);
+    try {
+      const [
+        orgsRes,
+        metricsRes,
+        crisesRes,
+        alertsRes,
+        requestsRes,
+        recsRes,
+        resourcesRes,
+        sheltersRes,
+        volunteersRes,
+        donationsRes,
+        auditsRes,
+        resilienceRes,
+        householdRes,
+        usersRes,
+        partnershipsRes,
+        permissionsRes,
+        configRes,
+        settingsRes,
+        myNotifsRes,
+        allocsDataRes,
+        transparencyRes,
+        mapRefsRes,
+        coverageRes
+      ] = await Promise.all([
+        apiFetch<any[]>('/organisations', {}, activeToken).catch(() => []),
+        apiFetch<any>('/admin/metrics', {}, activeToken),
+        apiFetch<any[]>('/crises', {}, activeToken),
+        apiFetch<any[]>('/crises/alerts', {}, activeToken),
+        apiFetch<any[]>('/requests', {}, activeToken),
+        apiFetch<any[]>('/ai-governance/recommendations', {}, activeToken),
+        apiFetch<any[]>('/logistics/resources', {}, activeToken),
+        apiFetch<any>('/shelters', {}, activeToken),
+        apiFetch<any>('/volunteers', {}, activeToken),
+        apiFetch<any>('/donations', {}, activeToken),
+        canViewAuditLogs ? apiFetch<any[]>('/admin/audit-logs', {}, activeToken).catch(() => []) : Promise.resolve([]),
+        apiFetch<any>('/admin/resilience', {}, activeToken),
+        apiFetch<any>('/users/households/me', {}, activeToken).catch(() => null),
+        isAdminTier ? apiFetch<any[]>('/admin/users', {}, activeToken).catch(() => []) : Promise.resolve([]),
+        isAdminTier ? apiFetch<any[]>('/admin/partnerships', {}, activeToken).catch(() => []) : Promise.resolve([]),
+        isAdminTier ? apiFetch<any[]>('/admin/role-permissions', {}, activeToken).catch(() => []) : Promise.resolve([]),
+        isAdminTier ? apiFetch<any>('/admin/system-config', {}, activeToken).catch(() => null) : Promise.resolve(null),
+        isAdminTier ? apiFetch<any>('/admin/service-settings', {}, activeToken).catch(() => null) : Promise.resolve(null),
+        apiFetch<any[]>('/notifications/me', {}, activeToken).catch(() => []),
+        apiFetch<any>('/logistics/allocations', {}, activeToken).catch(() => ({ allocations: [], dispatches: [], partnerAidRequests: [] })),
+        apiFetch<any>('/donations/transparency-report', {}, activeToken).catch(() => null),
+        apiFetch<any[]>('/mapping/references', {}, activeToken).catch(() => []),
+        apiFetch<any>('/mapping/coverage-report', {}, activeToken).catch(() => null)
+      ]);
+
+      if (Array.isArray(orgsRes) && orgsRes.length > 0) {
+        setOrganisations(orgsRes);
+      }
+      setMetrics(metricsRes);
+      setCrises(crisesRes);
+      setAlerts(alertsRes);
+      setRequests(requestsRes);
+      setRecommendations(recsRes);
+      setResources(resourcesRes);
+      setSheltersData(sheltersRes);
+      setVolunteersData(volunteersRes);
+      setDonationsData(donationsRes);
+      setAuditLogs(auditsRes);
+      setResilienceStatus(resilienceRes);
+      setHousehold(householdRes);
+      setAdminUsers(Array.isArray(usersRes) ? usersRes : []);
+      setAdminPartnerships(Array.isArray(partnershipsRes) ? partnershipsRes : []);
+      setRolePermissions(Array.isArray(permissionsRes) ? permissionsRes : []);
+      setSystemConfig(configRes);
+      setServiceSettings(settingsRes);
+      setMyNotifications(Array.isArray(myNotifsRes) ? myNotifsRes : []);
+      setLogisticsAllocationsData(allocsDataRes || { allocations: [], dispatches: [], partnerAidRequests: [] });
+      setTransparencyReport(transparencyRes);
+      setMappingReferences(Array.isArray(mapRefsRes) ? mapRefsRes : []);
+      setCoverageReport(coverageRes);
+
+      if (requestsRes.length >= 2 && selectedCompetingIds.length === 0) {
+        const medRequests = requestsRes
+          .filter((r: any) => r.category === 'Medicine' && r.status !== 'MergedAsDuplicate')
+          .map((r: any) => r.id);
+        setSelectedCompetingIds(medRequests);
+      }
+
+      if (crisesRes.length > 0) {
+        const primaryCrisisId = crisesRes[0].id;
+        const [forecastRes, briefRes] = await Promise.all([
+          apiFetch<any[]>(`/ai-governance/demand-forecast/${primaryCrisisId}`, {}, activeToken),
+          apiFetch<any>(`/ai-governance/multilingual-briefing/${primaryCrisisId}?lang=${activeLang}`, {}, activeToken)
+        ]);
+        setDemandForecast(forecastRes);
+        setBriefing(briefRes);
+      } else {
+        setDemandForecast([]);
+        setBriefing(null);
+      }
+    } catch (err: any) {
+      notify('error', err.message || 'Failed to load data.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const completeSessionLogin = async (res: any, successBannerText: string) => {
+    let stageTimerOne: ReturnType<typeof setTimeout> | undefined;
+    let stageTimerTwo: ReturnType<typeof setTimeout> | undefined;
+    try {
+      setMobileNavDrawerOpen(false);
+      setLoginStageIndex(0);
+      setLoginTransitionUser(res);
+
+      stageTimerOne = setTimeout(() => setLoginStageIndex(1), 700);
+      stageTimerTwo = setTimeout(() => setLoginStageIndex(2), 1450);
+
+      await Promise.all([
+        loadAllData(res.token, undefined, res.role),
+        new Promise((resolve) => setTimeout(resolve, 2200))
+      ]);
+
+      const roleTabs = getRoleMenuItems(res.role);
+      setActiveTab(roleTabs[0].id);
+      setAuthUser(res);
+      setLoginTransitionUser(null);
+      notify('success', successBannerText);
+    } finally {
+      if (stageTimerOne) clearTimeout(stageTimerOne);
+      if (stageTimerTwo) clearTimeout(stageTimerTwo);
+    }
+  };
+
+  const handleLogin = async (emailToUse: string, passwordToUse: string, requireAdminRole = false) => {
+    setLoginError(null);
+    try {
+      const res = await apiFetch<any>('/auth/login', {
+        method: 'POST',
+        body: JSON.stringify({ email: emailToUse, password: passwordToUse })
+      });
+      if (requireAdminRole && res.role !== 'SystemAdmin' && res.role !== 'OrganizationAdmin') {
+        setLoginError('Access Denied: The Admin Login portal is restricted to Global System Admin and Organization Admin accounts only.');
+        return;
+      }
+      await completeSessionLogin(res, `Signed in as ${res.fullName} (${getFriendlyRoleTitle(res.role)})`);
+    } catch (err: any) {
+      setLoginTransitionUser(null);
+      setLoginError(err.message || 'Invalid credentials');
+    }
+  };
+
+  const handleQuickUnlockSession = async (res: any, methodLabel: string) => {
+    setLoginError(null);
+    try {
+      await completeSessionLogin(res, `Unlocked via ${methodLabel} as ${res.fullName} (${getFriendlyRoleTitle(res.role)})`);
+    } catch (err: any) {
+      setLoginTransitionUser(null);
+      setLoginError(err.message || 'Quick Unlock failed.');
+    }
+  };
+
+  const handleRegister = async (payload: {
+    fullName: string;
+    email: string;
+    phoneNumber: string;
+    password: string;
+    role: string;
+    preferredLanguage: string;
+    organisationId: string | null;
+    primaryAddress?: string;
+    totalMembers?: number;
+    childrenCount?: number;
+    elderlyCount?: number;
+    hasMobilityNeeds?: boolean;
+    hasChronicMedicalNeeds?: boolean;
+    medicalNotes?: string;
+    registerAsVolunteer?: boolean;
+    skillsCsv?: string;
+    languagesCsv?: string;
+    availabilitySchedule?: string;
+    baseTown?: string;
+    organisationName?: string;
+    organisationType?: string;
+    country?: string;
+    partnershipProposal?: string;
+  }) => {
+    setLoginError(null);
+    let stageTimerOne: ReturnType<typeof setTimeout> | undefined;
+    let stageTimerTwo: ReturnType<typeof setTimeout> | undefined;
+    try {
+      const res = await apiFetch<any>('/auth/register', {
+        method: 'POST',
+        body: JSON.stringify({
+          fullName: payload.fullName.trim(),
+          email: payload.email.trim(),
+          phoneNumber: payload.phoneNumber.trim(),
+          password: payload.password,
+          role: payload.role,
+          preferredLanguage: payload.preferredLanguage || 'en',
+          organisationId: payload.organisationId || null,
+          organisationName: payload.organisationName?.trim() || null,
+          organisationType: payload.organisationType?.trim() || null,
+          country: payload.country?.trim() || null,
+          partnershipProposal: payload.partnershipProposal?.trim() || null,
+          skillsCsv: payload.skillsCsv?.trim() || null,
+          languagesCsv: payload.languagesCsv?.trim() || null,
+          availabilitySchedule: payload.availabilitySchedule?.trim() || null
+        })
+      });
+
+      const matchedOrg = organisations.find((o) => o.id === (res.organisationId || payload.organisationId));
+      const enrichedRes = {
+        ...res,
+        organisationName: matchedOrg ? matchedOrg.name : res.organisationName
+      };
+
+      const chosenLang = payload.preferredLanguage || 'en';
+      setBriefingLang(chosenLang);
+
+      setMobileNavDrawerOpen(false);
+      setLoginStageIndex(0);
+      setLoginTransitionUser(enrichedRes);
+
+      stageTimerOne = setTimeout(() => setLoginStageIndex(1), 700);
+      stageTimerTwo = setTimeout(() => setLoginStageIndex(2), 1450);
+
+      if (payload.role === 'Citizen') {
+        await apiFetch<any>(
+          '/users/households',
+          {
+            method: 'POST',
+            body: JSON.stringify({
+              householdHeadName: payload.fullName.trim(),
+              totalMembers: Math.max(1, Number(payload.totalMembers) || 1),
+              childrenCount: Math.max(0, Number(payload.childrenCount) || 0),
+              elderlyCount: Math.max(0, Number(payload.elderlyCount) || 0),
+              hasMobilityNeeds: Boolean(payload.hasMobilityNeeds),
+              hasChronicMedicalNeeds: Boolean(payload.hasChronicMedicalNeeds),
+              medicalNotes: payload.medicalNotes?.trim() || '',
+              primaryAddress: payload.primaryAddress?.trim() || '',
+              latitude: 6.9271,
+              longitude: 79.8612
+            })
+          },
+          enrichedRes.token
+        ).catch(() => {});
+      }
+
+      if (payload.role === 'Citizen' && payload.registerAsVolunteer) {
+        await apiFetch<any>(
+          '/volunteers',
+          {
+            method: 'POST',
+            body: JSON.stringify({
+              fullName: payload.fullName.trim(),
+              skillsCsv: payload.skillsCsv?.trim() || 'FirstAid, Logistics',
+              languagesCsv: payload.languagesCsv?.trim() || 'English',
+              availabilitySchedule: payload.availabilitySchedule?.trim() || 'Available On-Call',
+              currentLatitude: 6.9271,
+              currentLongitude: 79.8612
+            })
+          },
+          enrichedRes.token
+        ).catch(() => {});
+      }
+
+      await Promise.all([
+        loadAllData(enrichedRes.token, chosenLang, enrichedRes.role),
+        new Promise((resolve) => setTimeout(resolve, 2200))
+      ]);
+
+      const roleTabs = getRoleMenuItems(enrichedRes.role);
+      setActiveTab(roleTabs[0].id);
+      setAuthUser(enrichedRes);
+      setLoginTransitionUser(null);
+
+      if (enrichedRes.accountStatus === 'Pending') {
+        notify(
+          'info',
+          `Volunteer registration submitted for ${enrichedRes.fullName}. Status is Pending until verified and activated by a Volunteer Coordinator.`
+        );
+      } else if (enrichedRes.accountStatus === 'PendingPartnershipApproval') {
+        notify(
+          'info',
+          `Partner Organization request submitted for ${enrichedRes.fullName}. Status is Pending Admin approval.`
+        );
+      } else {
+        notify(
+          'success',
+          `Welcome to CriSync, ${enrichedRes.fullName}! Account registered as ${getFriendlyRoleTitle(enrichedRes.role)}.`
+        );
+      }
+    } catch (err: any) {
+      setLoginTransitionUser(null);
+      setLoginError(err.message || 'Registration failed. Please check your details.');
+    } finally {
+      if (stageTimerOne) clearTimeout(stageTimerOne);
+      if (stageTimerTwo) clearTimeout(stageTimerTwo);
+    }
+  };
+
+  const AVATAR_COLOR_PRESETS: Array<[string, string]> = [
+    ['#4f46e5', '#06b6d4'],
+    ['#e11d48', '#f97316'],
+    ['#059669', '#14b8a6'],
+    ['#7c3aed', '#ec4899'],
+    ['#0284c7', '#3b82f6'],
+    ['#d97706', '#eab308']
+  ];
+
+  const buildAvatarPresetDataUrl = (name: string, bgFrom: string, bgTo: string): string => {
+    const parts = (name || 'CS').trim().split(/\s+/).filter(Boolean);
+    const initials =
+      parts.length >= 2
+        ? `${parts[0][0]}${parts[1][0]}`.toUpperCase()
+        : (name || 'CS').slice(0, 2).toUpperCase();
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120"><defs><linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="${bgFrom}"/><stop offset="100%" stop-color="${bgTo}"/></linearGradient></defs><rect width="120" height="120" rx="28" fill="url(#g)"/><text x="60" y="74" text-anchor="middle" fill="#ffffff" font-family="Arial,sans-serif" font-weight="800" font-size="44">${initials}</text></svg>`;
+    return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+  };
+
+  const openProfileModal = () => {
+    if (!authUser) return;
+    setProfileFullName(authUser.fullName || '');
+    setProfilePhone(authUser.phoneNumber || '');
+    setProfileLanguage(authUser.preferredLanguage || briefingLang || 'en');
+    setProfilePhotoUrl(authUser.profilePhotoUrl || '');
+    setProfileCurrentPassword('');
+    setProfileNewPassword('');
+    setProfileUnlocked({});
+    setQuickUnlockPin('');
+    setQuickUnlockPattern('');
+    setQuickUnlockCurrentPassword('');
+    setQuickUnlockUseBiometrics(false);
+    const localRecord = loadTrustedDeviceUnlock();
+    setCurrentDeviceBound(Boolean(localRecord && localRecord.userId === authUser.id));
+    setMobileNavDrawerOpen(false);
+    setProfileModalOpen(true);
+
+    void isPlatformBiometricSupported().then(setBiometricSupported);
+    void apiFetch<any>('/auth/quick-unlock/status', {}, authUser.token)
+      .then((statusRes) => {
+        setQuickUnlockStatus(statusRes);
+        if (statusRes?.mode === 'Pin' || statusRes?.mode === 'Pattern') {
+          setQuickUnlockMode(statusRes.mode);
+        }
+      })
+      .catch(() => {});
+  };
+
+  const handleProfilePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const size = 160;
+        const canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+        const minSide = Math.min(img.width, img.height);
+        const sx = (img.width - minSide) / 2;
+        const sy = (img.height - minSide) / 2;
+        ctx.drawImage(img, sx, sy, minSide, minSide, 0, 0, size, size);
+        setProfilePhotoUrl(canvas.toDataURL('image/jpeg', 0.84));
+      };
+      if (typeof reader.result === 'string') {
+        img.src = reader.result;
+      }
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
+
+  const handleSaveProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!authUser || !profileFullName.trim()) return;
+    setProfileSaving(true);
+    try {
+      const updated = await apiFetch<any>(
+        '/users/me',
+        {
+          method: 'PUT',
+          body: JSON.stringify({
+            fullName: profileFullName.trim(),
+            phoneNumber: profilePhone.trim(),
+            preferredLanguage: profileLanguage || 'en',
+            profilePhotoUrl: profilePhotoUrl,
+            currentPassword: profileNewPassword.trim() ? profileCurrentPassword : null,
+            newPassword: profileNewPassword.trim() ? profileNewPassword.trim() : null
+          })
+        },
+        authUser.token
+      );
+      setAuthUser(updated);
+      setProfileModalOpen(false);
+      setProfileCurrentPassword('');
+      setProfileNewPassword('');
+      if (profileLanguage && profileLanguage !== briefingLang) {
+        await handleLanguageBriefingChange(profileLanguage);
+      }
+      await loadAllData(updated.token, profileLanguage || briefingLang, updated.role);
+      notify('success', `Profile updated for ${updated.fullName}.`);
+    } catch (err: any) {
+      notify('error', err.message || 'Could not update your profile settings.');
+    } finally {
+      setProfileSaving(false);
+    }
+  };
+
+  const handleEnableQuickUnlock = async () => {
+    if (!authUser) return;
+    const secret = quickUnlockMode === 'Pattern' ? quickUnlockPattern.trim() : quickUnlockPin.trim();
+    if (!quickUnlockCurrentPassword.trim()) {
+      notify('error', 'Please enter your current password to authorise Trusted-Device Quick Unlock.');
+      return;
+    }
+    if (quickUnlockMode === 'Pin' && !/^\d{6}$/.test(secret)) {
+      notify('error', 'Quick Unlock PIN must be exactly 6 digits.');
+      return;
+    }
+    if (quickUnlockMode === 'Pattern' && secret.split('-').filter(Boolean).length < 4) {
+      notify('error', 'Draw a pattern connecting at least 4 dots.');
+      return;
+    }
+
+    setQuickUnlockBusy(true);
+    try {
+      let biometricCredId: string | null = null;
+      if (quickUnlockUseBiometrics) {
+        biometricCredId = await enrollDeviceBiometric(authUser.email, authUser.fullName);
+      }
+
+      const setupRes = await apiFetch<any>(
+        '/auth/quick-unlock/setup',
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            currentPassword: quickUnlockCurrentPassword,
+            mode: quickUnlockMode,
+            secret,
+            biometricCredentialId: biometricCredId,
+            deviceName: detectCurrentDeviceName(),
+            originHost: typeof window !== 'undefined' ? window.location.host : 'localhost'
+          })
+        },
+        authUser.token
+      );
+
+      saveTrustedDeviceUnlock({
+        userId: setupRes.userId,
+        fullName: setupRes.fullName,
+        email: setupRes.email,
+        role: setupRes.role,
+        mode: setupRes.mode,
+        hasBiometricCredential: Boolean(setupRes.hasBiometricCredential),
+        credentialId: biometricCredId || undefined,
+        deviceId: setupRes.deviceId,
+        deviceName: setupRes.deviceName,
+        deviceToken: setupRes.deviceToken,
+        savedAtIso: new Date().toISOString()
+      });
+
+      setCurrentDeviceBound(true);
+      const refreshedStatus = await apiFetch<any>('/auth/quick-unlock/status', {}, authUser.token).catch(() => null);
+      if (refreshedStatus) {
+        setQuickUnlockStatus(refreshedStatus);
+      } else {
+        setQuickUnlockStatus({
+          quickUnlockEnabled: true,
+          mode: setupRes.mode,
+          hasBiometricCredential: Boolean(setupRes.hasBiometricCredential),
+          failedAttempts: 0
+        });
+      }
+      setQuickUnlockPin('');
+      setQuickUnlockPattern('');
+      setQuickUnlockCurrentPassword('');
+      notify(
+        'success',
+        `Trusted-Device Quick Unlock (${setupRes.mode}${setupRes.hasBiometricCredential ? ' + Biometrics' : ''}) bound to ${setupRes.deviceName || 'this browser'}!`
+      );
+    } catch (err: any) {
+      notify('error', err.message || 'Could not enable Quick Unlock on this device.');
+    } finally {
+      setQuickUnlockBusy(false);
+    }
+  };
+
+  const handleRemoveTrustedDevice = async (deviceId: string) => {
+    if (!authUser) return;
+    setQuickUnlockBusy(true);
+    try {
+      await apiFetch(`/auth/quick-unlock/devices/${deviceId}`, { method: 'DELETE' }, authUser.token);
+      const localRecord = loadTrustedDeviceUnlock();
+      if (localRecord && localRecord.deviceId === deviceId) {
+        clearTrustedDeviceUnlock();
+        setCurrentDeviceBound(false);
+      }
+      const refreshedStatus = await apiFetch<any>('/auth/quick-unlock/status', {}, authUser.token).catch(() => null);
+      if (refreshedStatus) {
+        setQuickUnlockStatus(refreshedStatus);
+      }
+      notify('info', 'Removed selected trusted device.');
+    } catch (err: any) {
+      notify('error', err.message || 'Could not remove trusted device.');
+    } finally {
+      setQuickUnlockBusy(false);
+    }
+  };
+
+  const handleRevokeQuickUnlock = async () => {
+    if (!authUser) return;
+    setQuickUnlockBusy(true);
+    try {
+      await apiFetch('/auth/quick-unlock', { method: 'DELETE' }, authUser.token);
+      const localRecord = loadTrustedDeviceUnlock();
+      if (localRecord && localRecord.userId === authUser.id) {
+        clearTrustedDeviceUnlock();
+        setCurrentDeviceBound(false);
+      }
+      setQuickUnlockStatus({
+        quickUnlockEnabled: false,
+        mode: '',
+        hasBiometricCredential: false,
+        failedAttempts: 0,
+        trustedDevices: []
+      });
+      notify('info', 'Trusted-Device Quick Unlock disabled across all devices.');
+    } catch (err: any) {
+      notify('error', err.message || 'Could not disable Quick Unlock.');
+    } finally {
+      setQuickUnlockBusy(false);
+    }
+  };
+
+  const handleLogout = () => {
+    setAuthUser(null);
+    setAdminUsers([]);
+    setAdminPartnerships([]);
+    setRolePermissions([]);
+    setSystemConfig(null);
+    setServiceSettings(null);
+    setStatusBanner(null);
+    setProfileModalOpen(false);
+    setMobileNavDrawerOpen(false);
+  };
+
+  const handleLanguageBriefingChange = async (lang: string) => {
+    setBriefingLang(lang);
+    const targetCrisisId = crises[0]?.id;
+    if (!targetCrisisId) {
+      setBriefing(null);
+      return;
+    }
+    try {
+      const briefRes = await apiFetch<any>(
+        `/ai-governance/multilingual-briefing/${targetCrisisId}?lang=${lang}`,
+        {},
+        authUser?.token
+      );
+      setBriefing(briefRes);
+    } catch {
+      setBriefing(null);
+    }
+  };
+
+  const handleUploadEvidence = async (file: File): Promise<string | null> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    try {
+      const res = await apiFetch<any>('/requests/upload-evidence', { method: 'POST', body: formData }, authUser?.token);
+      notify('success', `Document '${res.originalFileName}' attached successfully.`);
+      return res.safeFileName;
+    } catch (err: any) {
+      notify('error', err.message);
+      return null;
+    }
+  };
+
+  const handleSubmitCitizenRequest = async (payload: any): Promise<boolean> => {
+    const targetCrisisId = payload.crisisEventId || crises[0]?.id;
+    if (!targetCrisisId) {
+      notify(
+        'error',
+        'No active crisis event declared yet. An Emergency Coordinator or System Admin must declare an active crisis first.'
+      );
+      return false;
+    }
+    try {
+      const created = await apiFetch<any>(
+        '/requests',
+        {
+          method: 'POST',
+          body: JSON.stringify({ ...payload, crisisEventId: targetCrisisId })
+  return null;
+}
