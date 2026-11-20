@@ -2073,5 +2073,544 @@ export default function App() {
 
             <button
               type="button"
-  return null;
+              onClick={() => setLanguageMenuOpen(true)}
+              title="Change Language"
+              className="lg:hidden px-2.5 py-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 text-zinc-200 text-xs font-bold flex items-center gap-1.5 transition"
+            >
+              <Globe className="w-4 h-4 text-indigo-400 shrink-0" />
+              <span className="sm:hidden">{activeLanguageOption.code.toUpperCase()}</span>
+              <span className="hidden sm:inline">{activeLanguageOption.label}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={toggleTheme}
+              title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+              className="w-9 h-9 sm:w-auto sm:px-3 sm:py-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 text-zinc-200 text-xs font-bold flex items-center justify-center gap-1.5 transition"
+            >
+              {theme === 'dark' ? (
+                <>
+                  <Sun className="w-4 h-4 text-amber-400" />
+                  <span className="hidden sm:inline">{t.lightMode}</span>
+                </>
+              ) : (
+                <>
+                  <Moon className="w-4 h-4 text-indigo-400" />
+                  <span className="hidden sm:inline">{t.darkMode}</span>
+                </>
+              )}
+            </button>
+
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.97 }}
+              type="button"
+              onClick={openProfileModal}
+              title="Edit Your Profile, Photo & Password"
+              className="px-2 sm:px-3 py-1.5 rounded-xl bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/25 hover:border-indigo-400/50 flex items-center gap-2 text-left transition cursor-pointer"
+            >
+              {authUser.profilePhotoUrl ? (
+                <img
+                  src={authUser.profilePhotoUrl}
+                  alt={authUser.fullName}
+                  className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg object-cover border border-indigo-400/40 shrink-0"
+                />
+              ) : (
+                <div className="keep-white w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-xs font-extrabold text-white shrink-0">
+                  {authUser.fullName?.slice(0, 2).toUpperCase()}
+                </div>
+              )}
+              <div className="hidden sm:block max-w-[155px]">
+                <p className="text-xs font-bold text-white leading-tight truncate flex items-center gap-1">
+                  <span className="truncate">{authUser.fullName}</span>
+                  <Pencil className="w-2.5 h-2.5 text-indigo-400 shrink-0" />
+                </p>
+                <p className="text-[10px] text-indigo-300 leading-tight truncate">
+                  {getFriendlyRoleTitle(authUser.role)}
+                </p>
+              </div>
+            </motion.button>
+
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              type="button"
+              onClick={() => loadAllData()}
+              title="Refresh Data"
+              className="hidden sm:inline-flex p-2.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 text-zinc-300 hover:text-white transition"
+            >
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-indigo-400' : ''}`} />
+            </motion.button>
+
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              type="button"
+              onClick={handleLogout}
+              title="Sign Out to switch accounts with password"
+              className="hidden sm:inline-flex px-3 py-2 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-300 text-xs font-bold items-center gap-1.5 transition"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              <span className="hidden md:inline">{t.signOut}</span>
+            </motion.button>
+          </div>
+        </div>
+
+        <div className="bg-white/[0.02] border-t border-white/[0.05]">
+          <div className="md:hidden max-w-[1480px] mx-auto px-3 py-2 flex items-center justify-between gap-2 text-xs">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="w-6 h-6 rounded-lg bg-indigo-500/15 border border-indigo-500/30 text-indigo-400 flex items-center justify-center shrink-0">
+                {getModuleIcon(activeMenuItem.id, 'w-3.5 h-3.5')}
+              </span>
+              <div className="min-w-0">
+                <p className="text-xs font-extrabold text-white truncate">
+                  {getLocalizedTabLabel(activeMenuItem.id, activeMenuItem.label)}
+                </p>
+                <p className="text-[10px] text-zinc-400 truncate">
+                  {getFriendlyRoleTitle(authUser.role)}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-1.5 shrink-0">
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="px-2.5 py-1.5 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-[11px] font-bold flex items-center gap-1"
+              >
+                <LogOut className="w-3 h-3" />
+                <span>{t.signOut}</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setMobileNavDrawerOpen(true)}
+                className="px-2.5 py-1.5 rounded-xl bg-white/[0.05] border border-white/10 text-zinc-200 text-[11px] font-bold flex items-center gap-1"
+              >
+                <Menu className="w-3 h-3" />
+                <span>Menu</span>
+              </button>
+            </div>
+          </div>
+
+          <div className="hidden md:flex max-w-[1480px] mx-auto px-6 py-2 flex-wrap items-center justify-between gap-2 text-xs">
+            <div className="flex items-center gap-2 text-zinc-300 min-w-0">
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-indigo-500/15 border border-indigo-500/30 text-indigo-300 font-bold text-[11px] shrink-0">
+                <HelpCircle className="w-3 h-3" />
+                {t.yourRoleLabel}: {getFriendlyRoleTitle(authUser.role)}
+              </span>
+              <span className="text-zinc-400 truncate text-xs">
+                {getRolePermissionsSummary(authUser.role)}
+              </span>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2 shrink-0">
+              <div className="flex items-center gap-1 p-1 rounded-xl bg-black/20 border border-white/10">
+                <Globe className="w-3.5 h-3.5 text-indigo-400 ml-1.5 mr-0.5" />
+                {LANGUAGE_OPTIONS.map((langOpt) => (
+                  <button
+                    key={langOpt.code}
+                    type="button"
+                    onClick={() => handleLanguageBriefingChange(langOpt.code)}
+                    className={`px-2 py-0.5 rounded-lg text-[11px] font-bold transition ${
+                      briefingLang === langOpt.code
+                        ? 'bg-indigo-600 text-white keep-white'
+                        : 'text-zinc-400 hover:text-white'
+                    }`}
+                  >
+                    {langOpt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <AnimatePresence>
+        {languageMenuOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setLanguageMenuOpen(false)}
+              className="fixed inset-0 bg-slate-950/65 backdrop-blur-sm z-[70]"
+            />
+            <motion.div
+              initial={{ opacity: 0, y: 40, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 40, scale: 0.98 }}
+              transition={{ type: 'spring', stiffness: 360, damping: 30 }}
+              className="fixed inset-x-0 bottom-0 sm:inset-auto sm:top-20 sm:right-6 z-[70] w-full sm:w-[380px] max-h-[82dvh] bento-glass rounded-t-3xl sm:rounded-3xl p-5 flex flex-col border border-white/15 shadow-2xl overflow-hidden"
+            >
+              <div className="w-10 h-1 rounded-full bg-zinc-500/40 mx-auto mb-3 sm:hidden shrink-0" />
+              <div className="flex items-center justify-between pb-3 mb-3 border-b border-white/10 shrink-0">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-xl bg-indigo-500/20 border border-indigo-500/30 text-indigo-400 flex items-center justify-center shrink-0">
+                    <Globe className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <p className="text-base font-extrabold text-white">{t.languageLabel}</p>
+                    <p className="text-xs text-zinc-400">
+                      Choose your preferred interface & briefing language
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setLanguageMenuOpen(false)}
+                  className="p-2 rounded-xl bg-white/5 text-zinc-400 hover:text-white hover:bg-white/10"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="grid grid-cols-1 gap-2 overflow-y-auto sidebar-scroll pr-1 flex-1 min-h-0">
+                {LANGUAGE_OPTIONS.map((langOpt) => {
+                  const isActive = briefingLang === langOpt.code;
+                  return (
+                    <button
+                      key={langOpt.code}
+                      type="button"
+                      onClick={() => {
+                        handleLanguageBriefingChange(langOpt.code);
+                        setLanguageMenuOpen(false);
+                      }}
+                      className={`w-full text-left px-4 py-3 rounded-2xl border flex items-center justify-between transition ${
+                        isActive
+                          ? 'bg-indigo-600/20 border-2 border-indigo-500 text-white'
+                          : 'bg-white/[0.03] hover:bg-white/[0.08] border-white/[0.08] text-zinc-300'
+                      }`}
+                    >
+                      <div>
+                        <p className="text-sm font-extrabold text-white">{langOpt.label}</p>
+                        <p className="text-xs text-zinc-400">{langOpt.fullName}</p>
+                      </div>
+                      {isActive && <CheckCircle2 className="w-5 h-5 text-indigo-400 shrink-0" />}
+                    </button>
+                  );
+                })}
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {mobileNavDrawerOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setMobileNavDrawerOpen(false)}
+              className="fixed inset-0 bg-slate-950/65 backdrop-blur-sm z-[70] xl:hidden"
+            />
+            <motion.aside
+              initial={{ x: '-100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '-100%' }}
+              transition={{ type: 'spring', stiffness: 340, damping: 32 }}
+              className="fixed inset-y-0 left-0 z-[70] w-[88vw] max-w-[360px] h-[100dvh] bento-glass flex flex-col overflow-hidden xl:hidden border-r border-white/15"
+            >
+              <div className="shrink-0 p-4 border-b border-white/10 flex items-center justify-between">
+                <div className="flex items-center gap-3 min-w-0">
+                  <img
+                    src="/crisync-logo.png"
+                    alt="CriSync Logo"
+                    className="w-11 h-11 rounded-2xl object-cover crisync-logo-frame shrink-0"
+                  />
+                  <div className="min-w-0">
+                    <p className="crisync-wordmark text-xl">
+                      <span className="crisync-wordmark-primary">Cri</span>
+                      <span className="crisync-wordmark-accent">Sync</span>
+                    </p>
+                    <p className="text-xs font-semibold text-indigo-300 truncate mt-0.5">
+                      {getFriendlyRoleTitle(authUser.role)}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setMobileNavDrawerOpen(false)}
+                  className="w-10 h-10 rounded-xl bg-white/5 text-zinc-400 hover:text-white flex items-center justify-center shrink-0"
+                  aria-label="Close Navigation Menu"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="flex-1 min-h-0 overflow-y-auto sidebar-scroll p-4 space-y-5">
+                <div>
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-zinc-400 mb-2.5 px-1">
+                    Your Navigation Menu ({menuItems.length})
+                  </p>
+                  <div className="space-y-2">
+                    {menuItems.map((item) => {
+                      const isActive = activeTab === item.id;
+                      return (
+                        <button
+                          key={item.id}
+                          type="button"
+                          onClick={() => {
+                            setActiveTab(item.id);
+                            setMobileNavDrawerOpen(false);
+                          }}
+                          className={`w-full text-left p-3.5 rounded-2xl border flex items-center gap-3 transition ${
+                            isActive
+                              ? 'bg-indigo-600 text-white border-indigo-400 keep-white shadow-md'
+                              : 'bg-white/[0.03] border-white/10 text-zinc-300 hover:bg-white/[0.07]'
+                          }`}
+                        >
+                          <span
+                            className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
+                              isActive ? 'bg-indigo-700/60 text-white keep-white' : 'bg-black/25'
+                            }`}
+                          >
+                            {getModuleIcon(item.id, 'w-4 h-4')}
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs font-extrabold truncate">
+                              {getLocalizedTabLabel(item.id, item.label)}
+                            </p>
+                            <p className="text-[11px] opacity-80 truncate mt-0.5">{item.subtext}</p>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div>
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-zinc-400 mb-2.5 px-1 flex items-center gap-1.5">
+                    <Globe className="w-3.5 h-3.5 text-indigo-400" />
+                    <span>{t.languageLabel}</span>
+                  </p>
+                  <div className="grid grid-cols-3 gap-2">
+                    {LANGUAGE_OPTIONS.map((langOpt) => (
+                      <button
+                        key={langOpt.code}
+                        type="button"
+                        onClick={() => handleLanguageBriefingChange(langOpt.code)}
+                        className={`py-2 px-2 rounded-xl text-xs font-bold border transition truncate ${
+                          briefingLang === langOpt.code
+                            ? 'bg-indigo-600 border-indigo-400 text-white keep-white shadow-sm'
+                            : 'bg-white/[0.03] border-white/10 text-zinc-300 hover:bg-white/[0.07]'
+                        }`}
+                      >
+                        {langOpt.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="shrink-0 p-4 border-t border-white/10 space-y-2.5">
+                <button
+                  type="button"
+                  onClick={openProfileModal}
+                  className="w-full p-2.5 rounded-xl bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/25 flex items-center justify-between gap-2.5 text-left transition"
+                >
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    {authUser.profilePhotoUrl ? (
+                      <img
+                        src={authUser.profilePhotoUrl}
+                        alt={authUser.fullName}
+                        className="w-8 h-8 rounded-lg object-cover border border-indigo-400/40 shrink-0"
+                      />
+                    ) : (
+                      <div className="keep-white w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-xs font-extrabold text-white shrink-0">
+                        {authUser.fullName?.slice(0, 2).toUpperCase()}
+                      </div>
+                    )}
+                    <div className="min-w-0">
+                      <p className="text-xs font-extrabold text-white truncate">{authUser.fullName}</p>
+                      <p className="text-[10px] text-indigo-300 truncate">Tap to edit profile, photo & password</p>
+                    </div>
+                  </div>
+                  <Pencil className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+                </button>
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    type="button"
+                    onClick={toggleTheme}
+                    className="py-2.5 px-2 rounded-xl bg-white/[0.05] border border-white/10 text-[11px] font-bold flex items-center justify-center gap-1.5"
+                  >
+                    {theme === 'dark' ? <Sun className="w-3.5 h-3.5 text-amber-400" /> : <Moon className="w-3.5 h-3.5 text-indigo-400" />}
+                    <span>{theme === 'dark' ? t.lightMode : t.darkMode}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      loadAllData();
+                      setMobileNavDrawerOpen(false);
+                    }}
+                    className="py-2.5 px-2 rounded-xl bg-white/[0.05] border border-white/10 text-[11px] font-bold flex items-center justify-center gap-1.5"
+                  >
+                    <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-indigo-400' : ''}`} />
+                    <span>Refresh</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    className="py-2.5 px-2 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-[11px] font-bold flex items-center justify-center gap-1.5"
+                  >
+                    <LogOut className="w-3.5 h-3.5" />
+                    <span>{t.signOut}</span>
+                  </button>
+                </div>
+              </div>
+            </motion.aside>
+          </>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {profileModalOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setProfileModalOpen(false)}
+              className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-[80]"
+            />
+            <motion.div
+              role="dialog"
+              aria-modal="true"
+              aria-label="My Profile and Account Settings"
+              initial={{ opacity: 0, y: 24, scale: 0.97 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 24, scale: 0.97 }}
+              transition={{ type: 'spring', stiffness: 360, damping: 30 }}
+              className="fixed inset-x-3 top-6 sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 sm:top-10 z-[85] sm:w-full sm:max-w-lg max-h-[88dvh] bento-glass rounded-3xl p-5 sm:p-6 flex flex-col border border-indigo-500/30 shadow-2xl overflow-hidden"
+            >
+              <div className="flex items-center justify-between pb-3.5 mb-4 border-b border-white/10 shrink-0">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-xl bg-indigo-500/20 border border-indigo-500/35 text-indigo-400 flex items-center justify-center shrink-0">
+                    <User className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h2 className="text-base font-extrabold text-white">My Profile & Account Settings</h2>
+                    <p className="text-[11px] text-zinc-400">
+                      {authUser.email} • {getFriendlyRoleTitle(authUser.role)}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  aria-label="Close Profile Modal"
+                  onClick={() => setProfileModalOpen(false)}
+                  className="p-2 rounded-xl bg-white/5 text-zinc-400 hover:text-white hover:bg-white/10 transition"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <form
+                key="my-profile-settings-form"
+                onSubmit={handleSaveProfile}
+                autoComplete="off"
+                className="flex-1 min-h-0 overflow-y-auto sidebar-scroll pr-1 space-y-4 text-xs"
+              >
+                <div
+                  aria-hidden="true"
+                  className="pointer-events-none fixed -left-[9999px] top-0 h-px w-px opacity-0 overflow-hidden"
+                >
+                  <input type="text" name="prevent_profile_autofill_user" autoComplete="username" tabIndex={-1} defaultValue="" />
+                  <input type="password" name="prevent_profile_autofill_pass" autoComplete="current-password" tabIndex={-1} defaultValue="" />
+                </div>
+
+                <div className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/[0.08] space-y-3">
+                  <div className="flex flex-wrap items-center gap-4">
+                    {profilePhotoUrl ? (
+                      <img
+                        src={profilePhotoUrl}
+                        alt={profileFullName || authUser.fullName}
+                        className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl object-cover border-2 border-indigo-400/50 shadow-md shrink-0"
+                      />
+                    ) : (
+                      <div className="keep-white w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-indigo-600 to-cyan-500 flex items-center justify-center text-xl font-black text-white shadow-md shrink-0">
+                        {(profileFullName || authUser.fullName || 'CS').slice(0, 2).toUpperCase()}
+                      </div>
+                    )}
+
+                    <div className="flex-1 min-w-[180px] space-y-2">
+                      <p className="font-bold text-zinc-200">Profile Picture & Avatar</p>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <label
+                          htmlFor="profile-photo-upload-input"
+                          className="keep-white cursor-pointer px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold inline-flex items-center gap-1.5 shadow-sm transition"
+                        >
+                          <Camera className="w-3.5 h-3.5" />
+                          <span>Upload Photo</span>
+                        </label>
+                        <input
+                          id="profile-photo-upload-input"
+                          type="file"
+                          accept="image/*"
+                          onChange={handleProfilePhotoUpload}
+                          className="hidden"
+                        />
+                        {profilePhotoUrl && (
+                          <button
+                            type="button"
+                            onClick={() => setProfilePhotoUrl('')}
+                            className="px-3 py-1.5 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-300 font-bold transition"
+                          >
+                            Remove Photo
+                          </button>
+                        )}
+                      </div>
+                      <p className="text-[11px] text-zinc-400">
+                        Upload any photo or pick a built-in gradient avatar badge below:
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2 pt-1">
+                    {AVATAR_COLOR_PRESETS.map(([fromCol, toCol], idx) => (
+                      <button
+                        key={`${fromCol}-${toCol}`}
+                        type="button"
+                        title={`Use Avatar Style ${idx + 1}`}
+                        onClick={() =>
+                          setProfilePhotoUrl(buildAvatarPresetDataUrl(profileFullName || authUser.fullName, fromCol, toCol))
+                        }
+                        style={{ background: `linear-gradient(135deg, ${fromCol}, ${toCol})` }}
+                        className="keep-white w-8 h-8 rounded-xl text-[11px] font-black text-white flex items-center justify-center border border-white/25 hover:scale-110 transition shadow-sm"
+                      >
+                        {(profileFullName || authUser.fullName || 'CS').slice(0, 2).toUpperCase()}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="flex items-center gap-1.5 font-bold text-zinc-300 mb-1.5">
+                    <User className="w-3.5 h-3.5 text-indigo-400" />
+                    <span>Full Name</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="crisync_profile_fullname"
+                    autoComplete="off"
+                    required
+                    value={profileFullName}
+                    onChange={(e) => setProfileFullName(e.target.value)}
+                    placeholder="Enter your full name"
+                    className="rsvp-input"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="flex items-center gap-1.5 font-bold text-zinc-300 mb-1.5">
+                      <Phone className="w-3.5 h-3.5 text-indigo-400" />
+                      <span>Phone Number</span>
+                    </label>
+                    <input
+                      type="text"
+                      name="crisync_profile_phone"
+      </div>
+    )}
+    </div>
+  );
 }
