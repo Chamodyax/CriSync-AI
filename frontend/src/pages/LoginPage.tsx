@@ -772,27 +772,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
               </AnimatePresence>
 
               {authMode === 'signin' ? (
-                <form key="user-signin-form" onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
-                  <div
-                    aria-hidden="true"
-                    className="pointer-events-none fixed -left-[9999px] top-0 h-px w-px opacity-0 overflow-hidden"
-                  >
-                    <input
-                      type="text"
-                      name="prevent_signin_autofill_user"
-                      autoComplete="username"
-                      tabIndex={-1}
-                      defaultValue=""
-                    />
-                    <input
-                      type="password"
-                      name="prevent_signin_autofill_pass"
-                      autoComplete="current-password"
-                      tabIndex={-1}
-                      defaultValue=""
-                    />
-                  </div>
-
+                <form key="user-signin-form" onSubmit={handleSubmit} className="space-y-4">
                   <div>
                     <label className="flex items-center gap-1.5 text-[13px] sm:text-sm font-bold text-zinc-300 mb-1.5">
                       <Mail className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
@@ -800,13 +780,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                     </label>
                     <input
                       type="email"
-                      name="crisync_signin_identifier"
-                      autoComplete="off"
+                      name="email"
+                      autoComplete="username"
                       required
-                      readOnly={!unlockedInputs.signInEmail}
-                      onFocus={() => unlockInput('signInEmail')}
-                      onMouseDown={() => unlockInput('signInEmail')}
-                      onKeyDown={() => unlockInput('signInEmail')}
                       value={signInEmail}
                       onChange={(e) => setSignInEmail(e.target.value)}
                       className="rsvp-input"
@@ -821,13 +797,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                     </label>
                     <input
                       type="password"
-                      name="crisync_signin_secret"
-                      autoComplete="new-password"
+                      name="password"
+                      autoComplete="current-password"
                       required
-                      readOnly={!unlockedInputs.signInPassword}
-                      onFocus={() => unlockInput('signInPassword')}
-                      onMouseDown={() => unlockInput('signInPassword')}
-                      onKeyDown={() => unlockInput('signInPassword')}
                       value={signInPassword}
                       onChange={(e) => setSignInPassword(e.target.value)}
                       className="rsvp-input"
@@ -847,27 +819,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                   </motion.button>
                 </form>
               ) : authMode === 'admin' ? (
-                <form key="admin-portal-form" onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
-                  <div
-                    aria-hidden="true"
-                    className="pointer-events-none fixed -left-[9999px] top-0 h-px w-px opacity-0 overflow-hidden"
-                  >
-                    <input
-                      type="text"
-                      name="prevent_admin_autofill_user"
-                      autoComplete="username"
-                      tabIndex={-1}
-                      defaultValue=""
-                    />
-                    <input
-                      type="password"
-                      name="prevent_admin_autofill_pass"
-                      autoComplete="current-password"
-                      tabIndex={-1}
-                      defaultValue=""
-                    />
-                  </div>
-
+                <form key="admin-portal-form" onSubmit={handleSubmit} className="space-y-4">
                   <div className="p-3.5 rounded-2xl bg-violet-500/15 border border-violet-500/35 text-[13px] sm:text-sm text-violet-200 flex items-start gap-2.5">
                     <KeyRound className="w-4 h-4 text-violet-400 shrink-0 mt-0.5" />
                     <div>
@@ -885,13 +837,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                     </label>
                     <input
                       type="email"
-                      name="crisync_admin_identifier"
-                      autoComplete="off"
+                      name="email"
+                      autoComplete="username"
                       required
-                      readOnly={!unlockedInputs.adminEmail}
-                      onFocus={() => unlockInput('adminEmail')}
-                      onMouseDown={() => unlockInput('adminEmail')}
-                      onKeyDown={() => unlockInput('adminEmail')}
                       value={adminEmail}
                       onChange={(e) => setAdminEmail(e.target.value)}
                       className="rsvp-input"
@@ -906,13 +854,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                     </label>
                     <input
                       type="password"
-                      name="crisync_admin_secret"
-                      autoComplete="new-password"
+                      name="password"
+                      autoComplete="current-password"
                       required
-                      readOnly={!unlockedInputs.adminPassword}
-                      onFocus={() => unlockInput('adminPassword')}
-                      onMouseDown={() => unlockInput('adminPassword')}
-                      onKeyDown={() => unlockInput('adminPassword')}
                       value={adminPassword}
                       onChange={(e) => setAdminPassword(e.target.value)}
                       className="rsvp-input"
@@ -932,26 +876,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                   </motion.button>
                 </form>
               ) : (
-                <form key="public-signup-form" onSubmit={handleSignUpSubmit} className="space-y-3.5 text-[13px] sm:text-sm" autoComplete="off">
-                  <div
-                    aria-hidden="true"
-                    className="pointer-events-none fixed -left-[9999px] top-0 h-px w-px opacity-0 overflow-hidden"
-                  >
-                    <input
-                      type="text"
-                      name="prevent_signup_autofill_user"
-                      autoComplete="username"
-                      tabIndex={-1}
-                      defaultValue=""
-                    />
-                    <input
-                      type="password"
-                      name="prevent_signup_autofill_pass"
-                      autoComplete="current-password"
-                      tabIndex={-1}
-                      defaultValue=""
-                    />
-                  </div>
+                <form key="public-signup-form" onSubmit={handleSignUpSubmit} className="space-y-3.5 text-[13px] sm:text-sm">
 
                   <div>
                     <label className="flex items-center gap-1.5 font-bold text-zinc-300 mb-1.5">
