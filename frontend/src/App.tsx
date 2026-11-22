@@ -261,9 +261,8 @@ function CriSyncBrandIntroOverlay({
       animate={{ opacity: 1 }}
       exit={{ opacity: 0, scale: 1.03 }}
       transition={{ duration: 0.42, ease: 'easeOut' }}
-      className={`fixed inset-0 z-[110] flex flex-col items-center justify-center px-6 overflow-hidden backdrop-blur-2xl ${
-        theme === 'light' ? 'bg-slate-50 text-slate-900' : 'bg-[#07090e] text-zinc-100'
-      }`}
+      className={`fixed inset-0 z-[110] flex flex-col items-center justify-center px-6 overflow-hidden backdrop-blur-2xl ${theme === 'light' ? 'bg-slate-50 text-slate-900' : 'bg-[#07090e] text-zinc-100'
+        }`}
     >
       <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_center,rgba(79,70,229,0.24),transparent_60%)]" />
       <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(rgba(148,163,184,0.14)_1px,transparent_1px)] [background-size:24px_24px] opacity-40" />
@@ -271,11 +270,10 @@ function CriSyncBrandIntroOverlay({
       <button
         type="button"
         onClick={onSkip}
-        className={`fixed top-5 right-5 z-20 px-3.5 py-2 rounded-xl text-xs font-bold border transition ${
-          theme === 'light'
-            ? 'bg-white/90 hover:bg-white border-slate-200 text-slate-700 shadow-sm'
-            : 'bg-white/[0.06] hover:bg-white/[0.12] border-white/15 text-zinc-300'
-        }`}
+        className={`fixed top-5 right-5 z-20 px-3.5 py-2 rounded-xl text-xs font-bold border transition ${theme === 'light'
+          ? 'bg-white/90 hover:bg-white border-slate-200 text-slate-700 shadow-sm'
+          : 'bg-white/[0.06] hover:bg-white/[0.12] border-white/15 text-zinc-300'
+          }`}
       >
         Skip Intro →
       </button>
@@ -306,9 +304,8 @@ function CriSyncBrandIntroOverlay({
                 : { scale: 1, opacity: 1, rotate: 0 }
             }
             transition={{ type: 'spring', stiffness: 220, damping: 18 }}
-            className={`w-24 h-24 sm:w-28 sm:h-28 rounded-[26px] object-cover crisync-logo-frame ${
-              isFused ? 'crisync-fusion-glow' : ''
-            }`}
+            className={`w-24 h-24 sm:w-28 sm:h-28 rounded-[26px] object-cover crisync-logo-frame ${isFused ? 'crisync-fusion-glow' : ''
+              }`}
           />
         </div>
 
@@ -361,13 +358,12 @@ function CriSyncBrandIntroOverlay({
                   phase === 'enter'
                     ? { duration: 0.2 }
                     : {
-                        opacity: { duration: 0.16, ease: 'easeOut' },
-                        maxWidth: { duration: 0.48, delay: 0.1, ease: [0.22, 1, 0.36, 1] as const }
-                      }
+                      opacity: { duration: 0.16, ease: 'easeOut' },
+                      maxWidth: { duration: 0.48, delay: 0.1, ease: [0.22, 1, 0.36, 1] as const }
+                    }
                 }
-                className={`crisync-fragment-sis inline-block align-baseline ${
-                  phase === 'enter' ? 'overflow-visible' : 'overflow-hidden'
-                }`}
+                className={`crisync-fragment-sis inline-block align-baseline ${phase === 'enter' ? 'overflow-visible' : 'overflow-hidden'
+                  }`}
               >
                 sis
               </motion.span>
@@ -384,12 +380,12 @@ function CriSyncBrandIntroOverlay({
                 phase === 'enter'
                   ? { duration: 0.35, ease: [0.22, 1, 0.36, 1] as const }
                   : {
-                      opacity: { duration: 0.15, ease: 'easeOut' },
-                      scale: { duration: 0.2, ease: 'easeOut' },
-                      maxWidth: { duration: 0.45, delay: 0.1, ease: [0.22, 1, 0.36, 1] as const },
-                      marginLeft: { duration: 0.45, delay: 0.1, ease: [0.22, 1, 0.36, 1] as const },
-                      marginRight: { duration: 0.45, delay: 0.1, ease: [0.22, 1, 0.36, 1] as const }
-                    }
+                    opacity: { duration: 0.15, ease: 'easeOut' },
+                    scale: { duration: 0.2, ease: 'easeOut' },
+                    maxWidth: { duration: 0.45, delay: 0.1, ease: [0.22, 1, 0.36, 1] as const },
+                    marginLeft: { duration: 0.45, delay: 0.1, ease: [0.22, 1, 0.36, 1] as const },
+                    marginRight: { duration: 0.45, delay: 0.1, ease: [0.22, 1, 0.36, 1] as const }
+                  }
               }
               className="inline-flex items-center justify-center overflow-hidden rounded-2xl bg-indigo-500/20 border border-indigo-400/40 text-indigo-400 text-2xl sm:text-4xl font-black w-10 h-10 sm:w-14 sm:h-14 shrink-0"
             >
@@ -510,9 +506,8 @@ function CrisyncLaunchOverlay({
       animate={{ opacity: 1 }}
       exit={{ opacity: 0, scale: 1.03 }}
       transition={{ duration: 0.32, ease: 'easeOut' }}
-      className={`fixed inset-0 z-[100] flex flex-col items-center justify-center px-6 overflow-hidden backdrop-blur-2xl ${
-        theme === 'light' ? 'bg-slate-50/95 text-slate-900' : 'bg-[#07090e]/98 text-zinc-100'
-      }`}
+      className={`fixed inset-0 z-[100] flex flex-col items-center justify-center px-6 overflow-hidden backdrop-blur-2xl ${theme === 'light' ? 'bg-slate-50/95 text-slate-900' : 'bg-[#07090e]/98 text-zinc-100'
+        }`}
     >
       <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_center,rgba(79,70,229,0.22),transparent_62%)]" />
       <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(rgba(148,163,184,0.12)_1px,transparent_1px)] [background-size:24px_24px] opacity-35" />
@@ -614,14 +609,35 @@ export default function App() {
     const saved = localStorage.getItem('aether_theme');
     return saved === 'dark' ? 'dark' : 'light';
   });
-  const [showBrandIntro, setShowBrandIntro] = useState(true);
+  const [showBrandIntro, setShowBrandIntro] = useState<boolean>(() => {
+    try {
+      if (localStorage.getItem('crisync_auth_user')) return false;
+      return !sessionStorage.getItem('crisync_intro_seen');
+    } catch {
+      return false;
+    }
+  });
   const [introPhase, setIntroPhase] = useState<IntroPhase>('enter');
   const [introRunId, setIntroRunId] = useState(0);
-  const [activeTab, setActiveTab] = useState<TabKey>('dashboard');
+  const [activeTab, setActiveTab] = useState<TabKey>(() => {
+    try {
+      const savedTab = localStorage.getItem('crisync_active_tab') as TabKey;
+      return savedTab || 'dashboard';
+    } catch {
+      return 'dashboard';
+    }
+  });
   const [mobileNavDrawerOpen, setMobileNavDrawerOpen] = useState(false);
   const [languageMenuOpen, setLanguageMenuOpen] = useState(false);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
-  const [authUser, setAuthUser] = useState<any | null>(null);
+  const [authUser, setAuthUser] = useState<any | null>(() => {
+    try {
+      const saved = localStorage.getItem('crisync_auth_user');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [profileFullName, setProfileFullName] = useState('');
   const [profilePhone, setProfilePhone] = useState('');
@@ -696,21 +712,26 @@ export default function App() {
   const [transparencyReport, setTransparencyReport] = useState<any | null>(null);
   const [mappingReferences, setMappingReferences] = useState<any[]>([]);
   const [coverageReport, setCoverageReport] = useState<any | null>(null);
+  const [lastSyncedAt, setLastSyncedAt] = useState<Date | null>(null);
 
   useEffect(() => {
-    setShowBrandIntro(true);
+    if (!showBrandIntro) return;
     setIntroPhase('enter');
-    const fuseTimer = setTimeout(() => setIntroPhase('fuse'), 1550);
-    const lockTimer = setTimeout(() => setIntroPhase('locked'), 2400);
-    const hideTimer = setTimeout(() => setShowBrandIntro(false), 3850);
+    try {
+      sessionStorage.setItem('crisync_intro_seen', 'true');
+    } catch { }
+    const fuseTimer = setTimeout(() => setIntroPhase('fuse'), 500);
+    const lockTimer = setTimeout(() => setIntroPhase('locked'), 1000);
+    const hideTimer = setTimeout(() => setShowBrandIntro(false), 1600);
     return () => {
       clearTimeout(fuseTimer);
       clearTimeout(lockTimer);
       clearTimeout(hideTimer);
     };
-  }, [introRunId]);
+  }, [introRunId, showBrandIntro]);
 
   const triggerBrandIntro = () => {
+    setShowBrandIntro(true);
     setIntroRunId((n) => n + 1);
   };
 
@@ -720,6 +741,29 @@ export default function App() {
     root.classList.add(theme);
     localStorage.setItem('aether_theme', theme);
   }, [theme]);
+
+  // Sync authUser to localStorage (P0-2 Fix)
+  useEffect(() => {
+    if (authUser) {
+      try {
+        localStorage.setItem('crisync_auth_user', JSON.stringify(authUser));
+      } catch { }
+    } else {
+      try {
+        localStorage.removeItem('crisync_auth_user');
+        localStorage.removeItem('crisync_active_tab');
+      } catch { }
+    }
+  }, [authUser]);
+
+  // Sync activeTab to localStorage (P0-2 Fix)
+  useEffect(() => {
+    if (activeTab && authUser) {
+      try {
+        localStorage.setItem('crisync_active_tab', activeTab);
+      } catch { }
+    }
+  }, [activeTab, authUser]);
 
   useEffect(() => {
     document.body.style.overflow =
@@ -768,6 +812,10 @@ export default function App() {
   useEffect(() => {
     const onUnauthorized = () => {
       setAuthUser(null);
+      try {
+        localStorage.removeItem('crisync_auth_user');
+        localStorage.removeItem('crisync_active_tab');
+      } catch { }
       setAdminUsers([]);
       setAdminPartnerships([]);
       setRolePermissions([]);
@@ -795,7 +843,42 @@ export default function App() {
         setCrises(publicCrises);
       }
     });
+
+    // Session restore on page refresh (P0-2 Fix)
+    if (authUser?.token) {
+      loadAllData(authUser.token, undefined, authUser.role).catch((err: any) => {
+        if (err?.message?.includes('401') || err?.message?.toLowerCase().includes('unauthorized')) {
+          handleLogout();
+        }
+      });
+    }
   }, []);
+
+  // Background Auto-Refresh / Polling (P1-2 Fix)
+  useEffect(() => {
+    if (!authUser?.token) return;
+
+    // Background polling every 30 seconds
+    const interval = setInterval(() => {
+      if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+        loadAllData(authUser.token, undefined, authUser.role);
+      }
+    }, 30000);
+
+    // Refresh immediately when user returns to tab
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        loadAllData(authUser.token, undefined, authUser.role);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [authUser?.token, authUser?.role]);
 
   const loadAllData = async (tokenOverride?: string | null, langOverride?: string, roleOverride?: string) => {
     const activeToken = tokenOverride !== undefined ? tokenOverride : authUser?.token;
@@ -837,17 +920,17 @@ export default function App() {
         coverageRes
       ] = await Promise.all([
         apiFetch<any[]>('/organisations', {}, activeToken).catch(() => []),
-        apiFetch<any>('/admin/metrics', {}, activeToken),
-        apiFetch<any[]>('/crises', {}, activeToken),
-        apiFetch<any[]>('/crises/alerts', {}, activeToken),
-        apiFetch<any[]>('/requests', {}, activeToken),
-        apiFetch<any[]>('/ai-governance/recommendations', {}, activeToken),
-        apiFetch<any[]>('/logistics/resources', {}, activeToken),
-        apiFetch<any>('/shelters', {}, activeToken),
-        apiFetch<any>('/volunteers', {}, activeToken),
-        apiFetch<any>('/donations', {}, activeToken),
+        apiFetch<any>('/admin/metrics', {}, activeToken).catch(() => null),
+        apiFetch<any[]>('/crises', {}, activeToken).catch(() => []),
+        apiFetch<any[]>('/crises/alerts', {}, activeToken).catch(() => []),
+        apiFetch<any[]>('/requests', {}, activeToken).catch(() => []),
+        apiFetch<any[]>('/ai-governance/recommendations', {}, activeToken).catch(() => []),
+        apiFetch<any[]>('/logistics/resources', {}, activeToken).catch(() => []),
+        apiFetch<any>('/shelters', {}, activeToken).catch(() => ({ shelters: [], allocations: [] })),
+        apiFetch<any>('/volunteers', {}, activeToken).catch(() => ({ volunteers: [], assignments: [] })),
+        apiFetch<any>('/donations', {}, activeToken).catch(() => ({ campaigns: [], donations: [] })),
         canViewAuditLogs ? apiFetch<any[]>('/admin/audit-logs', {}, activeToken).catch(() => []) : Promise.resolve([]),
-        apiFetch<any>('/admin/resilience', {}, activeToken),
+        apiFetch<any>('/admin/resilience', {}, activeToken).catch(() => null),
         apiFetch<any>('/users/households/me', {}, activeToken).catch(() => null),
         isAdminTier ? apiFetch<any[]>('/admin/users', {}, activeToken).catch(() => []) : Promise.resolve([]),
         isAdminTier ? apiFetch<any[]>('/admin/partnerships', {}, activeToken).catch(() => []) : Promise.resolve([]),
@@ -906,6 +989,7 @@ export default function App() {
         setDemandForecast([]);
         setBriefing(null);
       }
+      setLastSyncedAt(new Date());
     } catch (err: any) {
       notify('error', err.message || 'Failed to load data.');
     } finally {
@@ -921,13 +1005,10 @@ export default function App() {
       setLoginStageIndex(0);
       setLoginTransitionUser(res);
 
-      stageTimerOne = setTimeout(() => setLoginStageIndex(1), 700);
-      stageTimerTwo = setTimeout(() => setLoginStageIndex(2), 1450);
+      stageTimerOne = setTimeout(() => setLoginStageIndex(1), 350);
+      stageTimerTwo = setTimeout(() => setLoginStageIndex(2), 700);
 
-      await Promise.all([
-        loadAllData(res.token, undefined, res.role),
-        new Promise((resolve) => setTimeout(resolve, 2200))
-      ]);
+      await loadAllData(res.token, undefined, res.role);
 
       const roleTabs = getRoleMenuItems(res.role);
       setActiveTab(roleTabs[0].id);
@@ -1052,7 +1133,7 @@ export default function App() {
             })
           },
           enrichedRes.token
-        ).catch(() => {});
+        ).catch(() => { });
       }
 
       if (payload.role === 'Citizen' && payload.registerAsVolunteer) {
@@ -1070,13 +1151,10 @@ export default function App() {
             })
           },
           enrichedRes.token
-        ).catch(() => {});
+        ).catch(() => { });
       }
 
-      await Promise.all([
-        loadAllData(enrichedRes.token, chosenLang, enrichedRes.role),
-        new Promise((resolve) => setTimeout(resolve, 2200))
-      ]);
+      await loadAllData(enrichedRes.token, chosenLang, enrichedRes.role);
 
       const roleTabs = getRoleMenuItems(enrichedRes.role);
       setActiveTab(roleTabs[0].id);
@@ -1153,7 +1231,7 @@ export default function App() {
           setQuickUnlockMode(statusRes.mode);
         }
       })
-      .catch(() => {});
+      .catch(() => { });
   };
 
   const handleProfilePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1347,6 +1425,10 @@ export default function App() {
 
   const handleLogout = () => {
     setAuthUser(null);
+    try {
+      localStorage.removeItem('crisync_auth_user');
+      localStorage.removeItem('crisync_active_tab');
+    } catch { }
     setAdminUsers([]);
     setAdminPartnerships([]);
     setRolePermissions([]);
@@ -1943,457 +2025,270 @@ export default function App() {
         />
       ) : (
         <div className="min-h-[100dvh] w-full bg-[#07090e] text-zinc-100 flex flex-col relative overflow-x-hidden">
-      <a
-        href="#main-content"
-        className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[100] focus:px-4 focus:py-2 focus:rounded-xl focus:bg-indigo-600 focus:text-white focus:font-bold"
-      >
-        Skip to main content
-      </a>
-      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(rgba(148,163,184,0.12)_1px,transparent_1px)] [background-size:24px_24px] opacity-35" />
-      <div className="pointer-events-none fixed inset-0 overflow-hidden z-0">
-        <motion.div
-          animate={{ scale: [1, 1.14, 1], x: [0, 30, 0], y: [0, -20, 0] }}
-          transition={{ duration: 14, repeat: Infinity, ease: 'easeInOut' }}
-          className={`absolute -top-28 -left-24 w-[480px] h-[480px] rounded-full blur-3xl ${
-            theme === 'light' ? 'bg-indigo-400/25' : 'bg-indigo-600/15'
-          }`}
-        />
-        <motion.div
-          animate={{ scale: [1.08, 0.94, 1.08], x: [0, -35, 0], y: [0, 28, 0] }}
-          transition={{ duration: 16, repeat: Infinity, ease: 'easeInOut' }}
-          className={`absolute -bottom-32 right-[-90px] w-[520px] h-[520px] rounded-full blur-3xl ${
-            theme === 'light' ? 'bg-cyan-400/25' : 'bg-cyan-500/12'
-          }`}
-        />
-        <motion.div
-          animate={{ scale: [0.95, 1.12, 0.95], x: [0, 22, 0], y: [0, 22, 0] }}
-          transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut' }}
-          className={`absolute top-1/2 left-1/3 w-[380px] h-[380px] rounded-full blur-3xl ${
-            theme === 'light' ? 'bg-rose-300/20' : 'bg-rose-500/8'
-          }`}
-        />
-      </div>
-      <GlobalEarthBackdrop theme={theme} variant="workspace" />
-
-      <header className="sticky top-0 z-30 backdrop-blur-2xl bg-[#07090e]/85 border-b border-white/[0.08]">
-        <div className="max-w-[1480px] mx-auto px-3 sm:px-6 py-2 sm:py-3 flex flex-wrap items-center justify-between gap-2">
-          <div className="flex items-center gap-2.5 sm:gap-3.5 min-w-0">
-            <button
-              type="button"
-              onClick={() => setMobileNavDrawerOpen(true)}
-              className="xl:hidden w-10 h-10 rounded-xl bg-white/[0.05] hover:bg-white/10 border border-white/10 text-zinc-200 flex items-center justify-center transition shrink-0"
-              aria-label="Open Navigation Menu"
-            >
-              <Menu className="w-5 h-5" />
-            </button>
-
-            <button
-              type="button"
-              onClick={triggerBrandIntro}
-              title="Replay Crisis + Sync → CriSync Intro Animation"
-              className="flex items-center gap-2.5 sm:gap-3.5 min-w-0 text-left group"
-            >
-              <img
-                src="/crisync-logo.png"
-                alt="CriSync Logo"
-                className="w-10 h-10 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl object-cover crisync-logo-frame shrink-0"
-              />
-
-              <div className="min-w-0">
-                <div className="flex items-center gap-2.5">
-                  <span className="crisync-wordmark text-xl sm:text-2xl lg:text-[26px]">
-                    <span className="crisync-wordmark-primary">Cri</span>
-                    <span className="crisync-wordmark-accent">Sync</span>
-                  </span>
-                  <span
-                    className={`hidden 2xl:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
-                      crises.length > 0
-                        ? 'bg-rose-500/15 border-rose-500/30 text-rose-300'
-                        : 'bg-emerald-500/15 border-emerald-500/30 text-emerald-300'
-                    }`}
-                  >
-                    <span
-                      className={`w-1.5 h-1.5 rounded-full animate-ping ${
-                        crises.length > 0 ? 'bg-rose-400' : 'bg-emerald-400'
-                      }`}
-                    />
-                    {crises[0]?.title || 'No Active Crisis Declared'}
-                  </span>
-                </div>
-                <p className="hidden sm:block text-[11px] font-medium text-zinc-400 truncate max-w-[160px] sm:max-w-[260px] mt-0.5">
-                  {authUser.organisationName}
-                </p>
-              </div>
-            </button>
-          </div>
-
-          <nav className="hidden md:flex order-3 xl:order-2 w-full xl:w-auto mobile-tabs-scroll items-center gap-1.5 overflow-x-auto py-1 px-1.5 rounded-2xl bg-white/[0.03] border border-white/[0.08]">
-            {menuItems.map((item) => {
-              const isActive = activeTab === item.id;
-              return (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => setActiveTab(item.id)}
-                  className={`relative shrink-0 px-3 sm:px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-colors ${
-                    isActive
-                      ? 'text-white keep-white'
-                      : 'text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.04]'
-                  }`}
-                >
-                  {isActive && (
-                    <motion.div
-                      layoutId="floatingNavDock"
-                      transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-                      className="absolute inset-0 rounded-xl bg-indigo-600 shadow-sm z-0"
-                    />
-                  )}
-                  <span className={`relative z-10 flex items-center gap-1.5 ${isActive ? 'keep-white' : ''}`}>
-                    {getModuleIcon(item.id, 'w-3.5 h-3.5')}
-                    <span>{getLocalizedTabLabel(item.id, item.label)}</span>
-                  </span>
-                </button>
-              );
-            })}
-          </nav>
-
-          <div className="order-2 xl:order-3 flex items-center gap-1.5 sm:gap-2 shrink-0">
-            <button
-              type="button"
-              onClick={() => setCommandPaletteOpen(true)}
-              title="Quick Search & Command Palette (Ctrl+K)"
-              className="w-9 h-9 sm:w-auto sm:px-3 sm:py-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 text-zinc-200 text-xs font-bold flex items-center justify-center gap-1.5 transition"
-            >
-              <Search className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
-              <span className="hidden lg:inline">Search</span>
-              <kbd className="hidden xl:inline-block px-1.5 py-0.5 text-[10px] font-mono rounded bg-white/10 text-zinc-300">
-                Ctrl K
-              </kbd>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setLanguageMenuOpen(true)}
-              title="Change Language"
-              className="lg:hidden px-2.5 py-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 text-zinc-200 text-xs font-bold flex items-center gap-1.5 transition"
-            >
-              <Globe className="w-4 h-4 text-indigo-400 shrink-0" />
-              <span className="sm:hidden">{activeLanguageOption.code.toUpperCase()}</span>
-              <span className="hidden sm:inline">{activeLanguageOption.label}</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={toggleTheme}
-              title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-              className="w-9 h-9 sm:w-auto sm:px-3 sm:py-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 text-zinc-200 text-xs font-bold flex items-center justify-center gap-1.5 transition"
-            >
-              {theme === 'dark' ? (
-                <>
-                  <Sun className="w-4 h-4 text-amber-400" />
-                  <span className="hidden sm:inline">{t.lightMode}</span>
-                </>
-              ) : (
-                <>
-                  <Moon className="w-4 h-4 text-indigo-400" />
-                  <span className="hidden sm:inline">{t.darkMode}</span>
-                </>
-              )}
-            </button>
-
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.97 }}
-              type="button"
-              onClick={openProfileModal}
-              title="Edit Your Profile, Photo & Password"
-              className="px-2 sm:px-3 py-1.5 rounded-xl bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/25 hover:border-indigo-400/50 flex items-center gap-2 text-left transition cursor-pointer"
-            >
-              {authUser.profilePhotoUrl ? (
-                <img
-                  src={authUser.profilePhotoUrl}
-                  alt={authUser.fullName}
-                  className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg object-cover border border-indigo-400/40 shrink-0"
-                />
-              ) : (
-                <div className="keep-white w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-xs font-extrabold text-white shrink-0">
-                  {authUser.fullName?.slice(0, 2).toUpperCase()}
-                </div>
-              )}
-              <div className="hidden sm:block max-w-[155px]">
-                <p className="text-xs font-bold text-white leading-tight truncate flex items-center gap-1">
-                  <span className="truncate">{authUser.fullName}</span>
-                  <Pencil className="w-2.5 h-2.5 text-indigo-400 shrink-0" />
-                </p>
-                <p className="text-[10px] text-indigo-300 leading-tight truncate">
-                  {getFriendlyRoleTitle(authUser.role)}
-                </p>
-              </div>
-            </motion.button>
-
-            <motion.button
-              whileTap={{ scale: 0.95 }}
-              type="button"
-              onClick={() => loadAllData()}
-              title="Refresh Data"
-              className="hidden sm:inline-flex p-2.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 text-zinc-300 hover:text-white transition"
-            >
-              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-indigo-400' : ''}`} />
-            </motion.button>
-
-            <motion.button
-              whileTap={{ scale: 0.95 }}
-              type="button"
-              onClick={handleLogout}
-              title="Sign Out to switch accounts with password"
-              className="hidden sm:inline-flex px-3 py-2 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-300 text-xs font-bold items-center gap-1.5 transition"
-            >
-              <LogOut className="w-3.5 h-3.5" />
-              <span className="hidden md:inline">{t.signOut}</span>
-            </motion.button>
-          </div>
-        </div>
-
-        <div className="bg-white/[0.02] border-t border-white/[0.05]">
-          <div className="md:hidden max-w-[1480px] mx-auto px-3 py-2 flex items-center justify-between gap-2 text-xs">
-            <div className="flex items-center gap-2 min-w-0">
-              <span className="w-6 h-6 rounded-lg bg-indigo-500/15 border border-indigo-500/30 text-indigo-400 flex items-center justify-center shrink-0">
-                {getModuleIcon(activeMenuItem.id, 'w-3.5 h-3.5')}
-              </span>
-              <div className="min-w-0">
-                <p className="text-xs font-extrabold text-white truncate">
-                  {getLocalizedTabLabel(activeMenuItem.id, activeMenuItem.label)}
-                </p>
-                <p className="text-[10px] text-zinc-400 truncate">
-                  {getFriendlyRoleTitle(authUser.role)}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-1.5 shrink-0">
-              <button
-                type="button"
-                onClick={handleLogout}
-                className="px-2.5 py-1.5 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-[11px] font-bold flex items-center gap-1"
-              >
-                <LogOut className="w-3 h-3" />
-                <span>{t.signOut}</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setMobileNavDrawerOpen(true)}
-                className="px-2.5 py-1.5 rounded-xl bg-white/[0.05] border border-white/10 text-zinc-200 text-[11px] font-bold flex items-center gap-1"
-              >
-                <Menu className="w-3 h-3" />
-                <span>Menu</span>
-              </button>
-            </div>
-          </div>
-
-          <div className="hidden md:flex max-w-[1480px] mx-auto px-6 py-2 flex-wrap items-center justify-between gap-2 text-xs">
-            <div className="flex items-center gap-2 text-zinc-300 min-w-0">
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-indigo-500/15 border border-indigo-500/30 text-indigo-300 font-bold text-[11px] shrink-0">
-                <HelpCircle className="w-3 h-3" />
-                {t.yourRoleLabel}: {getFriendlyRoleTitle(authUser.role)}
-              </span>
-              <span className="text-zinc-400 truncate text-xs">
-                {getRolePermissionsSummary(authUser.role)}
-              </span>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-2 shrink-0">
-              <div className="flex items-center gap-1 p-1 rounded-xl bg-black/20 border border-white/10">
-                <Globe className="w-3.5 h-3.5 text-indigo-400 ml-1.5 mr-0.5" />
-                {LANGUAGE_OPTIONS.map((langOpt) => (
-                  <button
-                    key={langOpt.code}
-                    type="button"
-                    onClick={() => handleLanguageBriefingChange(langOpt.code)}
-                    className={`px-2 py-0.5 rounded-lg text-[11px] font-bold transition ${
-                      briefingLang === langOpt.code
-                        ? 'bg-indigo-600 text-white keep-white'
-                        : 'text-zinc-400 hover:text-white'
-                    }`}
-                  >
-                    {langOpt.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      <AnimatePresence>
-        {languageMenuOpen && (
-          <>
+          <a
+            href="#main-content"
+            className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[100] focus:px-4 focus:py-2 focus:rounded-xl focus:bg-indigo-600 focus:text-white focus:font-bold"
+          >
+            Skip to main content
+          </a>
+          <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(rgba(148,163,184,0.12)_1px,transparent_1px)] [background-size:24px_24px] opacity-35" />
+          <div className="pointer-events-none fixed inset-0 overflow-hidden z-0">
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setLanguageMenuOpen(false)}
-              className="fixed inset-0 bg-slate-950/65 backdrop-blur-sm z-[70]"
+              animate={{ scale: [1, 1.14, 1], x: [0, 30, 0], y: [0, -20, 0] }}
+              transition={{ duration: 14, repeat: Infinity, ease: 'easeInOut' }}
+              className={`absolute -top-28 -left-24 w-[480px] h-[480px] rounded-full blur-3xl ${theme === 'light' ? 'bg-indigo-400/25' : 'bg-indigo-600/15'
+                }`}
             />
             <motion.div
-              initial={{ opacity: 0, y: 40, scale: 0.98 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 40, scale: 0.98 }}
-              transition={{ type: 'spring', stiffness: 360, damping: 30 }}
-              className="fixed inset-x-0 bottom-0 sm:inset-auto sm:top-20 sm:right-6 z-[70] w-full sm:w-[380px] max-h-[82dvh] bento-glass rounded-t-3xl sm:rounded-3xl p-5 flex flex-col border border-white/15 shadow-2xl overflow-hidden"
-            >
-              <div className="w-10 h-1 rounded-full bg-zinc-500/40 mx-auto mb-3 sm:hidden shrink-0" />
-              <div className="flex items-center justify-between pb-3 mb-3 border-b border-white/10 shrink-0">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-xl bg-indigo-500/20 border border-indigo-500/30 text-indigo-400 flex items-center justify-center shrink-0">
-                    <Globe className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <p className="text-base font-extrabold text-white">{t.languageLabel}</p>
-                    <p className="text-xs text-zinc-400">
-                      Choose your preferred interface & briefing language
-                    </p>
-                  </div>
-                </div>
+              animate={{ scale: [1.08, 0.94, 1.08], x: [0, -35, 0], y: [0, 28, 0] }}
+              transition={{ duration: 16, repeat: Infinity, ease: 'easeInOut' }}
+              className={`absolute -bottom-32 right-[-90px] w-[520px] h-[520px] rounded-full blur-3xl ${theme === 'light' ? 'bg-cyan-400/25' : 'bg-cyan-500/12'
+                }`}
+            />
+            <motion.div
+              animate={{ scale: [0.95, 1.12, 0.95], x: [0, 22, 0], y: [0, 22, 0] }}
+              transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut' }}
+              className={`absolute top-1/2 left-1/3 w-[380px] h-[380px] rounded-full blur-3xl ${theme === 'light' ? 'bg-rose-300/20' : 'bg-rose-500/8'
+                }`}
+            />
+          </div>
+          <GlobalEarthBackdrop theme={theme} variant="workspace" />
+
+          <header className="sticky top-0 z-30 backdrop-blur-2xl bg-[#07090e]/85 border-b border-white/[0.08]">
+            <div className="max-w-[1480px] mx-auto px-3 sm:px-6 py-2 sm:py-3 flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center gap-2.5 sm:gap-3.5 min-w-0">
                 <button
                   type="button"
-                  onClick={() => setLanguageMenuOpen(false)}
-                  className="p-2 rounded-xl bg-white/5 text-zinc-400 hover:text-white hover:bg-white/10"
+                  onClick={() => setMobileNavDrawerOpen(true)}
+                  className="xl:hidden w-10 h-10 rounded-xl bg-white/[0.05] hover:bg-white/10 border border-white/10 text-zinc-200 flex items-center justify-center transition shrink-0"
+                  aria-label="Open Navigation Menu"
                 >
-                  <X className="w-4 h-4" />
+                  <Menu className="w-5 h-5" />
                 </button>
-              </div>
-              <div className="grid grid-cols-1 gap-2 overflow-y-auto sidebar-scroll pr-1 flex-1 min-h-0">
-                {LANGUAGE_OPTIONS.map((langOpt) => {
-                  const isActive = briefingLang === langOpt.code;
-                  return (
-                    <button
-                      key={langOpt.code}
-                      type="button"
-                      onClick={() => {
-                        handleLanguageBriefingChange(langOpt.code);
-                        setLanguageMenuOpen(false);
-                      }}
-                      className={`w-full text-left px-4 py-3 rounded-2xl border flex items-center justify-between transition ${
-                        isActive
-                          ? 'bg-indigo-600/20 border-2 border-indigo-500 text-white'
-                          : 'bg-white/[0.03] hover:bg-white/[0.08] border-white/[0.08] text-zinc-300'
-                      }`}
-                    >
-                      <div>
-                        <p className="text-sm font-extrabold text-white">{langOpt.label}</p>
-                        <p className="text-xs text-zinc-400">{langOpt.fullName}</p>
-                      </div>
-                      {isActive && <CheckCircle2 className="w-5 h-5 text-indigo-400 shrink-0" />}
-                    </button>
-                  );
-                })}
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
 
-      <AnimatePresence>
-        {mobileNavDrawerOpen && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setMobileNavDrawerOpen(false)}
-              className="fixed inset-0 bg-slate-950/65 backdrop-blur-sm z-[70] xl:hidden"
-            />
-            <motion.aside
-              initial={{ x: '-100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '-100%' }}
-              transition={{ type: 'spring', stiffness: 340, damping: 32 }}
-              className="fixed inset-y-0 left-0 z-[70] w-[88vw] max-w-[360px] h-[100dvh] bento-glass flex flex-col overflow-hidden xl:hidden border-r border-white/15"
-            >
-              <div className="shrink-0 p-4 border-b border-white/10 flex items-center justify-between">
-                <div className="flex items-center gap-3 min-w-0">
+                <button
+                  type="button"
+                  onClick={triggerBrandIntro}
+                  title="Replay Crisis + Sync → CriSync Intro Animation"
+                  className="flex items-center gap-2.5 sm:gap-3.5 min-w-0 text-left group"
+                >
                   <img
                     src="/crisync-logo.png"
                     alt="CriSync Logo"
-                    className="w-11 h-11 rounded-2xl object-cover crisync-logo-frame shrink-0"
+                    className="w-10 h-10 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl object-cover crisync-logo-frame shrink-0"
                   />
+
                   <div className="min-w-0">
-                    <p className="crisync-wordmark text-xl">
-                      <span className="crisync-wordmark-primary">Cri</span>
-                      <span className="crisync-wordmark-accent">Sync</span>
+                    <div className="flex items-center gap-2.5">
+                      <span className="crisync-wordmark text-xl sm:text-2xl lg:text-[26px]">
+                        <span className="crisync-wordmark-primary">Cri</span>
+                        <span className="crisync-wordmark-accent">Sync</span>
+                      </span>
+                      <span
+                        className={`hidden 2xl:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${crises.length > 0
+                          ? 'bg-rose-500/15 border-rose-500/30 text-rose-300'
+                          : 'bg-emerald-500/15 border-emerald-500/30 text-emerald-300'
+                          }`}
+                      >
+                        <span
+                          className={`w-1.5 h-1.5 rounded-full animate-ping ${crises.length > 0 ? 'bg-rose-400' : 'bg-emerald-400'
+                            }`}
+                        />
+                        {crises[0]?.title || 'No Active Crisis Declared'}
+                      </span>
+                    </div>
+                    <p className="hidden sm:block text-[11px] font-medium text-zinc-400 truncate max-w-[160px] sm:max-w-[260px] mt-0.5">
+                      {authUser.organisationName}
                     </p>
-                    <p className="text-xs font-semibold text-indigo-300 truncate mt-0.5">
+                  </div>
+                </button>
+              </div>
+
+              <nav className="hidden md:flex order-3 xl:order-2 w-full xl:w-auto mobile-tabs-scroll items-center gap-1.5 overflow-x-auto py-1 px-1.5 rounded-2xl bg-white/[0.03] border border-white/[0.08]">
+                {menuItems.map((item) => {
+                  const isActive = activeTab === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => setActiveTab(item.id)}
+                      className={`relative shrink-0 px-3 sm:px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-colors ${isActive
+                        ? 'text-white keep-white'
+                        : 'text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.04]'
+                        }`}
+                    >
+                      {isActive && (
+                        <motion.div
+                          layoutId="floatingNavDock"
+                          transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                          className="absolute inset-0 rounded-xl bg-indigo-600 shadow-sm z-0"
+                        />
+                      )}
+                      <span className={`relative z-10 flex items-center gap-1.5 ${isActive ? 'keep-white' : ''}`}>
+                        {getModuleIcon(item.id, 'w-3.5 h-3.5')}
+                        <span>{getLocalizedTabLabel(item.id, item.label)}</span>
+                      </span>
+                    </button>
+                  );
+                })}
+              </nav>
+
+              <div className="order-2 xl:order-3 flex items-center gap-1.5 sm:gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setCommandPaletteOpen(true)}
+                  title="Quick Search & Command Palette (Ctrl+K)"
+                  className="w-9 h-9 sm:w-auto sm:px-3 sm:py-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 text-zinc-200 text-xs font-bold flex items-center justify-center gap-1.5 transition"
+                >
+                  <Search className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+                  <span className="hidden lg:inline">Search</span>
+                  <kbd className="hidden xl:inline-block px-1.5 py-0.5 text-[10px] font-mono rounded bg-white/10 text-zinc-300">
+                    Ctrl K
+                  </kbd>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setLanguageMenuOpen(true)}
+                  title="Change Language"
+                  className="lg:hidden px-2.5 py-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 text-zinc-200 text-xs font-bold flex items-center gap-1.5 transition"
+                >
+                  <Globe className="w-4 h-4 text-indigo-400 shrink-0" />
+                  <span className="sm:hidden">{activeLanguageOption.code.toUpperCase()}</span>
+                  <span className="hidden sm:inline">{activeLanguageOption.label}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={toggleTheme}
+                  title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+                  className="w-9 h-9 sm:w-auto sm:px-3 sm:py-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 text-zinc-200 text-xs font-bold flex items-center justify-center gap-1.5 transition"
+                >
+                  {theme === 'dark' ? (
+                    <>
+                      <Sun className="w-4 h-4 text-amber-400" />
+                      <span className="hidden sm:inline">{t.lightMode}</span>
+                    </>
+                  ) : (
+                    <>
+                      <Moon className="w-4 h-4 text-indigo-400" />
+                      <span className="hidden sm:inline">{t.darkMode}</span>
+                    </>
+                  )}
+                </button>
+
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.97 }}
+                  type="button"
+                  onClick={openProfileModal}
+                  title="Edit Your Profile, Photo & Password"
+                  className="px-2 sm:px-3 py-1.5 rounded-xl bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/25 hover:border-indigo-400/50 flex items-center gap-2 text-left transition cursor-pointer"
+                >
+                  {authUser.profilePhotoUrl ? (
+                    <img
+                      src={authUser.profilePhotoUrl}
+                      alt={authUser.fullName}
+                      className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg object-cover border border-indigo-400/40 shrink-0"
+                    />
+                  ) : (
+                    <div className="keep-white w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-xs font-extrabold text-white shrink-0">
+                      {authUser.fullName?.slice(0, 2).toUpperCase()}
+                    </div>
+                  )}
+                  <div className="hidden sm:block max-w-[155px]">
+                    <p className="text-xs font-bold text-white leading-tight truncate flex items-center gap-1">
+                      <span className="truncate">{authUser.fullName}</span>
+                      <Pencil className="w-2.5 h-2.5 text-indigo-400 shrink-0" />
+                    </p>
+                    <p className="text-[10px] text-indigo-300 leading-tight truncate">
+                      {getFriendlyRoleTitle(authUser.role)}
+                    </p>
+                  </div>
+                </motion.button>
+
+                <motion.button
+                  whileTap={{ scale: 0.95 }}
+                  type="button"
+                  onClick={() => loadAllData()}
+                  title="Refresh Data"
+                  className="hidden sm:inline-flex p-2.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 text-zinc-300 hover:text-white transition"
+                >
+                  <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-indigo-400' : ''}`} />
+                </motion.button>
+
+                <motion.button
+                  whileTap={{ scale: 0.95 }}
+                  type="button"
+                  onClick={handleLogout}
+                  title="Sign Out to switch accounts with password"
+                  className="hidden sm:inline-flex px-3 py-2 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-300 text-xs font-bold items-center gap-1.5 transition"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                  <span className="hidden md:inline">{t.signOut}</span>
+                </motion.button>
+              </div>
+            </div>
+
+            <div className="bg-white/[0.02] border-t border-white/[0.05]">
+              <div className="md:hidden max-w-[1480px] mx-auto px-3 py-2 flex items-center justify-between gap-2 text-xs">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="w-6 h-6 rounded-lg bg-indigo-500/15 border border-indigo-500/30 text-indigo-400 flex items-center justify-center shrink-0">
+                    {getModuleIcon(activeMenuItem.id, 'w-3.5 h-3.5')}
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-xs font-extrabold text-white truncate">
+                      {getLocalizedTabLabel(activeMenuItem.id, activeMenuItem.label)}
+                    </p>
+                    <p className="text-[10px] text-zinc-400 truncate">
                       {getFriendlyRoleTitle(authUser.role)}
                     </p>
                   </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setMobileNavDrawerOpen(false)}
-                  className="w-10 h-10 rounded-xl bg-white/5 text-zinc-400 hover:text-white flex items-center justify-center shrink-0"
-                  aria-label="Close Navigation Menu"
-                >
-                  <X className="w-5 h-5" />
-                </button>
+
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    className="px-2.5 py-1.5 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-[11px] font-bold flex items-center gap-1"
+                  >
+                    <LogOut className="w-3 h-3" />
+                    <span>{t.signOut}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setMobileNavDrawerOpen(true)}
+                    className="px-2.5 py-1.5 rounded-xl bg-white/[0.05] border border-white/10 text-zinc-200 text-[11px] font-bold flex items-center gap-1"
+                  >
+                    <Menu className="w-3 h-3" />
+                    <span>Menu</span>
+                  </button>
+                </div>
               </div>
 
-              <div className="flex-1 min-h-0 overflow-y-auto sidebar-scroll p-4 space-y-5">
-                <div>
-                  <p className="text-[11px] font-bold uppercase tracking-wider text-zinc-400 mb-2.5 px-1">
-                    Your Navigation Menu ({menuItems.length})
-                  </p>
-                  <div className="space-y-2">
-                    {menuItems.map((item) => {
-                      const isActive = activeTab === item.id;
-                      return (
-                        <button
-                          key={item.id}
-                          type="button"
-                          onClick={() => {
-                            setActiveTab(item.id);
-                            setMobileNavDrawerOpen(false);
-                          }}
-                          className={`w-full text-left p-3.5 rounded-2xl border flex items-center gap-3 transition ${
-                            isActive
-                              ? 'bg-indigo-600 text-white border-indigo-400 keep-white shadow-md'
-                              : 'bg-white/[0.03] border-white/10 text-zinc-300 hover:bg-white/[0.07]'
-                          }`}
-                        >
-                          <span
-                            className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
-                              isActive ? 'bg-indigo-700/60 text-white keep-white' : 'bg-black/25'
-                            }`}
-                          >
-                            {getModuleIcon(item.id, 'w-4 h-4')}
-                          </span>
-                          <div className="min-w-0 flex-1">
-                            <p className="text-xs font-extrabold truncate">
-                              {getLocalizedTabLabel(item.id, item.label)}
-                            </p>
-                            <p className="text-[11px] opacity-80 truncate mt-0.5">{item.subtext}</p>
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
+              <div className="hidden md:flex max-w-[1480px] mx-auto px-6 py-2 flex-wrap items-center justify-between gap-2 text-xs">
+                <div className="flex items-center gap-2 text-zinc-300 min-w-0">
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-indigo-500/15 border border-indigo-500/30 text-indigo-300 font-bold text-[11px] shrink-0">
+                    <HelpCircle className="w-3 h-3" />
+                    {t.yourRoleLabel}: {getFriendlyRoleTitle(authUser.role)}
+                  </span>
+                  <span className="text-zinc-400 truncate text-xs">
+                    {getRolePermissionsSummary(authUser.role)}
+                  </span>
                 </div>
 
-                <div>
-                  <p className="text-[11px] font-bold uppercase tracking-wider text-zinc-400 mb-2.5 px-1 flex items-center gap-1.5">
-                    <Globe className="w-3.5 h-3.5 text-indigo-400" />
-                    <span>{t.languageLabel}</span>
-                  </p>
-                  <div className="grid grid-cols-3 gap-2">
+                <div className="flex flex-wrap items-center gap-2 shrink-0">
+                  <div className="flex items-center gap-1 p-1 rounded-xl bg-black/20 border border-white/10">
+                    <Globe className="w-3.5 h-3.5 text-indigo-400 ml-1.5 mr-0.5" />
                     {LANGUAGE_OPTIONS.map((langOpt) => (
                       <button
                         key={langOpt.code}
                         type="button"
                         onClick={() => handleLanguageBriefingChange(langOpt.code)}
-                        className={`py-2 px-2 rounded-xl text-xs font-bold border transition truncate ${
-                          briefingLang === langOpt.code
-                            ? 'bg-indigo-600 border-indigo-400 text-white keep-white shadow-sm'
-                            : 'bg-white/[0.03] border-white/10 text-zinc-300 hover:bg-white/[0.07]'
-                        }`}
+                        className={`px-2 py-0.5 rounded-lg text-[11px] font-bold transition ${briefingLang === langOpt.code
+                          ? 'bg-indigo-600 text-white keep-white'
+                          : 'text-zinc-400 hover:text-white'
+                          }`}
                       >
                         {langOpt.label}
                       </button>
@@ -2401,947 +2296,1111 @@ export default function App() {
                   </div>
                 </div>
               </div>
+            </div>
+          </header>
 
-              <div className="shrink-0 p-4 border-t border-white/10 space-y-2.5">
-                <button
-                  type="button"
-                  onClick={openProfileModal}
-                  className="w-full p-2.5 rounded-xl bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/25 flex items-center justify-between gap-2.5 text-left transition"
+          <AnimatePresence>
+            {languageMenuOpen && (
+              <>
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  onClick={() => setLanguageMenuOpen(false)}
+                  className="fixed inset-0 bg-slate-950/65 backdrop-blur-sm z-[70]"
+                />
+                <motion.div
+                  initial={{ opacity: 0, y: 40, scale: 0.98 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 40, scale: 0.98 }}
+                  transition={{ type: 'spring', stiffness: 360, damping: 30 }}
+                  className="fixed inset-x-0 bottom-0 sm:inset-auto sm:top-20 sm:right-6 z-[70] w-full sm:w-[380px] max-h-[82dvh] bento-glass rounded-t-3xl sm:rounded-3xl p-5 flex flex-col border border-white/15 shadow-2xl overflow-hidden"
                 >
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    {authUser.profilePhotoUrl ? (
-                      <img
-                        src={authUser.profilePhotoUrl}
-                        alt={authUser.fullName}
-                        className="w-8 h-8 rounded-lg object-cover border border-indigo-400/40 shrink-0"
-                      />
-                    ) : (
-                      <div className="keep-white w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-xs font-extrabold text-white shrink-0">
-                        {authUser.fullName?.slice(0, 2).toUpperCase()}
+                  <div className="w-10 h-1 rounded-full bg-zinc-500/40 mx-auto mb-3 sm:hidden shrink-0" />
+                  <div className="flex items-center justify-between pb-3 mb-3 border-b border-white/10 shrink-0">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-9 h-9 rounded-xl bg-indigo-500/20 border border-indigo-500/30 text-indigo-400 flex items-center justify-center shrink-0">
+                        <Globe className="w-4 h-4" />
                       </div>
-                    )}
-                    <div className="min-w-0">
-                      <p className="text-xs font-extrabold text-white truncate">{authUser.fullName}</p>
-                      <p className="text-[10px] text-indigo-300 truncate">Tap to edit profile, photo & password</p>
+                      <div>
+                        <p className="text-base font-extrabold text-white">{t.languageLabel}</p>
+                        <p className="text-xs text-zinc-400">
+                          Choose your preferred interface & briefing language
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                  <Pencil className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
-                </button>
-                <div className="grid grid-cols-3 gap-2">
-                  <button
-                    type="button"
-                    onClick={toggleTheme}
-                    className="py-2.5 px-2 rounded-xl bg-white/[0.05] border border-white/10 text-[11px] font-bold flex items-center justify-center gap-1.5"
-                  >
-                    {theme === 'dark' ? <Sun className="w-3.5 h-3.5 text-amber-400" /> : <Moon className="w-3.5 h-3.5 text-indigo-400" />}
-                    <span>{theme === 'dark' ? t.lightMode : t.darkMode}</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      loadAllData();
-                      setMobileNavDrawerOpen(false);
-                    }}
-                    className="py-2.5 px-2 rounded-xl bg-white/[0.05] border border-white/10 text-[11px] font-bold flex items-center justify-center gap-1.5"
-                  >
-                    <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-indigo-400' : ''}`} />
-                    <span>Refresh</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleLogout}
-                    className="py-2.5 px-2 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-[11px] font-bold flex items-center justify-center gap-1.5"
-                  >
-                    <LogOut className="w-3.5 h-3.5" />
-                    <span>{t.signOut}</span>
-                  </button>
-                </div>
-              </div>
-            </motion.aside>
-          </>
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {profileModalOpen && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setProfileModalOpen(false)}
-              className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-[80]"
-            />
-            <motion.div
-              role="dialog"
-              aria-modal="true"
-              aria-label="My Profile and Account Settings"
-              initial={{ opacity: 0, y: 24, scale: 0.97 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 24, scale: 0.97 }}
-              transition={{ type: 'spring', stiffness: 360, damping: 30 }}
-              className="fixed inset-x-3 top-6 sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 sm:top-10 z-[85] sm:w-full sm:max-w-lg max-h-[88dvh] bento-glass rounded-3xl p-5 sm:p-6 flex flex-col border border-indigo-500/30 shadow-2xl overflow-hidden"
-            >
-              <div className="flex items-center justify-between pb-3.5 mb-4 border-b border-white/10 shrink-0">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-xl bg-indigo-500/20 border border-indigo-500/35 text-indigo-400 flex items-center justify-center shrink-0">
-                    <User className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <h2 className="text-base font-extrabold text-white">My Profile & Account Settings</h2>
-                    <p className="text-[11px] text-zinc-400">
-                      {authUser.email} • {getFriendlyRoleTitle(authUser.role)}
-                    </p>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  aria-label="Close Profile Modal"
-                  onClick={() => setProfileModalOpen(false)}
-                  className="p-2 rounded-xl bg-white/5 text-zinc-400 hover:text-white hover:bg-white/10 transition"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-
-              <form
-                key="my-profile-settings-form"
-                onSubmit={handleSaveProfile}
-                autoComplete="off"
-                className="flex-1 min-h-0 overflow-y-auto sidebar-scroll pr-1 space-y-4 text-xs"
-              >
-                <div
-                  aria-hidden="true"
-                  className="pointer-events-none fixed -left-[9999px] top-0 h-px w-px opacity-0 overflow-hidden"
-                >
-                  <input type="text" name="prevent_profile_autofill_user" autoComplete="username" tabIndex={-1} defaultValue="" />
-                  <input type="password" name="prevent_profile_autofill_pass" autoComplete="current-password" tabIndex={-1} defaultValue="" />
-                </div>
-
-                <div className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/[0.08] space-y-3">
-                  <div className="flex flex-wrap items-center gap-4">
-                    {profilePhotoUrl ? (
-                      <img
-                        src={profilePhotoUrl}
-                        alt={profileFullName || authUser.fullName}
-                        className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl object-cover border-2 border-indigo-400/50 shadow-md shrink-0"
-                      />
-                    ) : (
-                      <div className="keep-white w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-indigo-600 to-cyan-500 flex items-center justify-center text-xl font-black text-white shadow-md shrink-0">
-                        {(profileFullName || authUser.fullName || 'CS').slice(0, 2).toUpperCase()}
-                      </div>
-                    )}
-
-                    <div className="flex-1 min-w-[180px] space-y-2">
-                      <p className="font-bold text-zinc-200">Profile Picture & Avatar</p>
-                      <div className="flex flex-wrap items-center gap-2">
-                        <label
-                          htmlFor="profile-photo-upload-input"
-                          className="keep-white cursor-pointer px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold inline-flex items-center gap-1.5 shadow-sm transition"
-                        >
-                          <Camera className="w-3.5 h-3.5" />
-                          <span>Upload Photo</span>
-                        </label>
-                        <input
-                          id="profile-photo-upload-input"
-                          type="file"
-                          accept="image/*"
-                          onChange={handleProfilePhotoUpload}
-                          className="hidden"
-                        />
-                        {profilePhotoUrl && (
-                          <button
-                            type="button"
-                            onClick={() => setProfilePhotoUrl('')}
-                            className="px-3 py-1.5 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-300 font-bold transition"
-                          >
-                            Remove Photo
-                          </button>
-                        )}
-                      </div>
-                      <p className="text-[11px] text-zinc-400">
-                        Upload any photo or pick a built-in gradient avatar badge below:
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-wrap items-center gap-2 pt-1">
-                    {AVATAR_COLOR_PRESETS.map(([fromCol, toCol], idx) => (
-                      <button
-                        key={`${fromCol}-${toCol}`}
-                        type="button"
-                        title={`Use Avatar Style ${idx + 1}`}
-                        onClick={() =>
-                          setProfilePhotoUrl(buildAvatarPresetDataUrl(profileFullName || authUser.fullName, fromCol, toCol))
-                        }
-                        style={{ background: `linear-gradient(135deg, ${fromCol}, ${toCol})` }}
-                        className="keep-white w-8 h-8 rounded-xl text-[11px] font-black text-white flex items-center justify-center border border-white/25 hover:scale-110 transition shadow-sm"
-                      >
-                        {(profileFullName || authUser.fullName || 'CS').slice(0, 2).toUpperCase()}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="flex items-center gap-1.5 font-bold text-zinc-300 mb-1.5">
-                    <User className="w-3.5 h-3.5 text-indigo-400" />
-                    <span>Full Name</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="crisync_profile_fullname"
-                    autoComplete="off"
-                    required
-                    value={profileFullName}
-                    onChange={(e) => setProfileFullName(e.target.value)}
-                    placeholder="Enter your full name"
-                    className="rsvp-input"
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="flex items-center gap-1.5 font-bold text-zinc-300 mb-1.5">
-                      <Phone className="w-3.5 h-3.5 text-indigo-400" />
-                      <span>Phone Number</span>
-                    </label>
-                    <input
-                      type="text"
-                      name="crisync_profile_phone"
-                      autoComplete="off"
-                      value={profilePhone}
-                      onChange={(e) => setProfilePhone(e.target.value)}
-                      placeholder="+94 77 123 4567"
-                      className="rsvp-input"
-                    />
-                  </div>
-                  <div>
-                    <label className="flex items-center gap-1.5 font-bold text-zinc-300 mb-1.5">
-                      <Globe className="w-3.5 h-3.5 text-indigo-400" />
-                      <span>Preferred Language</span>
-                    </label>
-                    <select
-                      value={profileLanguage}
-                      onChange={(e) => setProfileLanguage(e.target.value)}
-                      className="rsvp-input"
+                    <button
+                      type="button"
+                      onClick={() => setLanguageMenuOpen(false)}
+                      className="p-2 rounded-xl bg-white/5 text-zinc-400 hover:text-white hover:bg-white/10"
                     >
-                      {LANGUAGE_OPTIONS.map((langOpt) => (
-                        <option key={langOpt.code} value={langOpt.code}>
-                          {langOpt.fullName}
-                        </option>
-                      ))}
-                    </select>
+                      <X className="w-4 h-4" />
+                    </button>
                   </div>
-                </div>
-
-                <div className="p-3.5 rounded-2xl bg-amber-500/[0.07] border border-amber-500/25 space-y-3">
-                  <p className="font-extrabold text-amber-300 flex items-center gap-1.5">
-                    <Lock className="w-3.5 h-3.5" />
-                    <span>Change Account Password (Optional)</span>
-                  </p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <label className="block font-bold text-zinc-300 mb-1">Current Password</label>
-                      <input
-                        type="password"
-                        name="crisync_profile_current_password"
-                        autoComplete="new-password"
-                        readOnly={!profileUnlocked.currentPassword}
-                        onFocus={() => setProfileUnlocked((p) => ({ ...p, currentPassword: true }))}
-                        onMouseDown={() => setProfileUnlocked((p) => ({ ...p, currentPassword: true }))}
-                        onKeyDown={() => setProfileUnlocked((p) => ({ ...p, currentPassword: true }))}
-                        value={profileCurrentPassword}
-                        onChange={(e) => setProfileCurrentPassword(e.target.value)}
-                        placeholder="Required only if changing password"
-                        className="rsvp-input"
-                      />
-                    </div>
-                    <div>
-                      <label className="block font-bold text-zinc-300 mb-1">New Password (Min 6 chars)</label>
-                      <input
-                        type="password"
-                        name="crisync_profile_new_password"
-                        autoComplete="new-password"
-                        readOnly={!profileUnlocked.newPassword}
-                        onFocus={() => setProfileUnlocked((p) => ({ ...p, newPassword: true }))}
-                        onMouseDown={() => setProfileUnlocked((p) => ({ ...p, newPassword: true }))}
-                        onKeyDown={() => setProfileUnlocked((p) => ({ ...p, newPassword: true }))}
-                        value={profileNewPassword}
-                        onChange={(e) => setProfileNewPassword(e.target.value)}
-                        placeholder="Leave empty to keep current password"
-                        className="rsvp-input"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="p-3.5 rounded-2xl bg-indigo-500/[0.08] border border-indigo-500/30 space-y-3">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <p className="font-extrabold text-indigo-300 flex items-center gap-1.5">
-                      <Fingerprint className="w-4 h-4" />
-                      <span>Trusted-Device Quick Unlock (Pattern / PIN / Biometrics)</span>
-                    </p>
-                    {quickUnlockStatus?.quickUnlockEnabled && (
-                      <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-[11px] font-bold inline-flex items-center gap-1">
-                        <ShieldCheck className="w-3 h-3" />
-                        Active ({quickUnlockStatus.mode}{quickUnlockStatus.hasBiometricCredential ? ' + Biometrics' : ''})
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-xs text-zinc-400 leading-relaxed">
-                    Bind each browser or URL (for example Laptop on localhost and Phone via ngrok HTTPS) independently to unlock with a 3×3 Pattern, 6-digit PIN, or device Fingerprint / Windows Hello.
-                  </p>
-
-                  <div
-                    className={`p-2.5 rounded-xl border text-xs flex items-center justify-between gap-2 ${
-                      currentDeviceBound
-                        ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
-                        : 'bg-amber-500/10 border-amber-500/30 text-amber-300'
-                    }`}
-                  >
-                    <span className="inline-flex items-center gap-1.5 font-semibold">
-                      <Smartphone className="w-3.5 h-3.5 shrink-0" />
-                      {currentDeviceBound
-                        ? `Current browser (${typeof window !== 'undefined' ? window.location.host : 'device'}) is bound.`
-                        : `Current browser (${typeof window !== 'undefined' ? window.location.host : 'device'}) is not bound yet — enable below for this phone or URL!`}
-                    </span>
-                  </div>
-
-                  {quickUnlockStatus?.trustedDevices && quickUnlockStatus.trustedDevices.length > 0 && (
-                    <div className="space-y-1.5">
-                      <p className="text-[11px] font-bold uppercase tracking-wider text-zinc-400">
-                        Active Trusted Devices ({quickUnlockStatus.trustedDevices.length})
-                      </p>
-                      <div className="space-y-1.5 max-h-32 overflow-y-auto">
-                        {quickUnlockStatus.trustedDevices.map((dev) => (
-                          <div
-                            key={dev.deviceId}
-                            className="flex items-center justify-between gap-2 px-3 py-2 rounded-xl bg-white/[0.04] border border-white/10 text-xs"
-                          >
-                            <div className="min-w-0">
-                              <p className="font-bold text-zinc-100 truncate">{dev.deviceName}</p>
-                              <p className="text-[11px] text-zinc-400 truncate">
-                                {dev.originHost} • {dev.hasBiometrics ? 'Pattern/PIN + Biometrics' : 'Pattern/PIN'}
-                              </p>
-                            </div>
-                            <button
-                              type="button"
-                              disabled={quickUnlockBusy}
-                              onClick={() => void handleRemoveTrustedDevice(dev.deviceId)}
-                              className="p-1.5 rounded-lg bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 transition shrink-0"
-                              title="Remove this device"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
+                  <div className="grid grid-cols-1 gap-2 overflow-y-auto sidebar-scroll pr-1 flex-1 min-h-0">
+                    {LANGUAGE_OPTIONS.map((langOpt) => {
+                      const isActive = briefingLang === langOpt.code;
+                      return (
+                        <button
+                          key={langOpt.code}
+                          type="button"
+                          onClick={() => {
+                            handleLanguageBriefingChange(langOpt.code);
+                            setLanguageMenuOpen(false);
+                          }}
+                          className={`w-full text-left px-4 py-3 rounded-2xl border flex items-center justify-between transition ${isActive
+                            ? 'bg-indigo-600/20 border-2 border-indigo-500 text-white'
+                            : 'bg-white/[0.03] hover:bg-white/[0.08] border-white/[0.08] text-zinc-300'
+                            }`}
+                        >
+                          <div>
+                            <p className="text-sm font-extrabold text-white">{langOpt.label}</p>
+                            <p className="text-xs text-zinc-400">{langOpt.fullName}</p>
                           </div>
+                          {isActive && <CheckCircle2 className="w-5 h-5 text-indigo-400 shrink-0" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </motion.div>
+              </>
+            )}
+          </AnimatePresence>
+
+          <AnimatePresence>
+            {mobileNavDrawerOpen && (
+              <>
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  onClick={() => setMobileNavDrawerOpen(false)}
+                  className="fixed inset-0 bg-slate-950/65 backdrop-blur-sm z-[70] xl:hidden"
+                />
+                <motion.aside
+                  initial={{ x: '-100%' }}
+                  animate={{ x: 0 }}
+                  exit={{ x: '-100%' }}
+                  transition={{ type: 'spring', stiffness: 340, damping: 32 }}
+                  className="fixed inset-y-0 left-0 z-[70] w-[88vw] max-w-[360px] h-[100dvh] bento-glass flex flex-col overflow-hidden xl:hidden border-r border-white/15"
+                >
+                  <div className="shrink-0 p-4 border-b border-white/10 flex items-center justify-between">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <img
+                        src="/crisync-logo.png"
+                        alt="CriSync Logo"
+                        className="w-11 h-11 rounded-2xl object-cover crisync-logo-frame shrink-0"
+                      />
+                      <div className="min-w-0">
+                        <p className="crisync-wordmark text-xl">
+                          <span className="crisync-wordmark-primary">Cri</span>
+                          <span className="crisync-wordmark-accent">Sync</span>
+                        </p>
+                        <p className="text-xs font-semibold text-indigo-300 truncate mt-0.5">
+                          {getFriendlyRoleTitle(authUser.role)}
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setMobileNavDrawerOpen(false)}
+                      className="w-10 h-10 rounded-xl bg-white/5 text-zinc-400 hover:text-white flex items-center justify-center shrink-0"
+                      aria-label="Close Navigation Menu"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+
+                  <div className="flex-1 min-h-0 overflow-y-auto sidebar-scroll p-4 space-y-5">
+                    <div>
+                      <p className="text-[11px] font-bold uppercase tracking-wider text-zinc-400 mb-2.5 px-1">
+                        Your Navigation Menu ({menuItems.length})
+                      </p>
+                      <div className="space-y-2">
+                        {menuItems.map((item) => {
+                          const isActive = activeTab === item.id;
+                          return (
+                            <button
+                              key={item.id}
+                              type="button"
+                              onClick={() => {
+                                setActiveTab(item.id);
+                                setMobileNavDrawerOpen(false);
+                              }}
+                              className={`w-full text-left p-3.5 rounded-2xl border flex items-center gap-3 transition ${isActive
+                                ? 'bg-indigo-600 text-white border-indigo-400 keep-white shadow-md'
+                                : 'bg-white/[0.03] border-white/10 text-zinc-300 hover:bg-white/[0.07]'
+                                }`}
+                            >
+                              <span
+                                className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${isActive ? 'bg-indigo-700/60 text-white keep-white' : 'bg-black/25'
+                                  }`}
+                              >
+                                {getModuleIcon(item.id, 'w-4 h-4')}
+                              </span>
+                              <div className="min-w-0 flex-1">
+                                <p className="text-xs font-extrabold truncate">
+                                  {getLocalizedTabLabel(item.id, item.label)}
+                                </p>
+                                <p className="text-[11px] opacity-80 truncate mt-0.5">{item.subtext}</p>
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    <div>
+                      <p className="text-[11px] font-bold uppercase tracking-wider text-zinc-400 mb-2.5 px-1 flex items-center gap-1.5">
+                        <Globe className="w-3.5 h-3.5 text-indigo-400" />
+                        <span>{t.languageLabel}</span>
+                      </p>
+                      <div className="grid grid-cols-3 gap-2">
+                        {LANGUAGE_OPTIONS.map((langOpt) => (
+                          <button
+                            key={langOpt.code}
+                            type="button"
+                            onClick={() => handleLanguageBriefingChange(langOpt.code)}
+                            className={`py-2 px-2 rounded-xl text-xs font-bold border transition truncate ${briefingLang === langOpt.code
+                              ? 'bg-indigo-600 border-indigo-400 text-white keep-white shadow-sm'
+                              : 'bg-white/[0.03] border-white/10 text-zinc-300 hover:bg-white/[0.07]'
+                              }`}
+                          >
+                            {langOpt.label}
+                          </button>
                         ))}
                       </div>
                     </div>
-                  )}
-
-                  <div className="grid grid-cols-2 gap-1.5 p-1 rounded-xl bg-white/[0.04] border border-white/10">
-                    <button
-                      type="button"
-                      onClick={() => setQuickUnlockMode('Pattern')}
-                      className={`py-1.5 px-2.5 rounded-lg text-xs font-extrabold transition ${
-                        quickUnlockMode === 'Pattern'
-                          ? 'bg-indigo-600 text-white keep-white'
-                          : 'text-zinc-300 hover:text-white'
-                      }`}
-                    >
-                      3×3 Pattern Lock
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setQuickUnlockMode('Pin')}
-                      className={`py-1.5 px-2.5 rounded-lg text-xs font-extrabold transition ${
-                        quickUnlockMode === 'Pin'
-                          ? 'bg-indigo-600 text-white keep-white'
-                          : 'text-zinc-300 hover:text-white'
-                      }`}
-                    >
-                      6-Digit PIN
-                    </button>
                   </div>
 
-                  {quickUnlockMode === 'Pattern' ? (
-                    <PatternLockPad
-                      value={quickUnlockPattern}
-                      onChange={setQuickUnlockPattern}
-                      disabled={quickUnlockBusy}
-                      label="Draw new unlock pattern (drag across 4+ dots)"
-                    />
-                  ) : (
-                    <div>
-                      <label className="block font-bold text-zinc-300 mb-1">6-Digit Quick Unlock PIN</label>
-                      <input
-                        type="password"
-                        inputMode="numeric"
-                        maxLength={6}
-                        autoComplete="off"
-                        value={quickUnlockPin}
-                        onChange={(e) => setQuickUnlockPin(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                        placeholder="Enter 6 digits (e.g. 482910)"
-                        className="rsvp-input tracking-widest font-mono"
-                      />
-                    </div>
-                  )}
-
-                  {biometricSupported && (
-                    <label className="flex items-center gap-2.5 p-2.5 rounded-xl bg-white/[0.04] border border-white/10 cursor-pointer text-xs font-semibold text-zinc-200">
-                      <input
-                        type="checkbox"
-                        checked={quickUnlockUseBiometrics}
-                        onChange={(e) => setQuickUnlockUseBiometrics(e.target.checked)}
-                        className="w-4 h-4 rounded border-white/20 text-indigo-500"
-                      />
-                      <Fingerprint className="w-4 h-4 text-emerald-400 shrink-0" />
-                      <span>Also enroll Fingerprint / Face / Windows Hello on this device</span>
-                    </label>
-                  )}
-
-                  <div>
-                    <label className="block font-bold text-zinc-300 mb-1">Confirm Account Password</label>
-                    <input
-                      type="password"
-                      autoComplete="new-password"
-                      value={quickUnlockCurrentPassword}
-                      onChange={(e) => setQuickUnlockCurrentPassword(e.target.value)}
-                      placeholder="Enter current password to bind this device"
-                      className="rsvp-input"
-                    />
-                  </div>
-
-                  <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+                  <div className="shrink-0 p-4 border-t border-white/10 space-y-2.5">
                     <button
                       type="button"
-                      disabled={quickUnlockBusy || !quickUnlockCurrentPassword.trim()}
-                      onClick={() => void handleEnableQuickUnlock()}
-                      className="keep-white px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-xs font-extrabold inline-flex items-center gap-1.5 shadow-sm transition"
+                      onClick={openProfileModal}
+                      className="w-full p-2.5 rounded-xl bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/25 flex items-center justify-between gap-2.5 text-left transition"
                     >
-                      <Fingerprint className="w-3.5 h-3.5" />
-                      <span>{quickUnlockBusy ? 'Configuring...' : 'Enable Quick Unlock on This Device'}</span>
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        {authUser.profilePhotoUrl ? (
+                          <img
+                            src={authUser.profilePhotoUrl}
+                            alt={authUser.fullName}
+                            className="w-8 h-8 rounded-lg object-cover border border-indigo-400/40 shrink-0"
+                          />
+                        ) : (
+                          <div className="keep-white w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-xs font-extrabold text-white shrink-0">
+                            {authUser.fullName?.slice(0, 2).toUpperCase()}
+                          </div>
+                        )}
+                        <div className="min-w-0">
+                          <p className="text-xs font-extrabold text-white truncate">{authUser.fullName}</p>
+                          <p className="text-[10px] text-indigo-300 truncate">Tap to edit profile, photo & password</p>
+                        </div>
+                      </div>
+                      <Pencil className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
                     </button>
-                    {quickUnlockStatus?.quickUnlockEnabled && (
+                    <div className="grid grid-cols-3 gap-2">
                       <button
                         type="button"
-                        disabled={quickUnlockBusy}
-                        onClick={() => void handleRevokeQuickUnlock()}
-                        className="px-3 py-2 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-300 text-xs font-bold transition"
+                        onClick={toggleTheme}
+                        className="py-2.5 px-2 rounded-xl bg-white/[0.05] border border-white/10 text-[11px] font-bold flex items-center justify-center gap-1.5"
                       >
-                        Revoke Quick Unlock
+                        {theme === 'dark' ? <Sun className="w-3.5 h-3.5 text-amber-400" /> : <Moon className="w-3.5 h-3.5 text-indigo-400" />}
+                        <span>{theme === 'dark' ? t.lightMode : t.darkMode}</span>
                       </button>
-                    )}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          loadAllData();
+                          setMobileNavDrawerOpen(false);
+                        }}
+                        className="py-2.5 px-2 rounded-xl bg-white/[0.05] border border-white/10 text-[11px] font-bold flex items-center justify-center gap-1.5"
+                      >
+                        <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-indigo-400' : ''}`} />
+                        <span>Refresh</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleLogout}
+                        className="py-2.5 px-2 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-[11px] font-bold flex items-center justify-center gap-1.5"
+                      >
+                        <LogOut className="w-3.5 h-3.5" />
+                        <span>{t.signOut}</span>
+                      </button>
+                    </div>
                   </div>
-                </div>
+                </motion.aside>
+              </>
+            )}
+          </AnimatePresence>
 
-                <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-white/10">
-                  <button
-                    type="button"
-                    onClick={() => setProfileModalOpen(false)}
-                    className="px-4 py-2.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 text-zinc-300 font-bold transition"
-                  >
-                    Cancel
-                  </button>
-                  <motion.button
-                    whileHover={{ scale: 1.01 }}
-                    whileTap={{ scale: 0.98 }}
-                    type="submit"
-                    disabled={profileSaving || !profileFullName.trim()}
-                    className="keep-white px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold inline-flex items-center gap-1.5 shadow-md disabled:opacity-50 transition"
-                  >
-                    <CheckCircle2 className="w-4 h-4" />
-                    <span>{profileSaving ? 'Saving...' : 'Save Profile Changes'}</span>
-                  </motion.button>
-                </div>
-              </form>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
-
-      <main id="main-content" className="relative z-10 max-w-[1480px] mx-auto w-full flex-1 px-3 sm:px-6 pt-4 pb-24 md:py-6 space-y-5">
-        {(authUser.accountStatus === 'Pending' || authUser.accountStatus === 'PendingPartnershipApproval') && (
-          <div className="p-4 rounded-2xl bg-amber-500/15 border border-amber-500/40 text-xs sm:text-sm text-amber-200 font-semibold flex items-center gap-3">
-            <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0" />
-            <div>
-              {authUser.accountStatus === 'Pending' ? (
-                <span>
-                  <strong className="text-white">Account Status: Pending Volunteer Verification.</strong> A Volunteer Coordinator must verify and activate your volunteer profile before full field deployment.
-                </span>
-              ) : (
-                <span>
-                  <strong className="text-white">Partnership Request Pending Approval.</strong> Your Partner Organization request is awaiting Global System Admin or Organization Admin approval.
-                </span>
-              )}
-            </div>
-          </div>
-        )}
-
-        <CommandPaletteModal
-          isOpen={commandPaletteOpen}
-          onClose={() => setCommandPaletteOpen(false)}
-          menuItems={menuItems.map((m) => ({
-            id: m.id,
-            label: getLocalizedTabLabel(m.id, m.label),
-            subtext: m.subtext
-          }))}
-          requests={requests}
-          shelters={sheltersData.shelters || []}
-          resources={resources}
-          theme={theme}
-          onSelectTab={(tabId) => setActiveTab(tabId)}
-          onToggleTheme={toggleTheme}
-          onOpenProfile={openProfileModal}
-          onRefresh={() => void loadAllData()}
-          onReplayIntro={triggerBrandIntro}
-        />
-
-        <AnimatePresence mode="wait">
-          {statusBanner && (
-            <motion.div
-              key={statusBanner.text}
-              initial={{ opacity: 0, x: 24, scale: 0.96 }}
-              animate={{ opacity: 1, x: 0, scale: 1 }}
-              exit={{ opacity: 0, x: 24, scale: 0.96 }}
-              transition={{ duration: 0.22 }}
-              className={`keep-white fixed top-20 right-4 sm:right-6 z-[90] w-[calc(100%-2rem)] sm:max-w-md rounded-2xl border text-xs sm:text-sm font-semibold backdrop-blur-2xl shadow-2xl overflow-hidden ${
-                statusBanner.type === 'error'
-                  ? 'bg-rose-950/90 border-rose-500/45 text-rose-100'
-                  : statusBanner.type === 'info'
-                  ? 'bg-amber-950/90 border-amber-500/45 text-amber-100'
-                  : 'bg-emerald-950/90 border-emerald-500/45 text-emerald-100'
-              }`}
-            >
-              <div className="flex items-center justify-between px-4 py-3 gap-3">
-                <div className="flex items-center gap-2.5 min-w-0">
-                  {statusBanner.type === 'error' ? (
-                    <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
-                  ) : statusBanner.type === 'info' ? (
-                    <Info className="w-4 h-4 text-amber-400 shrink-0" />
-                  ) : (
-                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                  )}
-                  <span className="leading-snug">{statusBanner.text}</span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setStatusBanner(null)}
-                  className="text-zinc-300 hover:text-white p-1 rounded-lg hover:bg-white/10 transition shrink-0"
+          <AnimatePresence>
+            {profileModalOpen && (
+              <>
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  onClick={() => setProfileModalOpen(false)}
+                  className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-[80]"
+                />
+                <motion.div
+                  role="dialog"
+                  aria-modal="true"
+                  aria-label="My Profile and Account Settings"
+                  initial={{ opacity: 0, y: 24, scale: 0.97 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 24, scale: 0.97 }}
+                  transition={{ type: 'spring', stiffness: 360, damping: 30 }}
+                  className="fixed inset-x-3 top-6 sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 sm:top-10 z-[85] sm:w-full sm:max-w-lg max-h-[88dvh] bento-glass rounded-3xl p-5 sm:p-6 flex flex-col border border-indigo-500/30 shadow-2xl overflow-hidden"
                 >
-                  <X className="w-4 h-4" />
-                </button>
+                  <div className="flex items-center justify-between pb-3.5 mb-4 border-b border-white/10 shrink-0">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-9 h-9 rounded-xl bg-indigo-500/20 border border-indigo-500/35 text-indigo-400 flex items-center justify-center shrink-0">
+                        <User className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <h2 className="text-base font-extrabold text-white">My Profile & Account Settings</h2>
+                        <p className="text-[11px] text-zinc-400">
+                          {authUser.email} • {getFriendlyRoleTitle(authUser.role)}
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      aria-label="Close Profile Modal"
+                      onClick={() => setProfileModalOpen(false)}
+                      className="p-2 rounded-xl bg-white/5 text-zinc-400 hover:text-white hover:bg-white/10 transition"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  <form
+                    key="my-profile-settings-form"
+                    onSubmit={handleSaveProfile}
+                    className="flex-1 min-h-0 overflow-y-auto sidebar-scroll pr-1 space-y-4 text-xs"
+                  >
+                    <div className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/[0.08] space-y-3">
+                      <div className="flex flex-wrap items-center gap-4">
+                        {profilePhotoUrl ? (
+                          <img
+                            src={profilePhotoUrl}
+                            alt={profileFullName || authUser.fullName}
+                            className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl object-cover border-2 border-indigo-400/50 shadow-md shrink-0"
+                          />
+                        ) : (
+                          <div className="keep-white w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-indigo-600 to-cyan-500 flex items-center justify-center text-xl font-black text-white shadow-md shrink-0">
+                            {(profileFullName || authUser.fullName || 'CS').slice(0, 2).toUpperCase()}
+                          </div>
+                        )}
+
+                        <div className="flex-1 min-w-[180px] space-y-2">
+                          <p className="font-bold text-zinc-200">Profile Picture & Avatar</p>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <label
+                              htmlFor="profile-photo-upload-input"
+                              className="keep-white cursor-pointer px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold inline-flex items-center gap-1.5 shadow-sm transition"
+                            >
+                              <Camera className="w-3.5 h-3.5" />
+                              <span>Upload Photo</span>
+                            </label>
+                            <input
+                              id="profile-photo-upload-input"
+                              type="file"
+                              accept="image/*"
+                              onChange={handleProfilePhotoUpload}
+                              className="hidden"
+                            />
+                            {profilePhotoUrl && (
+                              <button
+                                type="button"
+                                onClick={() => setProfilePhotoUrl('')}
+                                className="px-3 py-1.5 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-300 font-bold transition"
+                              >
+                                Remove Photo
+                              </button>
+                            )}
+                          </div>
+                          <p className="text-[11px] text-zinc-400">
+                            Upload any photo or pick a built-in gradient avatar badge below:
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-2 pt-1">
+                        {AVATAR_COLOR_PRESETS.map(([fromCol, toCol], idx) => (
+                          <button
+                            key={`${fromCol}-${toCol}`}
+                            type="button"
+                            title={`Use Avatar Style ${idx + 1}`}
+                            onClick={() =>
+                              setProfilePhotoUrl(buildAvatarPresetDataUrl(profileFullName || authUser.fullName, fromCol, toCol))
+                            }
+                            style={{ background: `linear-gradient(135deg, ${fromCol}, ${toCol})` }}
+                            className="keep-white w-8 h-8 rounded-xl text-[11px] font-black text-white flex items-center justify-center border border-white/25 hover:scale-110 transition shadow-sm"
+                          >
+                            {(profileFullName || authUser.fullName || 'CS').slice(0, 2).toUpperCase()}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="flex items-center gap-1.5 font-bold text-zinc-300 mb-1.5">
+                        <User className="w-3.5 h-3.5 text-indigo-400" />
+                        <span>Full Name</span>
+                      </label>
+                      <input
+                        type="text"
+                        name="crisync_profile_fullname"
+                        autoComplete="off"
+                        required
+                        value={profileFullName}
+                        onChange={(e) => setProfileFullName(e.target.value)}
+                        placeholder="Enter your full name"
+                        className="rsvp-input"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="flex items-center gap-1.5 font-bold text-zinc-300 mb-1.5">
+                          <Phone className="w-3.5 h-3.5 text-indigo-400" />
+                          <span>Phone Number</span>
+                        </label>
+                        <input
+                          type="text"
+                          name="crisync_profile_phone"
+                          autoComplete="off"
+                          value={profilePhone}
+                          onChange={(e) => setProfilePhone(e.target.value)}
+                          placeholder="+94 77 123 4567"
+                          className="rsvp-input"
+                        />
+                      </div>
+                      <div>
+                        <label className="flex items-center gap-1.5 font-bold text-zinc-300 mb-1.5">
+                          <Globe className="w-3.5 h-3.5 text-indigo-400" />
+                          <span>Preferred Language</span>
+                        </label>
+                        <select
+                          value={profileLanguage}
+                          onChange={(e) => setProfileLanguage(e.target.value)}
+                          className="rsvp-input"
+                        >
+                          {LANGUAGE_OPTIONS.map((langOpt) => (
+                            <option key={langOpt.code} value={langOpt.code}>
+                              {langOpt.fullName}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="p-3.5 rounded-2xl bg-amber-500/[0.07] border border-amber-500/25 space-y-3">
+                      <p className="font-extrabold text-amber-300 flex items-center gap-1.5">
+                        <Lock className="w-3.5 h-3.5" />
+                        <span>Change Account Password (Optional)</span>
+                      </p>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <label className="block font-bold text-zinc-300 mb-1">Current Password</label>
+                          <input
+                            type="password"
+                            name="crisync_profile_current_password"
+                            autoComplete="new-password"
+                            readOnly={!profileUnlocked.currentPassword}
+                            onFocus={() => setProfileUnlocked((p) => ({ ...p, currentPassword: true }))}
+                            onMouseDown={() => setProfileUnlocked((p) => ({ ...p, currentPassword: true }))}
+                            onKeyDown={() => setProfileUnlocked((p) => ({ ...p, currentPassword: true }))}
+                            value={profileCurrentPassword}
+                            onChange={(e) => setProfileCurrentPassword(e.target.value)}
+                            placeholder="Required only if changing password"
+                            className="rsvp-input"
+                          />
+                        </div>
+                        <div>
+                          <label className="block font-bold text-zinc-300 mb-1">New Password (Min 6 chars)</label>
+                          <input
+                            type="password"
+                            name="crisync_profile_new_password"
+                            autoComplete="new-password"
+                            readOnly={!profileUnlocked.newPassword}
+                            onFocus={() => setProfileUnlocked((p) => ({ ...p, newPassword: true }))}
+                            onMouseDown={() => setProfileUnlocked((p) => ({ ...p, newPassword: true }))}
+                            onKeyDown={() => setProfileUnlocked((p) => ({ ...p, newPassword: true }))}
+                            value={profileNewPassword}
+                            onChange={(e) => setProfileNewPassword(e.target.value)}
+                            placeholder="Leave empty to keep current password"
+                            className="rsvp-input"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="p-3.5 rounded-2xl bg-indigo-500/[0.08] border border-indigo-500/30 space-y-3">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <p className="font-extrabold text-indigo-300 flex items-center gap-1.5">
+                          <Fingerprint className="w-4 h-4" />
+                          <span>Trusted-Device Quick Unlock (Pattern / PIN / Biometrics)</span>
+                        </p>
+                        {quickUnlockStatus?.quickUnlockEnabled && (
+                          <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-[11px] font-bold inline-flex items-center gap-1">
+                            <ShieldCheck className="w-3 h-3" />
+                            Active ({quickUnlockStatus.mode}{quickUnlockStatus.hasBiometricCredential ? ' + Biometrics' : ''})
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-zinc-400 leading-relaxed">
+                        Bind each browser or URL (for example Laptop on localhost and Phone via ngrok HTTPS) independently to unlock with a 3×3 Pattern, 6-digit PIN, or device Fingerprint / Windows Hello.
+                      </p>
+
+                      <div
+                        className={`p-2.5 rounded-xl border text-xs flex items-center justify-between gap-2 ${currentDeviceBound
+                          ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
+                          : 'bg-amber-500/10 border-amber-500/30 text-amber-300'
+                          }`}
+                      >
+                        <span className="inline-flex items-center gap-1.5 font-semibold">
+                          <Smartphone className="w-3.5 h-3.5 shrink-0" />
+                          {currentDeviceBound
+                            ? `Current browser (${typeof window !== 'undefined' ? window.location.host : 'device'}) is bound.`
+                            : `Current browser (${typeof window !== 'undefined' ? window.location.host : 'device'}) is not bound yet — enable below for this phone or URL!`}
+                        </span>
+                      </div>
+
+                      {quickUnlockStatus?.trustedDevices && quickUnlockStatus.trustedDevices.length > 0 && (
+                        <div className="space-y-1.5">
+                          <p className="text-[11px] font-bold uppercase tracking-wider text-zinc-400">
+                            Active Trusted Devices ({quickUnlockStatus.trustedDevices.length})
+                          </p>
+                          <div className="space-y-1.5 max-h-32 overflow-y-auto">
+                            {quickUnlockStatus.trustedDevices.map((dev) => (
+                              <div
+                                key={dev.deviceId}
+                                className="flex items-center justify-between gap-2 px-3 py-2 rounded-xl bg-white/[0.04] border border-white/10 text-xs"
+                              >
+                                <div className="min-w-0">
+                                  <p className="font-bold text-zinc-100 truncate">{dev.deviceName}</p>
+                                  <p className="text-[11px] text-zinc-400 truncate">
+                                    {dev.originHost} • {dev.hasBiometrics ? 'Pattern/PIN + Biometrics' : 'Pattern/PIN'}
+                                  </p>
+                                </div>
+                                <button
+                                  type="button"
+                                  disabled={quickUnlockBusy}
+                                  onClick={() => void handleRemoveTrustedDevice(dev.deviceId)}
+                                  className="p-1.5 rounded-lg bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 transition shrink-0"
+                                  title="Remove this device"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="grid grid-cols-2 gap-1.5 p-1 rounded-xl bg-white/[0.04] border border-white/10">
+                        <button
+                          type="button"
+                          onClick={() => setQuickUnlockMode('Pattern')}
+                          className={`py-1.5 px-2.5 rounded-lg text-xs font-extrabold transition ${quickUnlockMode === 'Pattern'
+                            ? 'bg-indigo-600 text-white keep-white'
+                            : 'text-zinc-300 hover:text-white'
+                            }`}
+                        >
+                          3×3 Pattern Lock
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setQuickUnlockMode('Pin')}
+                          className={`py-1.5 px-2.5 rounded-lg text-xs font-extrabold transition ${quickUnlockMode === 'Pin'
+                            ? 'bg-indigo-600 text-white keep-white'
+                            : 'text-zinc-300 hover:text-white'
+                            }`}
+                        >
+                          6-Digit PIN
+                        </button>
+                      </div>
+
+                      {quickUnlockMode === 'Pattern' ? (
+                        <PatternLockPad
+                          value={quickUnlockPattern}
+                          onChange={setQuickUnlockPattern}
+                          disabled={quickUnlockBusy}
+                          label="Draw new unlock pattern (drag across 4+ dots)"
+                        />
+                      ) : (
+                        <div>
+                          <label className="block font-bold text-zinc-300 mb-1">6-Digit Quick Unlock PIN</label>
+                          <input
+                            type="password"
+                            inputMode="numeric"
+                            maxLength={6}
+                            autoComplete="off"
+                            value={quickUnlockPin}
+                            onChange={(e) => setQuickUnlockPin(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                            placeholder="Enter 6 digits (e.g. 482910)"
+                            className="rsvp-input tracking-widest font-mono"
+                          />
+                        </div>
+                      )}
+
+                      {biometricSupported && (
+                        <label className="flex items-center gap-2.5 p-2.5 rounded-xl bg-white/[0.04] border border-white/10 cursor-pointer text-xs font-semibold text-zinc-200">
+                          <input
+                            type="checkbox"
+                            checked={quickUnlockUseBiometrics}
+                            onChange={(e) => setQuickUnlockUseBiometrics(e.target.checked)}
+                            className="w-4 h-4 rounded border-white/20 text-indigo-500"
+                          />
+                          <Fingerprint className="w-4 h-4 text-emerald-400 shrink-0" />
+                          <span>Also enroll Fingerprint / Face / Windows Hello on this device</span>
+                        </label>
+                      )}
+
+                      <div>
+                        <label className="block font-bold text-zinc-300 mb-1">Confirm Account Password</label>
+                        <input
+                          type="password"
+                          autoComplete="new-password"
+                          value={quickUnlockCurrentPassword}
+                          onChange={(e) => setQuickUnlockCurrentPassword(e.target.value)}
+                          placeholder="Enter current password to bind this device"
+                          className="rsvp-input"
+                        />
+                      </div>
+
+                      <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+                        <button
+                          type="button"
+                          disabled={quickUnlockBusy || !quickUnlockCurrentPassword.trim()}
+                          onClick={() => void handleEnableQuickUnlock()}
+                          className="keep-white px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-xs font-extrabold inline-flex items-center gap-1.5 shadow-sm transition"
+                        >
+                          <Fingerprint className="w-3.5 h-3.5" />
+                          <span>{quickUnlockBusy ? 'Configuring...' : 'Enable Quick Unlock on This Device'}</span>
+                        </button>
+                        {quickUnlockStatus?.quickUnlockEnabled && (
+                          <button
+                            type="button"
+                            disabled={quickUnlockBusy}
+                            onClick={() => void handleRevokeQuickUnlock()}
+                            className="px-3 py-2 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-300 text-xs font-bold transition"
+                          >
+                            Revoke Quick Unlock
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-white/10">
+                      <button
+                        type="button"
+                        onClick={() => setProfileModalOpen(false)}
+                        className="px-4 py-2.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 text-zinc-300 font-bold transition"
+                      >
+                        Cancel
+                      </button>
+                      <motion.button
+                        whileHover={{ scale: 1.01 }}
+                        whileTap={{ scale: 0.98 }}
+                        type="submit"
+                        disabled={profileSaving || !profileFullName.trim()}
+                        className="keep-white px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold inline-flex items-center gap-1.5 shadow-md disabled:opacity-50 transition"
+                      >
+                        <CheckCircle2 className="w-4 h-4" />
+                        <span>{profileSaving ? 'Saving...' : 'Save Profile Changes'}</span>
+                      </motion.button>
+                    </div>
+                  </form>
+                </motion.div>
+              </>
+            )}
+          </AnimatePresence>
+
+          <main id="main-content" className="relative z-10 max-w-[1480px] mx-auto w-full flex-1 px-3 sm:px-6 pt-4 pb-24 md:py-6 space-y-5">
+            {(authUser.accountStatus === 'Pending' || authUser.accountStatus === 'PendingPartnershipApproval') && (
+              <div className="p-4 rounded-2xl bg-amber-500/15 border border-amber-500/40 text-xs sm:text-sm text-amber-200 font-semibold flex items-center gap-3">
+                <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0" />
+                <div>
+                  {authUser.accountStatus === 'Pending' ? (
+                    <span>
+                      <strong className="text-white">Account Status: Pending Volunteer Verification.</strong> A Volunteer Coordinator must verify and activate your volunteer profile before full field deployment.
+                    </span>
+                  ) : (
+                    <span>
+                      <strong className="text-white">Partnership Request Pending Approval.</strong> Your Partner Organization request is awaiting Global System Admin or Organization Admin approval.
+                    </span>
+                  )}
+                </div>
               </div>
-              <motion.div
-                initial={{ width: '100%' }}
-                animate={{ width: '0%' }}
-                transition={{ duration: 5.5, ease: 'linear' }}
-                className={`h-1 ${
-                  statusBanner.type === 'error'
-                    ? 'bg-rose-400'
+            )}
+
+            <CommandPaletteModal
+              isOpen={commandPaletteOpen}
+              onClose={() => setCommandPaletteOpen(false)}
+              menuItems={menuItems.map((m) => ({
+                id: m.id,
+                label: getLocalizedTabLabel(m.id, m.label),
+                subtext: m.subtext
+              }))}
+              requests={requests}
+              shelters={sheltersData.shelters || []}
+              resources={resources}
+              theme={theme}
+              onSelectTab={(tabId) => setActiveTab(tabId)}
+              onToggleTheme={toggleTheme}
+              onOpenProfile={openProfileModal}
+              onRefresh={() => void loadAllData()}
+              onReplayIntro={triggerBrandIntro}
+            />
+
+            <AnimatePresence mode="wait">
+              {statusBanner && (
+                <motion.div
+                  key={statusBanner.text}
+                  initial={{ opacity: 0, x: 24, scale: 0.96 }}
+                  animate={{ opacity: 1, x: 0, scale: 1 }}
+                  exit={{ opacity: 0, x: 24, scale: 0.96 }}
+                  transition={{ duration: 0.22 }}
+                  className={`keep-white fixed top-20 right-4 sm:right-6 z-[90] w-[calc(100%-2rem)] sm:max-w-md rounded-2xl border text-xs sm:text-sm font-semibold backdrop-blur-2xl shadow-2xl overflow-hidden ${statusBanner.type === 'error'
+                    ? 'bg-rose-950/90 border-rose-500/45 text-rose-100'
                     : statusBanner.type === 'info'
-                    ? 'bg-amber-400'
-                    : 'bg-emerald-400'
-                }`}
-              />
-            </motion.div>
-          )}
-        </AnimatePresence>
+                      ? 'bg-amber-950/90 border-amber-500/45 text-amber-100'
+                      : 'bg-emerald-950/90 border-emerald-500/45 text-emerald-100'
+                    }`}
+                >
+                  <div className="flex items-center justify-between px-4 py-3 gap-3">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      {statusBanner.type === 'error' ? (
+                        <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
+                      ) : statusBanner.type === 'info' ? (
+                        <Info className="w-4 h-4 text-amber-400 shrink-0" />
+                      ) : (
+                        <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                      )}
+                      <span className="leading-snug">{statusBanner.text}</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setStatusBanner(null)}
+                      className="text-zinc-300 hover:text-white p-1 rounded-lg hover:bg-white/10 transition shrink-0"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <motion.div
+                    initial={{ width: '100%' }}
+                    animate={{ width: '0%' }}
+                    transition={{ duration: 5.5, ease: 'linear' }}
+                    className={`h-1 ${statusBanner.type === 'error'
+                      ? 'bg-rose-400'
+                      : statusBanner.type === 'info'
+                        ? 'bg-amber-400'
+                        : 'bg-emerald-400'
+                      }`}
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
 
-        {loading && requests.length === 0 && crises.length === 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4" aria-hidden="true">
-            <div className="h-32 rounded-3xl crisync-skeleton border border-white/10" />
-            <div className="h-32 rounded-3xl crisync-skeleton border border-white/10" />
-            <div className="h-32 rounded-3xl crisync-skeleton border border-white/10" />
-          </div>
-        )}
-
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activeTab}
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.24, ease: 'easeOut' }}
-          >
-            {activeTab === 'dashboard' && (
-              <DashboardTab
-                userRole={authUser.role}
-                metrics={metrics}
-                briefing={briefing}
-                briefingLang={briefingLang}
-                requests={requests}
-                crises={crises}
-                organisations={organisations}
-                onChangeBriefingLanguage={handleLanguageBriefingChange}
-                onMergeDuplicate={handleMergeDuplicate}
-                onUpdateRequestStatus={handleUpdateRequestStatus}
-                onCreatePublicAlert={handleCreatePublicAlert}
-                onCreateCrisisEvent={handleCreateCrisisEvent}
-                onCreateOperationalArea={handleCreateOperationalArea}
-                onRegisterCitizenOnBehalf={handleRegisterCitizenOnBehalf}
-                onInviteStaff={handleInviteStaff}
-                onSelectForAiGovernance={(req) => {
-                  setActiveTab('ai-governance');
-                  if (req.aiRecommendations?.[0]) {
-                    setSelectedRecommendation(req.aiRecommendations[0]);
-                  }
-                }}
-              />
+            {loading && requests.length === 0 && crises.length === 0 && (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4" aria-hidden="true">
+                <div className="h-32 rounded-3xl crisync-skeleton border border-white/10" />
+                <div className="h-32 rounded-3xl crisync-skeleton border border-white/10" />
+                <div className="h-32 rounded-3xl crisync-skeleton border border-white/10" />
+              </div>
             )}
 
-            {activeTab === 'citizen' && (
-              <CitizenPortalTab
-                alerts={alerts}
-                crises={crises}
-                shelters={sheltersData.shelters || []}
-                requests={requests}
-                notifications={myNotifications}
-                household={household}
-                currentUserId={authUser.userId}
-                briefing={briefing}
-                activeLanguage={briefingLang as SupportedLanguage}
-                onChangeLanguage={handleLanguageBriefingChange}
-                onUploadEvidence={handleUploadEvidence}
-                onSubmitRequest={handleSubmitCitizenRequest}
-                onSaveHousehold={handleSaveHousehold}
-                onSubmitFeedback={handleSubmitCitizenFeedback}
-              />
-            )}
-
-            {activeTab === 'ai-governance' && (
-              <AiGovernanceTab
-                userRole={authUser.role}
-                recommendations={recommendations}
-                demandForecast={demandForecast}
-                selectedRecommendation={selectedRecommendation}
-                onSelectRecommendation={setSelectedRecommendation}
-                onSubmitGovernanceReview={handleGovernanceReviewSubmit}
-              />
-            )}
-
-            {activeTab === 'logistics' && (
-              <LogisticsTab
-                userRole={authUser.role}
-                requests={requests}
-                resources={resources}
-                dispatches={logisticsAllocationsData.dispatches || []}
-                partnerAidRequests={logisticsAllocationsData.partnerAidRequests || []}
-                organisations={organisations}
-                selectedStrategy={selectedStrategy}
-                selectedCompetingIds={selectedCompetingIds}
-                allocationPlanResult={allocationPlanResult}
-                onChangeStrategy={setSelectedStrategy}
-                onToggleCompetingRequest={(id) =>
-                  setSelectedCompetingIds((prev) =>
-                    prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
-                  )
-                }
-                onRunAllocation={handleSimulateOrExecuteAllocation}
-                onAddResource={handleAddResource}
-                onReplenishResource={handleReplenishResource}
-                onMarkDispatchDelivered={handleMarkDispatchDelivered}
-                onCreatePartnerAidRequest={handleCreatePartnerAidRequest}
-                onFulfillPartnerAidRequest={handleFulfillPartnerAidRequest}
-              />
-            )}
-
-            {activeTab === 'shelters' && (
-              <SheltersTab
-                userRole={authUser.role}
-                shelters={sheltersData.shelters || []}
-                requests={requests}
-                onRecommendShelters={handleRecommendShelters}
-                onCreateShelter={handleCreateShelter}
-                onRequestShelterSupplies={handleRequestShelterSupplies}
-                onAllocateShelter={async (payload) => {
-                  try {
-                    await apiFetch<any>(
-                      '/shelters/allocate',
-                      {
-                        method: 'POST',
-                        body: JSON.stringify({
-                          shelterId: payload.shelterId,
-                          householdName: payload.householdName,
-                          membersCount: payload.membersCount,
-                          requiresAccessibility: payload.requiresAccessibility,
-                          assistanceRequestId: payload.assistanceRequestId || null,
-                          citizenUserId: authUser.userId
-                        })
-                      },
-                      authUser?.token
-                    );
-                    notify('success', `Checked in ${payload.membersCount} family members to shelter.`);
-                    await loadAllData();
-                  } catch (err: any) {
-                    notify('error', err.message);
-                  }
-                }}
-              />
-            )}
-
-            {activeTab === 'volunteers' && (
-              <VolunteersTab
-                userRole={authUser.role}
-                currentUserId={authUser.userId}
-                volunteers={volunteersData.volunteers || []}
-                assignments={volunteersData.assignments || []}
-                volunteerMatches={volunteerMatches}
-                onRegisterVolunteer={handleRegisterVolunteer}
-                onVerifyActivateVolunteer={handleVerifyActivateVolunteer}
-                onUpdateMyAvailability={handleUpdateMyAvailability}
-                onRespondAssignment={handleRespondAssignment}
-                onCompleteAssignment={handleCompleteAssignment}
-                onMatchVolunteers={async (skill) => {
-                  try {
-                    const matchLat = crises[0]?.centerLatitude ?? 6.9271;
-                    const matchLon = crises[0]?.centerLongitude ?? 79.8612;
-                    const backendMatches = await apiFetch<any[]>(
-                      `/volunteers/match?skill=${encodeURIComponent(skill)}&lat=${matchLat}&lon=${matchLon}`,
-                      {},
-                      authUser?.token
-                    );
-                    setVolunteerMatches(backendMatches);
-                    notify('info', `Found ${backendMatches.length} volunteers matching '${skill}'.`);
-                  } catch (err: any) {
-                    notify('error', err.message);
-                  }
-                }}
-                onAssignVolunteer={async (volunteerProfileId, taskTitle, requiredSkill) => {
-                  try {
-                    await apiFetch<any>(
-                      '/volunteers/assign',
-                      {
-                        method: 'POST',
-                        body: JSON.stringify({
-                          volunteerProfileId,
-                          assistanceRequestId: requests[0]?.id || null,
-                          taskTitle,
-                          requiredSkill
-                        })
-                      },
-                      authUser?.token
-                    );
-                    notify('success', 'Volunteer assigned to field task.');
-                    await loadAllData();
-                  } catch (err: any) {
-                    notify('error', err.message);
-                  }
-                }}
-              />
-            )}
-
-            {activeTab === 'donations' && (
-              <DonationsTab
-                userRole={authUser.role}
-                crises={crises}
-                campaigns={donationsData.campaigns || []}
-                donations={donationsData.donations || []}
-                transparencyReport={transparencyReport}
-                onCreateCampaign={handleCreateCampaign}
-                onRecordExpenditure={handleRecordExpenditure}
-                onRejectFlaggedDonation={handleRejectFlaggedDonation}
-                onRecordDonation={async (payload) => {
-                  const targetCampaignId = payload.campaignId || donationsData.campaigns?.[0]?.id;
-                  if (!targetCampaignId) {
-                    notify('error', 'No active relief campaign found to credit donation.');
-                    return;
-                  }
-                  try {
-                    const record = await apiFetch<any>(
-                      '/donations',
-                      {
-                        method: 'POST',
-                        body: JSON.stringify({
-                          campaignId: targetCampaignId,
-                          donorName: payload.donorName,
-                          donationType: payload.donationType,
-                          monetaryAmountUsd: payload.donationType === 'Monetary' ? payload.monetaryAmountUsd : 0,
-                          materialDescription: payload.donationType === 'Material' ? payload.materialDescription : '',
-                          materialQuantity: payload.donationType === 'Material' ? payload.materialQuantity : 0,
-                          allocationPurpose: payload.allocationPurpose,
-                          sandboxCardLastFour:
-                            payload.donationType === 'Monetary'
-                              ? payload.sandboxCardLastFour || '4242'
-                              : '0000'
-                        })
-                      },
-                      authUser?.token
-                    );
-                    notify(
-                      record.isFlaggedSuspicious ? 'info' : 'success',
-                      record.isFlaggedSuspicious
-                        ? `Large donation ($${record.monetaryAmountUsd}) recorded and queued for compliance approval: ${record.suspiciousReason}`
-                        : record.donationType === 'Material'
-                          ? `In-kind material donation (${record.materialQuantity} × ${record.materialDescription}) recorded. Thank you!`
-                          : `Donation of $${record.monetaryAmountUsd} recorded. Thank you!`
-                    );
-                    await loadAllData();
-                  } catch (err: any) {
-                    notify('error', err.message);
-                  }
-                }}
-                onApproveFlaggedDonation={async (id) => {
-                  try {
-                    await apiFetch<any>(`/donations/${id}/approve`, { method: 'POST' }, authUser?.token);
-                    notify('success', 'Large donation verified and approved.');
-                    await loadAllData();
-                  } catch (err: any) {
-                    notify('error', err.message);
-                  }
-                }}
-              />
-            )}
-
-            {activeTab === 'map-resilience' && (
-              <MapAndResilienceTab
-                userRole={authUser.role}
-                requests={requests}
-                shelters={sheltersData.shelters || []}
-                resources={resources}
-                operationalAreas={allOperationalAreas}
-                mappingReferences={mappingReferences}
-                coverageReport={coverageReport}
-                resilienceStatus={resilienceStatus}
-                onRetryFailedNotifications={handleRetryFailedNotifications}
-                routeCalc={routeCalc}
-                auditLogs={auditLogs}
-                adminUsers={adminUsers}
-                currentUserId={authUser.userId}
-                organisations={organisations}
-                crises={crises}
-                volunteers={volunteersData.volunteers || []}
-                campaigns={donationsData.campaigns || []}
-                adminPartnerships={adminPartnerships}
-                rolePermissions={rolePermissions}
-                systemConfig={systemConfig}
-                serviceSettings={serviceSettings}
-                onAdminCreateUser={handleAdminCreateUser}
-                onInviteStaff={handleInviteStaff}
-                onAdminUpdateUser={handleAdminUpdateUser}
-                onAdminDeleteUser={handleAdminDeleteUser}
-                onApprovePartnership={handleApprovePartnership}
-                onRejectPartnership={handleRejectPartnership}
-                onAddRolePermission={handleAddRolePermission}
-                onDeleteRolePermission={handleDeleteRolePermission}
-                onUpdateSystemConfig={handleUpdateSystemConfig}
-                onUpdateServiceSettings={handleUpdateServiceSettings}
-                onAdminUpdateCrisis={handleAdminUpdateCrisis}
-                onAdminDeleteCrisis={handleAdminDeleteCrisis}
-                onAdminUpdateShelter={handleAdminUpdateShelter}
-                onAdminDeleteShelter={handleAdminDeleteShelter}
-                onAdminUpdateResource={handleAdminUpdateResource}
-                onAdminDeleteResource={handleAdminDeleteResource}
-                onAdminDeleteRequest={handleAdminDeleteRequest}
-                onAdminDeleteVolunteer={handleAdminDeleteVolunteer}
-                onAdminDeleteCampaign={handleAdminDeleteCampaign}
-                activeLanguage={briefingLang as SupportedLanguage}
-                onChangeLanguage={handleLanguageBriefingChange}
-                onCalculateRoute={async () => {
-                  try {
-                    const originLat = resources[0]?.warehouseLatitude ?? 6.9271;
-                    const originLon = resources[0]?.warehouseLongitude ?? 79.8612;
-                    const destLat = requests[0]?.latitude ?? crises[0]?.centerLatitude ?? 6.9319;
-                    const destLon = requests[0]?.longitude ?? crises[0]?.centerLongitude ?? 79.8478;
-                    const route = await apiFetch<any>(
-                      `/mapping/route?originLat=${originLat}&originLon=${originLon}&destLat=${destLat}&destLon=${destLon}`,
-                      {},
-                      authUser?.token
-                    );
-                    setRouteCalc(route);
-                  } catch (err: any) {
-                    notify('error', err.message);
-                  }
-                }}
-                onToggleResilience={async (service, currentValue) => {
-                  try {
-                    const updated = await apiFetch<any>(
-                      `/admin/resilience/toggle?service=${service}&simulateFailure=${!currentValue}`,
-                      { method: 'POST' },
-                      authUser?.token
-                    );
-                    setResilienceStatus(updated);
-                    notify('info', `${service.toUpperCase()} service mode updated.`);
-                    await loadAllData();
-                  } catch (err: any) {
-                    notify('error', err.message);
-                  }
-                }}
-                onSendIdempotentNotification={async (idempotencyKey, languageCode, subject, messageBody) => {
-                  const selectedLang = languageCode || briefingLang || 'en';
-                  try {
-                    const rec = await apiFetch<any>(
-                      '/notifications/send',
-                      {
-                        method: 'POST',
-                        body: JSON.stringify({
-                          recipientUserId: authUser?.userId || '22222222-2222-2222-2222-222222222201',
-                          recipientContact: '+94-77-1112233',
-                          channel: 'Sms',
-                          languageCode: selectedLang,
-                          subject,
-                          messageBody,
-                          idempotencyKey
-                        })
-                      },
-                      authUser?.token
-                    );
-                    notify(
-                      rec.deliveryStatus === 'SkippedDuplicate' ? 'info' : 'success',
-                      `SMS Test Result (${selectedLang.toUpperCase()}): ${rec.deliveryStatus} (${rec.providerResponse})`
-                    );
-                    await loadAllData();
-                  } catch (err: any) {
-                    notify('error', err.message);
-                  }
-                }}
-              />
-            )}
-          </motion.div>
-        </AnimatePresence>
-      </main>
-
-      <nav
-        aria-label="Mobile Bottom Navigation"
-        className="md:hidden fixed bottom-0 inset-x-0 z-40 bento-glass border-t border-white/10 px-2 py-1.5 pb-[max(0.45rem,env(safe-area-inset-bottom))]"
-      >
-        <div className="flex items-center justify-around gap-1">
-          {mobileBottomTabs.map((item) => {
-            const isActive = activeTab === item.id;
-            return (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => setActiveTab(item.id)}
-                className={`flex-1 min-w-0 py-1.5 px-1 rounded-xl flex flex-col items-center justify-center gap-1 transition ${
-                  isActive
-                    ? 'bg-indigo-600 text-white keep-white shadow-sm'
-                    : 'text-zinc-400 hover:text-zinc-200'
-                }`}
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeTab}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.24, ease: 'easeOut' }}
               >
-                {getModuleIcon(item.id, 'w-4 h-4 shrink-0')}
-                <span className="text-[10px] font-bold truncate max-w-full leading-tight">
-                  {getLocalizedTabLabel(item.id, item.label)}
-                </span>
-              </button>
-            );
-          })}
-          <button
-            type="button"
-            onClick={() => setMobileNavDrawerOpen(true)}
-            className={`shrink-0 px-3 py-1.5 rounded-xl flex flex-col items-center justify-center gap-1 transition ${
-              mobileNavDrawerOpen
-                ? 'bg-indigo-500/20 text-indigo-300'
-                : 'text-zinc-400 hover:text-zinc-200'
-            }`}
+                {activeTab === 'dashboard' && (
+                  <DashboardTab
+                    userRole={authUser.role}
+                    metrics={metrics}
+                    briefing={briefing}
+                    briefingLang={briefingLang}
+                    requests={requests}
+                    crises={crises}
+                    organisations={organisations}
+                    lastSyncedAt={lastSyncedAt}
+                    onManualRefresh={() => loadAllData()}
+                    isSyncing={loading}
+                    onChangeBriefingLanguage={handleLanguageBriefingChange}
+                    onMergeDuplicate={handleMergeDuplicate}
+                    onUpdateRequestStatus={handleUpdateRequestStatus}
+                    onCreatePublicAlert={handleCreatePublicAlert}
+                    onCreateCrisisEvent={handleCreateCrisisEvent}
+                    onCreateOperationalArea={handleCreateOperationalArea}
+                    onRegisterCitizenOnBehalf={handleRegisterCitizenOnBehalf}
+                    onInviteStaff={handleInviteStaff}
+                    onSelectForAiGovernance={(req) => {
+                      setActiveTab('ai-governance');
+                      if (req.aiRecommendations?.[0]) {
+                        setSelectedRecommendation(req.aiRecommendations[0]);
+                      }
+                    }}
+                  />
+                )}
+
+                {activeTab === 'citizen' && (
+                  <CitizenPortalTab
+                    alerts={alerts}
+                    crises={crises}
+                    shelters={sheltersData.shelters || []}
+                    requests={requests}
+                    notifications={myNotifications}
+                    household={household}
+                    currentUserId={authUser.userId}
+                    briefing={briefing}
+                    activeLanguage={briefingLang as SupportedLanguage}
+                    onChangeLanguage={handleLanguageBriefingChange}
+                    onUploadEvidence={handleUploadEvidence}
+                    onSubmitRequest={handleSubmitCitizenRequest}
+                    onSaveHousehold={handleSaveHousehold}
+                    onSubmitFeedback={handleSubmitCitizenFeedback}
+                  />
+                )}
+
+                {activeTab === 'ai-governance' && (
+                  <AiGovernanceTab
+                    userRole={authUser.role}
+                    recommendations={recommendations}
+                    demandForecast={demandForecast}
+                    selectedRecommendation={selectedRecommendation}
+                    onSelectRecommendation={setSelectedRecommendation}
+                    onSubmitGovernanceReview={handleGovernanceReviewSubmit}
+                  />
+                )}
+
+                {activeTab === 'logistics' && (
+                  <LogisticsTab
+                    userRole={authUser.role}
+                    requests={requests}
+                    resources={resources}
+                    dispatches={logisticsAllocationsData.dispatches || []}
+                    partnerAidRequests={logisticsAllocationsData.partnerAidRequests || []}
+                    organisations={organisations}
+                    selectedStrategy={selectedStrategy}
+                    selectedCompetingIds={selectedCompetingIds}
+                    allocationPlanResult={allocationPlanResult}
+                    onChangeStrategy={setSelectedStrategy}
+                    onToggleCompetingRequest={(id) =>
+                      setSelectedCompetingIds((prev) =>
+                        prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+                      )
+                    }
+                    onRunAllocation={handleSimulateOrExecuteAllocation}
+                    onAddResource={handleAddResource}
+                    onReplenishResource={handleReplenishResource}
+                    onMarkDispatchDelivered={handleMarkDispatchDelivered}
+                    onCreatePartnerAidRequest={handleCreatePartnerAidRequest}
+                    onFulfillPartnerAidRequest={handleFulfillPartnerAidRequest}
+                  />
+                )}
+
+                {activeTab === 'shelters' && (
+                  <SheltersTab
+                    userRole={authUser.role}
+                    shelters={sheltersData.shelters || []}
+                    requests={requests}
+                    onRecommendShelters={handleRecommendShelters}
+                    onCreateShelter={handleCreateShelter}
+                    onRequestShelterSupplies={handleRequestShelterSupplies}
+                    onAllocateShelter={async (payload) => {
+                      try {
+                        await apiFetch<any>(
+                          '/shelters/allocate',
+                          {
+                            method: 'POST',
+                            body: JSON.stringify({
+                              shelterId: payload.shelterId,
+                              householdName: payload.householdName,
+                              membersCount: payload.membersCount,
+                              requiresAccessibility: payload.requiresAccessibility,
+                              assistanceRequestId: payload.assistanceRequestId || null,
+                              citizenUserId: payload.citizenUserId || (authUser?.role === 'Citizen' ? authUser.userId : null)
+                            })
+                          },
+                          authUser?.token
+                        );
+                        notify('success', `Checked in ${payload.membersCount} family members to shelter.`);
+                        await loadAllData();
+                      } catch (err: any) {
+                        notify('error', err.message);
+                      }
+                    }}
+                  />
+                )}
+
+                {activeTab === 'volunteers' && (
+                  <VolunteersTab
+                    userRole={authUser.role}
+                    currentUserId={authUser.userId}
+                    volunteers={volunteersData.volunteers || []}
+                    assignments={volunteersData.assignments || []}
+                    requests={requests}
+                    volunteerMatches={volunteerMatches}
+                    onRegisterVolunteer={handleRegisterVolunteer}
+                    onVerifyActivateVolunteer={handleVerifyActivateVolunteer}
+                    onUpdateMyAvailability={handleUpdateMyAvailability}
+                    onRespondAssignment={handleRespondAssignment}
+                    onCompleteAssignment={handleCompleteAssignment}
+                    onMatchVolunteers={async (skill) => {
+                      try {
+                        const matchLat = crises[0]?.centerLatitude ?? 6.9271;
+                        const matchLon = crises[0]?.centerLongitude ?? 79.8612;
+                        const backendMatches = await apiFetch<any[]>(
+                          `/volunteers/match?skill=${encodeURIComponent(skill)}&lat=${matchLat}&lon=${matchLon}`,
+                          {},
+                          authUser?.token
+                        );
+                        setVolunteerMatches(backendMatches);
+                        notify('info', `Found ${backendMatches.length} volunteers matching '${skill}'.`);
+                      } catch (err: any) {
+                        notify('error', err.message);
+                      }
+                    }}
+                    onAssignVolunteer={async (volunteerProfileId, taskTitle, requiredSkill, assistanceRequestId) => {
+                      try {
+                        await apiFetch<any>(
+                          '/volunteers/assign',
+                          {
+                            method: 'POST',
+                            body: JSON.stringify({
+                              volunteerProfileId,
+                              assistanceRequestId: assistanceRequestId || null,
+                              taskTitle,
+                              requiredSkill
+                            })
+                          },
+                          authUser?.token
+                        );
+                        notify('success', 'Volunteer assigned to field task.');
+                        await loadAllData();
+                      } catch (err: any) {
+                        notify('error', err.message);
+                      }
+                    }}
+                  />
+                )}
+
+                {activeTab === 'donations' && (
+                  <DonationsTab
+                    userRole={authUser.role}
+                    crises={crises}
+                    campaigns={donationsData.campaigns || []}
+                    donations={donationsData.donations || []}
+                    transparencyReport={transparencyReport}
+                    onCreateCampaign={handleCreateCampaign}
+                    onRecordExpenditure={handleRecordExpenditure}
+                    onRejectFlaggedDonation={handleRejectFlaggedDonation}
+                    onRecordDonation={async (payload) => {
+                      const targetCampaignId = payload.campaignId;
+                      if (!targetCampaignId) {
+                        notify('error', 'Please select a specific relief campaign to credit your donation.');
+                        return;
+                      }
+                      try {
+                        const record = await apiFetch<any>(
+                          '/donations',
+                          {
+                            method: 'POST',
+                            body: JSON.stringify({
+                              campaignId: targetCampaignId,
+                              donorName: payload.donorName,
+                              donationType: payload.donationType,
+                              monetaryAmountUsd: payload.donationType === 'Monetary' ? payload.monetaryAmountUsd : 0,
+                              materialDescription: payload.donationType === 'Material' ? payload.materialDescription : '',
+                              materialQuantity: payload.donationType === 'Material' ? payload.materialQuantity : 0,
+                              allocationPurpose: payload.allocationPurpose,
+                              sandboxCardLastFour:
+                                payload.donationType === 'Monetary'
+                                  ? payload.sandboxCardLastFour || '4242'
+                                  : '0000'
+                            })
+                          },
+                          authUser?.token
+                        );
+                        notify(
+                          record.isFlaggedSuspicious ? 'info' : 'success',
+                          record.isFlaggedSuspicious
+                            ? `Large donation ($${record.monetaryAmountUsd}) recorded and queued for compliance approval: ${record.suspiciousReason}`
+                            : record.donationType === 'Material'
+                              ? `In-kind material donation (${record.materialQuantity} × ${record.materialDescription}) recorded. Thank you!`
+                              : `Donation of $${record.monetaryAmountUsd} recorded. Thank you!`
+                        );
+                        await loadAllData();
+                      } catch (err: any) {
+                        notify('error', err.message);
+                      }
+                    }}
+                    onApproveFlaggedDonation={async (id) => {
+                      try {
+                        await apiFetch<any>(`/donations/${id}/approve`, { method: 'POST' }, authUser?.token);
+                        notify('success', 'Large donation verified and approved.');
+                        await loadAllData();
+                      } catch (err: any) {
+                        notify('error', err.message);
+                      }
+                    }}
+                  />
+                )}
+
+                {activeTab === 'map-resilience' && (
+                  <MapAndResilienceTab
+                    userRole={authUser.role}
+                    requests={requests}
+                    shelters={sheltersData.shelters || []}
+                    resources={resources}
+                    operationalAreas={allOperationalAreas}
+                    mappingReferences={mappingReferences}
+                    coverageReport={coverageReport}
+                    resilienceStatus={resilienceStatus}
+                    onRetryFailedNotifications={handleRetryFailedNotifications}
+                    routeCalc={routeCalc}
+                    auditLogs={auditLogs}
+                    adminUsers={adminUsers}
+                    currentUserId={authUser.userId}
+                    organisations={organisations}
+                    crises={crises}
+                    volunteers={volunteersData.volunteers || []}
+                    campaigns={donationsData.campaigns || []}
+                    adminPartnerships={adminPartnerships}
+                    rolePermissions={rolePermissions}
+                    systemConfig={systemConfig}
+                    serviceSettings={serviceSettings}
+                    onAdminCreateUser={handleAdminCreateUser}
+                    onInviteStaff={handleInviteStaff}
+                    onAdminUpdateUser={handleAdminUpdateUser}
+                    onAdminDeleteUser={handleAdminDeleteUser}
+                    onApprovePartnership={handleApprovePartnership}
+                    onRejectPartnership={handleRejectPartnership}
+                    onAddRolePermission={handleAddRolePermission}
+                    onDeleteRolePermission={handleDeleteRolePermission}
+                    onUpdateSystemConfig={handleUpdateSystemConfig}
+                    onUpdateServiceSettings={handleUpdateServiceSettings}
+                    onAdminUpdateCrisis={handleAdminUpdateCrisis}
+                    onAdminDeleteCrisis={handleAdminDeleteCrisis}
+                    onAdminUpdateShelter={handleAdminUpdateShelter}
+                    onAdminDeleteShelter={handleAdminDeleteShelter}
+                    onAdminUpdateResource={handleAdminUpdateResource}
+                    onAdminDeleteResource={handleAdminDeleteResource}
+                    onAdminDeleteRequest={handleAdminDeleteRequest}
+                    onAdminDeleteVolunteer={handleAdminDeleteVolunteer}
+                    onAdminDeleteCampaign={handleAdminDeleteCampaign}
+                    activeLanguage={briefingLang as SupportedLanguage}
+                    onChangeLanguage={handleLanguageBriefingChange}
+                    onCalculateRoute={async (customOriginLat?: number, customOriginLon?: number, customDestLat?: number, customDestLon?: number) => {
+                      try {
+                        const originLat = customOriginLat ?? resources[0]?.warehouseLatitude ?? 6.9271;
+                        const originLon = customOriginLon ?? resources[0]?.warehouseLongitude ?? 79.8612;
+                        const destLat = customDestLat ?? requests[0]?.latitude ?? crises[0]?.centerLatitude ?? 6.9319;
+                        const destLon = customDestLon ?? requests[0]?.longitude ?? crises[0]?.centerLongitude ?? 79.8478;
+                        const route = await apiFetch<any>(
+                          `/mapping/route?originLat=${originLat}&originLon=${originLon}&destLat=${destLat}&destLon=${destLon}`,
+                          {},
+                          authUser?.token
+                        );
+                        setRouteCalc(route);
+                      } catch (err: any) {
+                        notify('error', err.message);
+                      }
+                    }}
+                    onToggleResilience={async (service, currentValue) => {
+                      try {
+                        const updated = await apiFetch<any>(
+                          `/admin/resilience/toggle?service=${service}&simulateFailure=${!currentValue}`,
+                          { method: 'POST' },
+                          authUser?.token
+                        );
+                        setResilienceStatus(updated);
+                        notify('info', `${service.toUpperCase()} service mode updated.`);
+                        await loadAllData();
+                      } catch (err: any) {
+                        notify('error', err.message);
+                      }
+                    }}
+                    onSendIdempotentNotification={async (idempotencyKey, languageCode, subject, messageBody) => {
+                      const selectedLang = languageCode || briefingLang || 'en';
+                      try {
+                        const rec = await apiFetch<any>(
+                          '/notifications/send',
+                          {
+                            method: 'POST',
+                            body: JSON.stringify({
+                              recipientUserId: authUser?.userId || '22222222-2222-2222-2222-222222222201',
+                              recipientContact: '+94-77-1112233',
+                              channel: 'Sms',
+                              languageCode: selectedLang,
+                              subject,
+                              messageBody,
+                              idempotencyKey
+                            })
+                          },
+                          authUser?.token
+                        );
+                        notify(
+                          rec.deliveryStatus === 'SkippedDuplicate' ? 'info' : 'success',
+                          `SMS Test Result (${selectedLang.toUpperCase()}): ${rec.deliveryStatus} (${rec.providerResponse})`
+                        );
+                        await loadAllData();
+                      } catch (err: any) {
+                        notify('error', err.message);
+                      }
+                    }}
+                  />
+                )}
+              </motion.div>
+            </AnimatePresence>
+          </main>
+
+          <nav
+            aria-label="Mobile Bottom Navigation"
+            className="md:hidden fixed bottom-0 inset-x-0 z-40 bento-glass border-t border-white/10 px-2 py-1.5 pb-[max(0.45rem,env(safe-area-inset-bottom))]"
           >
-            <Menu className="w-4 h-4 shrink-0" />
-            <span className="text-[10px] font-bold leading-tight">Menu</span>
-          </button>
+            <div className="flex items-center justify-around gap-1">
+              {mobileBottomTabs.map((item) => {
+                const isActive = activeTab === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => setActiveTab(item.id)}
+                    className={`flex-1 min-w-0 py-1.5 px-1 rounded-xl flex flex-col items-center justify-center gap-1 transition ${isActive
+                      ? 'bg-indigo-600 text-white keep-white shadow-sm'
+                      : 'text-zinc-400 hover:text-zinc-200'
+                      }`}
+                  >
+                    {getModuleIcon(item.id, 'w-4 h-4 shrink-0')}
+                    <span className="text-[10px] font-bold truncate max-w-full leading-tight">
+                      {getLocalizedTabLabel(item.id, item.label)}
+                    </span>
+                  </button>
+                );
+              })}
+              <button
+                type="button"
+                onClick={() => setMobileNavDrawerOpen(true)}
+                className={`shrink-0 px-3 py-1.5 rounded-xl flex flex-col items-center justify-center gap-1 transition ${mobileNavDrawerOpen
+                  ? 'bg-indigo-500/20 text-indigo-300'
+                  : 'text-zinc-400 hover:text-zinc-200'
+                  }`}
+              >
+                <Menu className="w-4 h-4 shrink-0" />
+                <span className="text-[10px] font-bold leading-tight">Menu</span>
+              </button>
+            </div>
+          </nav>
         </div>
-      </nav>
-    </div>
       )}
     </>
   );
