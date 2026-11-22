@@ -695,4 +695,70 @@ public class ApiIntegrationAndSecurityTests : IClassFixture<CriSyncWebApplicatio
             new QuickUnlockVerifyRequestDto(phone.UserId, phone.DeviceToken, "654321"));
         Assert.Equal(HttpStatusCode.OK, phoneStillActive.StatusCode);
     }
+
+    [Fact]
+    public async Task ShelterCheckout_ReleasesCapacity_AndSitRepAndFeedbackAnalytics_ReturnValidSummaries()
+    {
+        using var shelterClient = _factory.CreateClient();
+        var shelterAuth = await LoginAsAsync(shelterClient, "shelter@crisync.org", "Crisync@2026");
+
+        var shelterId = Guid.Parse("44444444-4444-4444-4444-444444444411");
+        var beforeShelters = await shelterClient.GetFromJsonAsync<JsonElement>("/api/shelters", JsonOptions);
+        int beforeOcc = beforeShelters.GetProperty("shelters").EnumerateArray()
+            .First(s => s.GetProperty("id").GetGuid() == shelterId)
+            .GetProperty("currentOccupancy").GetInt32();
+
+        var allocResp = await shelterClient.PostAsJsonAsync("/api/shelters/allocate", new AllocateShelterRequestDto(
+            shelterId,
+            null,
+            shelterAuth.UserId,
+            "Checkout Verification Family",
+            4,
+            true
+        ));
+        allocResp.EnsureSuccessStatusCode();
+        var allocation = await allocResp.Content.ReadFromJsonAsync<ShelterAllocation>(JsonOptions);
+        Assert.NotNull(allocation);
+        Assert.Equal("CheckedIn", allocation!.AllocationStatus);
+
+        var checkoutResp = await shelterClient.PostAsJsonAsync(
+            $"/api/shelters/allocations/{allocation.Id}/checkout",
+            new CheckoutShelterAllocationDto("Family safely returned home after flood recession"));
+        Assert.Equal(HttpStatusCode.OK, checkoutResp.StatusCode);
+        var checkedOut = await checkoutResp.Content.ReadFromJsonAsync<ShelterAllocation>(JsonOptions);
+        Assert.Equal("CheckedOut", checkedOut!.AllocationStatus);
+
+        var afterShelters = await shelterClient.GetFromJsonAsync<JsonElement>("/api/shelters", JsonOptions);
+        int afterOcc = afterShelters.GetProperty("shelters").EnumerateArray()
+            .First(s => s.GetProperty("id").GetGuid() == shelterId)
+            .GetProperty("currentOccupancy").GetInt32();
+        Assert.Equal(beforeOcc, afterOcc);
+
+        var doubleCheckoutResp = await shelterClient.PostAsJsonAsync(
+            $"/api/shelters/allocations/{allocation.Id}/checkout",
+            new CheckoutShelterAllocationDto("Duplicate checkout attempt"));
+        Assert.Equal(HttpStatusCode.Conflict, doubleCheckoutResp.StatusCode);
+
+        using var citizenClient = _factory.CreateClient();
+        await LoginAsAsync(citizenClient, "citizen@crisync.org", "Crisync@2026");
+
+        var fbPost = await citizenClient.PostAsJsonAsync("/api/requests/feedback", new SubmitFeedbackDto(
+            Guid.Parse("66666666-6666-6666-6666-666666666611"),
+            5,
+            "Cold-chain insulin arrived quickly by boat.",
+            true,
+            true
+        ));
+        Assert.Equal(HttpStatusCode.OK, fbPost.StatusCode);
+
+        var fbAnalytics = await citizenClient.GetFromJsonAsync<FeedbackAnalyticsSummaryDto>("/api/requests/feedback", JsonOptions);
+        Assert.NotNull(fbAnalytics);
+        Assert.True(fbAnalytics!.TotalReviewsCount >= 1);
+        Assert.True(fbAnalytics.AverageRating >= 4.0);
+
+        var sitRep = await shelterClient.GetFromJsonAsync<SitRepReportDto>("/api/reports/sitrep", JsonOptions);
+        Assert.NotNull(sitRep);
+        Assert.True(sitRep!.TotalAssistanceRequests >= 4);
+        Assert.NotEmpty(sitRep.WarehouseAlerts);
+    }
 }
