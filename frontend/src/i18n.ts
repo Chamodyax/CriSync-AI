@@ -81,6 +81,7 @@ export interface LanguageBundle {
     verifyBtn: string;
     escalateBtn: string;
     closeBtn: string;
+    rejectBtn: string;
     mergeBtn: string;
     reviewAiBtn: string;
     peopleAffected: string;
@@ -206,6 +207,7 @@ export const TRANSLATIONS: Record<SupportedLanguage, LanguageBundle> = {
       verifyBtn: 'Verify Request',
       escalateBtn: 'Escalate Urgent',
       closeBtn: 'Close Case',
+      rejectBtn: 'Reject Case',
       mergeBtn: 'Merge Duplicate',
       reviewAiBtn: 'Review AI Score',
       peopleAffected: 'people affected',
@@ -406,6 +408,7 @@ export const TRANSLATIONS: Record<SupportedLanguage, LanguageBundle> = {
       verifyBtn: 'තහවුරු කරන්න',
       escalateBtn: 'හදිසි ලෙස යොමු කරන්න',
       closeBtn: 'අවසන් කරන්න',
+      rejectBtn: 'ප්‍රතික්ෂේප කරන්න',
       mergeBtn: 'අනුපිටපත් එක් කරන්න',
       reviewAiBtn: 'AI ලකුණු බලන්න',
       peopleAffected: 'පුද්ගලයින්',
@@ -606,6 +609,7 @@ export const TRANSLATIONS: Record<SupportedLanguage, LanguageBundle> = {
       verifyBtn: 'சரிபார்',
       escalateBtn: 'அவசரமாக்கு',
       closeBtn: 'முடித்து வை',
+      rejectBtn: 'நிராகரி',
       mergeBtn: 'நகலை இணை',
       reviewAiBtn: 'AI மதிப்பெண் ஆய்வு',
       peopleAffected: 'பாதிக்கப்பட்டவர்கள்',
@@ -806,6 +810,7 @@ export const TRANSLATIONS: Record<SupportedLanguage, LanguageBundle> = {
       verifyBtn: 'Verificar Caso',
       escalateBtn: 'Escalar Urgente',
       closeBtn: 'Cerrar Caso',
+      rejectBtn: 'Rechazar Caso',
       mergeBtn: 'Fusionar Duplicado',
       reviewAiBtn: 'Revisar IA',
       peopleAffected: 'personas afectadas',
@@ -1006,6 +1011,7 @@ export const TRANSLATIONS: Record<SupportedLanguage, LanguageBundle> = {
       verifyBtn: 'Vérifier',
       escalateBtn: 'Escalader',
       closeBtn: 'Clôturer',
+      rejectBtn: 'Rejeter',
       mergeBtn: 'Fusionner Doublon',
       reviewAiBtn: 'Réviser Score IA',
       peopleAffected: 'personnes touchées',
@@ -1206,6 +1212,7 @@ export const TRANSLATIONS: Record<SupportedLanguage, LanguageBundle> = {
       verifyBtn: 'تأكيد الطلب',
       escalateBtn: 'تصعيد عاجل',
       closeBtn: 'إغلاق الحالة',
+      rejectBtn: 'رفض الحالة',
       mergeBtn: 'دمج المكرر',
       reviewAiBtn: 'مراجعة تقييم الذكاء الاصطناعي',
       peopleAffected: 'أشخاص متضررون',

@@ -47,6 +47,7 @@ export const SheltersTab: React.FC<{
     membersCount: number;
     requiresAccessibility: boolean;
     assistanceRequestId?: string | null;
+    citizenUserId?: string | null;
   }) => Promise<void>;
   onCheckoutShelterAllocation?: (allocationId: string, householdName: string) => Promise<void>;
   onCreateShelter: (payload: any) => Promise<void>;
@@ -314,8 +315,7 @@ export const SheltersTab: React.FC<{
                   whileHover={{ y: -2 }}
                   key={s.id}
                   onClick={() => setShelterId(s.id)}
-                  className={`cursor-pointer p-5 rounded-3xl border space-y-3.5 transition-all ${
-                    isSelected
+                    className={`cursor-pointer p-5 rounded-3xl border space-y-3.5 transition-all ${isSelected
                       ? 'bg-indigo-500/10 border-2 border-indigo-500 shadow-glow'
                       : 'bg-white/[0.025] border-white/[0.08] hover:border-white/20'
                   }`}
@@ -335,8 +335,7 @@ export const SheltersTab: React.FC<{
                       initial={{ width: 0 }}
                       animate={{ width: `${Math.min(100, pct)}%` }}
                       transition={{ duration: 0.6, ease: 'easeOut' }}
-                      className={`h-full rounded-full crisync-shimmer-bar ${
-                        isNearFull
+                        className={`h-full rounded-full crisync-shimmer-bar ${isNearFull
                           ? 'bg-gradient-to-r from-rose-500 to-orange-500'
                           : 'bg-gradient-to-r from-emerald-500 to-teal-400'
                       }`}
@@ -356,8 +355,7 @@ export const SheltersTab: React.FC<{
                   </div>
                   <div className="flex flex-wrap items-center gap-2 pt-2.5 border-t border-white/[0.07] text-xs">
                     <span
-                      className={`px-2.5 py-0.5 rounded-full font-semibold border ${
-                        s.isWheelchairAccessible
+                        className={`px-2.5 py-0.5 rounded-full font-semibold border ${s.isWheelchairAccessible
                           ? 'bg-indigo-500/15 text-indigo-300 border-indigo-500/30'
                           : 'bg-white/5 text-zinc-500 border-white/10'
                       }`}
@@ -365,8 +363,7 @@ export const SheltersTab: React.FC<{
                       Wheelchair Ramp: <strong>{s.isWheelchairAccessible ? 'Yes' : 'No'}</strong>
                     </span>
                     <span
-                      className={`px-2.5 py-0.5 rounded-full font-semibold border ${
-                        s.hasMedicalFacility
+                        className={`px-2.5 py-0.5 rounded-full font-semibold border ${s.hasMedicalFacility
                           ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
                           : 'bg-white/5 text-zinc-500 border-white/10'
                       }`}
@@ -719,9 +716,10 @@ export const VolunteersTab: React.FC<{
   currentUserId?: string;
   volunteers: any[];
   assignments: any[];
+  requests?: any[];
   volunteerMatches: any[];
   onMatchVolunteers: (skill: string) => Promise<void>;
-  onAssignVolunteer: (volunteerId: string, taskTitle: string, skill: string) => Promise<void>;
+  onAssignVolunteer: (volunteerId: string, taskTitle: string, skill: string, assistanceRequestId?: string | null) => Promise<void>;
   onVerifyActivateVolunteer?: (volunteerId: string, fullName: string) => Promise<void>;
   onUpdateMyAvailability?: (payload: { isAvailable: boolean; availabilitySchedule: string }) => Promise<void>;
   onRespondAssignment?: (assignmentId: string, decision: string, notes?: string) => Promise<void>;
@@ -740,6 +738,7 @@ export const VolunteersTab: React.FC<{
   currentUserId,
   volunteers,
   assignments,
+  requests = [],
   volunteerMatches,
   onMatchVolunteers,
   onAssignVolunteer,
@@ -763,6 +762,7 @@ export const VolunteersTab: React.FC<{
   const pendingVolunteers = volunteers.filter((v: any) => !v.isVerified);
   const [skillFilter, setSkillFilter] = useState('Medicine');
   const [taskTitle, setTaskTitle] = useState('');
+    const [selectedCaseId, setSelectedCaseId] = useState<string>('');
   const [volFullName, setVolFullName] = useState('');
   const [volSkillsCsv, setVolSkillsCsv] = useState('');
   const [volLanguagesCsv, setVolLanguagesCsv] = useState('');
@@ -832,8 +832,7 @@ export const VolunteersTab: React.FC<{
                   setSkillFilter(sk.id);
                   onMatchVolunteers(sk.id);
                 }}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold border transition ${
-                  skillFilter === sk.id
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold border transition ${skillFilter === sk.id
                     ? 'bg-indigo-600 border-indigo-500 text-white keep-white shadow-sm'
                     : 'bg-white/[0.03] border-white/10 text-zinc-300 hover:text-white'
                 }`}
@@ -880,6 +879,24 @@ export const VolunteersTab: React.FC<{
             Example: Deliver emergency medical kits to Sector B clinic
           </p>
         </div>
+
+          <div>
+            <label className="block text-xs font-bold text-zinc-300 mb-1">
+              3. Link to Specific Emergency Assistance Case (Optional):
+            </label>
+            <select
+              value={selectedCaseId}
+              onChange={(e) => setSelectedCaseId(e.target.value)}
+              className="rsvp-input py-2 text-xs"
+            >
+              <option value="">General Field Mission (Unlinked to specific case)</option>
+              {requests.map((req: any) => (
+                <option key={req.id} value={req.id}>
+                  Case {req.trackingCode || req.id.slice(0, 8)}: {req.title} ({req.district || 'Zone'})
+                </option>
+              ))}
+            </select>
+          </div>
 
         <div className="space-y-3">
           {pendingVolunteers.length > 0 && (
@@ -990,7 +1007,8 @@ export const VolunteersTab: React.FC<{
                   onAssignVolunteer(
                     v.volunteerProfileId || v.id,
                     taskTitle.trim() || `Emergency ${skillFilter} Field Deployment`,
-                    skillFilter
+                      skillFilter,
+                      selectedCaseId || null
                   )
                 }
                 className="keep-white px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold shrink-0 flex items-center gap-1.5 shadow-sm"
@@ -1476,8 +1494,7 @@ export const DonationsTab: React.FC<{
                   whileHover={{ y: -2 }}
                   key={c.id}
                   onClick={() => setSelectedCampaignId(c.id)}
-                  className={`cursor-pointer overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-500/15 via-purple-500/10 to-transparent border text-xs transition-all group ${
-                    activeCampaignId === c.id
+                    className={`cursor-pointer overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-500/15 via-purple-500/10 to-transparent border text-xs transition-all group ${activeCampaignId === c.id
                       ? 'border-indigo-400 ring-2 ring-indigo-500/40'
                       : 'border-indigo-500/30'
                   }`}
@@ -1565,8 +1582,7 @@ export const DonationsTab: React.FC<{
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.24, delay: Math.min(idx * 0.05, 0.25) }}
                   key={d.id}
-                  className={`p-4 rounded-2xl border text-xs transition-all ${
-                    isFlagged
+                    className={`p-4 rounded-2xl border text-xs transition-all ${isFlagged
                       ? 'crisync-critical-pulse bg-rose-500/10 border-rose-500/40'
                       : 'bg-white/[0.025] border-white/[0.08]'
                   }`}
@@ -1668,8 +1684,7 @@ export const DonationsTab: React.FC<{
                 <button
                   type="button"
                   onClick={() => setDonationType('Monetary')}
-                  className={`py-2 px-3 rounded-xl font-extrabold transition ${
-                    donationType === 'Monetary'
+                    className={`py-2 px-3 rounded-xl font-extrabold transition ${donationType === 'Monetary'
                       ? 'bg-emerald-600 text-white keep-white shadow-sm'
                       : 'text-zinc-300 hover:text-white'
                   }`}
@@ -1679,8 +1694,7 @@ export const DonationsTab: React.FC<{
                 <button
                   type="button"
                   onClick={() => setDonationType('Material')}
-                  className={`py-2 px-3 rounded-xl font-extrabold transition ${
-                    donationType === 'Material'
+                    className={`py-2 px-3 rounded-xl font-extrabold transition ${donationType === 'Material'
                       ? 'bg-amber-600 text-white keep-white shadow-sm'
                       : 'text-zinc-300 hover:text-white'
                   }`}
@@ -1715,8 +1729,7 @@ export const DonationsTab: React.FC<{
                         key={amt}
                         type="button"
                         onClick={() => setAmountUsd(amt)}
-                        className={`py-2 rounded-xl font-mono font-bold border transition ${
-                          amountUsd === amt
+                          className={`py-2 rounded-xl font-mono font-bold border transition ${amountUsd === amt
                             ? 'bg-emerald-600 border-emerald-500 text-white keep-white'
                             : 'bg-white/[0.03] border-white/10 text-zinc-300 hover:text-white'
                         }`}
@@ -2259,8 +2272,7 @@ const SystemAdminControlCenter: React.FC<{
               setAdminTab(tab.id);
               setConfirmDeleteKey(null);
             }}
-            className={`px-3.5 py-2 rounded-xl text-xs font-extrabold transition ${
-              adminTab === tab.id
+              className={`px-3.5 py-2 rounded-xl text-xs font-extrabold transition ${adminTab === tab.id
                 ? 'bg-indigo-600 text-white keep-white shadow-sm'
                 : 'text-zinc-400 hover:text-white hover:bg-white/[0.05]'
             }`}
@@ -2509,8 +2521,7 @@ const SystemAdminControlCenter: React.FC<{
                           {u.role}
                         </span>
                         <span
-                          className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${
-                            u.isActive
+                            className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${u.isActive
                               ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-300'
                               : 'bg-rose-500/15 border-rose-500/30 text-rose-300'
                           }`}
@@ -2718,8 +2729,7 @@ const SystemAdminControlCenter: React.FC<{
                     <div className="flex flex-wrap items-center gap-2">
                       <p className="text-sm font-extrabold text-white">{p.name}</p>
                       <span
-                        className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${
-                          p.partnershipStatus === 'Approved'
+                          className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${p.partnershipStatus === 'Approved'
                             ? 'bg-emerald-500/15 border-emerald-500/35 text-emerald-300'
                             : p.partnershipStatus === 'Rejected'
                               ? 'bg-rose-500/15 border-rose-500/35 text-rose-300'
@@ -3641,7 +3651,7 @@ export const MapAndResilienceTab: React.FC<{
   onAdminDeleteCampaign?: (id: string, label: string) => Promise<void>;
   activeLanguage?: SupportedLanguage;
   onChangeLanguage?: (lang: SupportedLanguage) => void;
-  onCalculateRoute: () => Promise<void>;
+  onCalculateRoute: (originLat?: number, originLon?: number, destLat?: number, destLon?: number) => Promise<void>;
   onToggleResilience: (service: string, currentValue: boolean) => Promise<void>;
   onRetryFailedNotifications?: () => Promise<void>;
   onSendIdempotentNotification: (
@@ -3699,6 +3709,8 @@ export const MapAndResilienceTab: React.FC<{
 }) => {
   const [idempKey, setIdempKey] = useState('');
   const [smsLang, setSmsLang] = useState<SupportedLanguage>(activeLanguage || 'si');
+    const [routeOriginWarehouseId, setRouteOriginWarehouseId] = useState<string>('');
+    const [routeDestRequestId, setRouteDestRequestId] = useState<string>('');
 
   const smsBundle = TRANSLATIONS[smsLang]?.smsNotification || TRANSLATIONS.en.smsNotification;
 
@@ -3746,8 +3758,7 @@ export const MapAndResilienceTab: React.FC<{
       )}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         <div
-          className={`${
-            isSystemAdminOrCoord ? 'lg:col-span-8' : 'lg:col-span-12'
+            className={`${isSystemAdminOrCoord ? 'lg:col-span-8' : 'lg:col-span-12'
           } bento-glass rounded-3xl p-5 sm:p-6 space-y-4`}
         >
           <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-white/[0.08]">
@@ -3778,16 +3789,54 @@ export const MapAndResilienceTab: React.FC<{
                 </span>
               </div>
             </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <select
+                  aria-label="Route Origin Warehouse"
+                  value={routeOriginWarehouseId}
+                  onChange={(e) => setRouteOriginWarehouseId(e.target.value)}
+                  className="rsvp-input py-1.5 px-2.5 text-xs bg-zinc-900 border-white/15 max-w-xs"
+                >
+                  <option value="">Default Warehouse (Auto)</option>
+                  {resources.map((res: any) => (
+                    <option key={res.id} value={res.id}>
+                      Warehouse: {res.warehouseName || res.itemCategory} ({res.warehouseDistrict || 'Base'})
+                    </option>
+                  ))}
+                </select>
+                <span className="text-zinc-500 text-xs">➔</span>
+                <select
+                  aria-label="Route Destination Case"
+                  value={routeDestRequestId}
+                  onChange={(e) => setRouteDestRequestId(e.target.value)}
+                  className="rsvp-input py-1.5 px-2.5 text-xs bg-zinc-900 border-white/15 max-w-xs truncate"
+                >
+                  <option value="">Default Incident (Auto)</option>
+                  {requests.map((req: any) => (
+                    <option key={req.id} value={req.id}>
+                      Case: {req.trackingCode || req.id.slice(0, 8)} ({req.district || 'Zone'})
+                    </option>
+                  ))}
+                </select>
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.97 }}
-              onClick={onCalculateRoute}
-              className="keep-white px-4 py-2.5 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-extrabold flex items-center gap-2 shadow-sm"
+                  onClick={() => {
+                    const selRes = resources.find((r) => r.id === routeOriginWarehouseId);
+                    const selReq = requests.find((rq) => rq.id === routeDestRequestId);
+                    onCalculateRoute(
+                      selRes?.warehouseLatitude,
+                      selRes?.warehouseLongitude,
+                      selReq?.latitude,
+                      selReq?.longitude
+                    );
+                  }}
+                  className="keep-white px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-extrabold flex items-center gap-2 shadow-sm"
             >
               <Navigation className="w-4 h-4" />
-              <span>Check Delivery Route Distance</span>
+                  <span>Calculate Route</span>
             </motion.button>
           </div>
+            </div>
 
           <AnimatePresence>
             {routeCalc && (
@@ -3834,8 +3883,7 @@ export const MapAndResilienceTab: React.FC<{
                     <div className="flex items-start justify-between gap-2">
                       <p className="font-extrabold text-white leading-snug">{z.zoneName}</p>
                       <span
-                        className={`px-2 py-0.5 rounded-full text-[10px] font-bold border shrink-0 ${
-                          z.coverageStatus === 'CriticalGap'
+                          className={`px-2 py-0.5 rounded-full text-[10px] font-bold border shrink-0 ${z.coverageStatus === 'CriticalGap'
                             ? 'bg-rose-500/20 border-rose-500/40 text-rose-300'
                             : z.coverageStatus === 'Strained'
                             ? 'bg-amber-500/20 border-amber-500/40 text-amber-300'
@@ -3907,15 +3955,13 @@ export const MapAndResilienceTab: React.FC<{
                       <motion.button
                         whileTap={{ scale: 0.96 }}
                         onClick={() => onToggleResilience(svc.name, svc.sim)}
-                        className={`px-3 py-1.5 rounded-xl font-bold flex items-center gap-1.5 border transition ${
-                          svc.sim
+                          className={`px-3 py-1.5 rounded-xl font-bold flex items-center gap-1.5 border transition ${svc.sim
                             ? 'bg-amber-500/20 border-amber-500/50 text-amber-300'
                             : 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300'
                         }`}
                       >
                         <span
-                          className={`w-2 h-2 rounded-full ${
-                            svc.sim ? 'bg-amber-400 animate-ping' : 'bg-emerald-400'
+                            className={`w-2 h-2 rounded-full ${svc.sim ? 'bg-amber-400 animate-ping' : 'bg-emerald-400'
                           }`}
                         />
                         {svc.sim ? 'Backup Mode' : 'Online'}
@@ -3965,8 +4011,7 @@ export const MapAndResilienceTab: React.FC<{
                           onChangeLanguage(l.code);
                         }
                       }}
-                      className={`px-2.5 py-1 rounded-lg text-xs font-bold border transition ${
-                        smsLang === l.code
+                        className={`px-2.5 py-1 rounded-lg text-xs font-bold border transition ${smsLang === l.code
                           ? 'bg-indigo-600 border-indigo-500 text-white keep-white'
                           : 'bg-white/[0.03] border-white/10 text-zinc-300 hover:text-white'
                       }`}

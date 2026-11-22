@@ -261,8 +261,7 @@ function CriSyncBrandIntroOverlay({
       animate={{ opacity: 1 }}
       exit={{ opacity: 0, scale: 1.03 }}
       transition={{ duration: 0.42, ease: 'easeOut' }}
-      className={`fixed inset-0 z-[110] flex flex-col items-center justify-center px-6 overflow-hidden backdrop-blur-2xl ${
-        theme === 'light' ? 'bg-slate-50 text-slate-900' : 'bg-[#07090e] text-zinc-100'
+      className={`fixed inset-0 z-[110] flex flex-col items-center justify-center px-6 overflow-hidden backdrop-blur-2xl ${theme === 'light' ? 'bg-slate-50 text-slate-900' : 'bg-[#07090e] text-zinc-100'
       }`}
     >
       <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_center,rgba(79,70,229,0.24),transparent_60%)]" />
@@ -271,8 +270,7 @@ function CriSyncBrandIntroOverlay({
       <button
         type="button"
         onClick={onSkip}
-        className={`fixed top-5 right-5 z-20 px-3.5 py-2 rounded-xl text-xs font-bold border transition ${
-          theme === 'light'
+        className={`fixed top-5 right-5 z-20 px-3.5 py-2 rounded-xl text-xs font-bold border transition ${theme === 'light'
             ? 'bg-white/90 hover:bg-white border-slate-200 text-slate-700 shadow-sm'
             : 'bg-white/[0.06] hover:bg-white/[0.12] border-white/15 text-zinc-300'
         }`}
@@ -306,8 +304,7 @@ function CriSyncBrandIntroOverlay({
                 : { scale: 1, opacity: 1, rotate: 0 }
             }
             transition={{ type: 'spring', stiffness: 220, damping: 18 }}
-            className={`w-24 h-24 sm:w-28 sm:h-28 rounded-[26px] object-cover crisync-logo-frame ${
-              isFused ? 'crisync-fusion-glow' : ''
+            className={`w-24 h-24 sm:w-28 sm:h-28 rounded-[26px] object-cover crisync-logo-frame ${isFused ? 'crisync-fusion-glow' : ''
             }`}
           />
         </div>
@@ -365,8 +362,7 @@ function CriSyncBrandIntroOverlay({
                         maxWidth: { duration: 0.48, delay: 0.1, ease: [0.22, 1, 0.36, 1] as const }
                       }
                 }
-                className={`crisync-fragment-sis inline-block align-baseline ${
-                  phase === 'enter' ? 'overflow-visible' : 'overflow-hidden'
+                className={`crisync-fragment-sis inline-block align-baseline ${phase === 'enter' ? 'overflow-visible' : 'overflow-hidden'
                 }`}
               >
                 sis
@@ -510,8 +506,7 @@ function CrisyncLaunchOverlay({
       animate={{ opacity: 1 }}
       exit={{ opacity: 0, scale: 1.03 }}
       transition={{ duration: 0.32, ease: 'easeOut' }}
-      className={`fixed inset-0 z-[100] flex flex-col items-center justify-center px-6 overflow-hidden backdrop-blur-2xl ${
-        theme === 'light' ? 'bg-slate-50/95 text-slate-900' : 'bg-[#07090e]/98 text-zinc-100'
+      className={`fixed inset-0 z-[100] flex flex-col items-center justify-center px-6 overflow-hidden backdrop-blur-2xl ${theme === 'light' ? 'bg-slate-50/95 text-slate-900' : 'bg-[#07090e]/98 text-zinc-100'
       }`}
     >
       <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_center,rgba(79,70,229,0.22),transparent_62%)]" />
@@ -614,14 +609,35 @@ export default function App() {
     const saved = localStorage.getItem('aether_theme');
     return saved === 'dark' ? 'dark' : 'light';
   });
-  const [showBrandIntro, setShowBrandIntro] = useState(true);
+  const [showBrandIntro, setShowBrandIntro] = useState<boolean>(() => {
+    try {
+      if (localStorage.getItem('crisync_auth_user')) return false;
+      return !sessionStorage.getItem('crisync_intro_seen');
+    } catch {
+      return false;
+    }
+  });
   const [introPhase, setIntroPhase] = useState<IntroPhase>('enter');
   const [introRunId, setIntroRunId] = useState(0);
-  const [activeTab, setActiveTab] = useState<TabKey>('dashboard');
+  const [activeTab, setActiveTab] = useState<TabKey>(() => {
+    try {
+      const savedTab = localStorage.getItem('crisync_active_tab') as TabKey;
+      return savedTab || 'dashboard';
+    } catch {
+      return 'dashboard';
+    }
+  });
   const [mobileNavDrawerOpen, setMobileNavDrawerOpen] = useState(false);
   const [languageMenuOpen, setLanguageMenuOpen] = useState(false);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
-  const [authUser, setAuthUser] = useState<any | null>(null);
+  const [authUser, setAuthUser] = useState<any | null>(() => {
+    try {
+      const saved = localStorage.getItem('crisync_auth_user');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [profileFullName, setProfileFullName] = useState('');
   const [profilePhone, setProfilePhone] = useState('');
@@ -698,21 +714,26 @@ export default function App() {
   const [coverageReport, setCoverageReport] = useState<any | null>(null);
   const [feedbackAnalytics, setFeedbackAnalytics] = useState<any | null>(null);
   const [sitRepReport, setSitRepReport] = useState<any | null>(null);
+  const [lastSyncedAt, setLastSyncedAt] = useState<Date | null>(null);
 
   useEffect(() => {
-    setShowBrandIntro(true);
+    if (!showBrandIntro) return;
     setIntroPhase('enter');
-    const fuseTimer = setTimeout(() => setIntroPhase('fuse'), 1550);
-    const lockTimer = setTimeout(() => setIntroPhase('locked'), 2400);
-    const hideTimer = setTimeout(() => setShowBrandIntro(false), 3850);
+    try {
+      sessionStorage.setItem('crisync_intro_seen', 'true');
+    } catch { }
+    const fuseTimer = setTimeout(() => setIntroPhase('fuse'), 500);
+    const lockTimer = setTimeout(() => setIntroPhase('locked'), 1000);
+    const hideTimer = setTimeout(() => setShowBrandIntro(false), 1600);
     return () => {
       clearTimeout(fuseTimer);
       clearTimeout(lockTimer);
       clearTimeout(hideTimer);
     };
-  }, [introRunId]);
+  }, [introRunId, showBrandIntro]);
 
   const triggerBrandIntro = () => {
+    setShowBrandIntro(true);
     setIntroRunId((n) => n + 1);
   };
 
@@ -722,6 +743,29 @@ export default function App() {
     root.classList.add(theme);
     localStorage.setItem('aether_theme', theme);
   }, [theme]);
+
+  // Sync authUser to localStorage (P0-2 Fix)
+  useEffect(() => {
+    if (authUser) {
+      try {
+        localStorage.setItem('crisync_auth_user', JSON.stringify(authUser));
+      } catch { }
+    } else {
+      try {
+        localStorage.removeItem('crisync_auth_user');
+        localStorage.removeItem('crisync_active_tab');
+      } catch { }
+    }
+  }, [authUser]);
+
+  // Sync activeTab to localStorage (P0-2 Fix)
+  useEffect(() => {
+    if (activeTab && authUser) {
+      try {
+        localStorage.setItem('crisync_active_tab', activeTab);
+      } catch { }
+    }
+  }, [activeTab, authUser]);
 
   useEffect(() => {
     document.body.style.overflow =
@@ -770,6 +814,10 @@ export default function App() {
   useEffect(() => {
     const onUnauthorized = () => {
       setAuthUser(null);
+      try {
+        localStorage.removeItem('crisync_auth_user');
+        localStorage.removeItem('crisync_active_tab');
+      } catch { }
       setAdminUsers([]);
       setAdminPartnerships([]);
       setRolePermissions([]);
@@ -797,7 +845,42 @@ export default function App() {
         setCrises(publicCrises);
       }
     });
+
+    // Session restore on page refresh (P0-2 Fix)
+    if (authUser?.token) {
+      loadAllData(authUser.token, undefined, authUser.role).catch((err: any) => {
+        if (err?.message?.includes('401') || err?.message?.toLowerCase().includes('unauthorized')) {
+          handleLogout();
+        }
+      });
+    }
   }, []);
+
+  // Background Auto-Refresh / Polling (P1-2 Fix)
+  useEffect(() => {
+    if (!authUser?.token) return;
+
+    // Background polling every 30 seconds
+    const interval = setInterval(() => {
+      if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+        loadAllData(authUser.token, undefined, authUser.role);
+      }
+    }, 30000);
+
+    // Refresh immediately when user returns to tab
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        loadAllData(authUser.token, undefined, authUser.role);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [authUser?.token, authUser?.role]);
 
   const loadAllData = async (tokenOverride?: string | null, langOverride?: string, roleOverride?: string) => {
     const activeToken = tokenOverride !== undefined ? tokenOverride : authUser?.token;
@@ -841,17 +924,17 @@ export default function App() {
         sitRepRes
       ] = await Promise.all([
         apiFetch<any[]>('/organisations', {}, activeToken).catch(() => []),
-        apiFetch<any>('/admin/metrics', {}, activeToken),
-        apiFetch<any[]>('/crises', {}, activeToken),
-        apiFetch<any[]>('/crises/alerts', {}, activeToken),
-        apiFetch<any[]>('/requests', {}, activeToken),
-        apiFetch<any[]>('/ai-governance/recommendations', {}, activeToken),
-        apiFetch<any[]>('/logistics/resources', {}, activeToken),
-        apiFetch<any>('/shelters', {}, activeToken),
-        apiFetch<any>('/volunteers', {}, activeToken),
-        apiFetch<any>('/donations', {}, activeToken),
+        apiFetch<any>('/admin/metrics', {}, activeToken).catch(() => null),
+        apiFetch<any[]>('/crises', {}, activeToken).catch(() => []),
+        apiFetch<any[]>('/crises/alerts', {}, activeToken).catch(() => []),
+        apiFetch<any[]>('/requests', {}, activeToken).catch(() => []),
+        apiFetch<any[]>('/ai-governance/recommendations', {}, activeToken).catch(() => []),
+        apiFetch<any[]>('/logistics/resources', {}, activeToken).catch(() => []),
+        apiFetch<any>('/shelters', {}, activeToken).catch(() => ({ shelters: [], allocations: [] })),
+        apiFetch<any>('/volunteers', {}, activeToken).catch(() => ({ volunteers: [], assignments: [] })),
+        apiFetch<any>('/donations', {}, activeToken).catch(() => ({ campaigns: [], donations: [] })),
         canViewAuditLogs ? apiFetch<any[]>('/admin/audit-logs', {}, activeToken).catch(() => []) : Promise.resolve([]),
-        apiFetch<any>('/admin/resilience', {}, activeToken),
+        apiFetch<any>('/admin/resilience', {}, activeToken).catch(() => null),
         apiFetch<any>('/users/households/me', {}, activeToken).catch(() => null),
         isAdminTier ? apiFetch<any[]>('/admin/users', {}, activeToken).catch(() => []) : Promise.resolve([]),
         isAdminTier ? apiFetch<any[]>('/admin/partnerships', {}, activeToken).catch(() => []) : Promise.resolve([]),
@@ -914,6 +997,7 @@ export default function App() {
         setDemandForecast([]);
         setBriefing(null);
       }
+      setLastSyncedAt(new Date());
     } catch (err: any) {
       notify('error', err.message || 'Failed to load data.');
     } finally {
@@ -929,13 +1013,10 @@ export default function App() {
       setLoginStageIndex(0);
       setLoginTransitionUser(res);
 
-      stageTimerOne = setTimeout(() => setLoginStageIndex(1), 700);
-      stageTimerTwo = setTimeout(() => setLoginStageIndex(2), 1450);
+      stageTimerOne = setTimeout(() => setLoginStageIndex(1), 350);
+      stageTimerTwo = setTimeout(() => setLoginStageIndex(2), 700);
 
-      await Promise.all([
-        loadAllData(res.token, undefined, res.role),
-        new Promise((resolve) => setTimeout(resolve, 2200))
-      ]);
+      await loadAllData(res.token, undefined, res.role);
 
       const roleTabs = getRoleMenuItems(res.role);
       setActiveTab(roleTabs[0].id);
@@ -1081,10 +1162,7 @@ export default function App() {
         ).catch(() => {});
       }
 
-      await Promise.all([
-        loadAllData(enrichedRes.token, chosenLang, enrichedRes.role),
-        new Promise((resolve) => setTimeout(resolve, 2200))
-      ]);
+      await loadAllData(enrichedRes.token, chosenLang, enrichedRes.role);
 
       const roleTabs = getRoleMenuItems(enrichedRes.role);
       setActiveTab(roleTabs[0].id);
@@ -1355,6 +1433,10 @@ export default function App() {
 
   const handleLogout = () => {
     setAuthUser(null);
+    try {
+      localStorage.removeItem('crisync_auth_user');
+      localStorage.removeItem('crisync_active_tab');
+    } catch { }
     setAdminUsers([]);
     setAdminPartnerships([]);
     setRolePermissions([]);
@@ -1962,22 +2044,19 @@ export default function App() {
         <motion.div
           animate={{ scale: [1, 1.14, 1], x: [0, 30, 0], y: [0, -20, 0] }}
           transition={{ duration: 14, repeat: Infinity, ease: 'easeInOut' }}
-          className={`absolute -top-28 -left-24 w-[480px] h-[480px] rounded-full blur-3xl ${
-            theme === 'light' ? 'bg-indigo-400/25' : 'bg-indigo-600/15'
+              className={`absolute -top-28 -left-24 w-[480px] h-[480px] rounded-full blur-3xl ${theme === 'light' ? 'bg-indigo-400/25' : 'bg-indigo-600/15'
           }`}
         />
         <motion.div
           animate={{ scale: [1.08, 0.94, 1.08], x: [0, -35, 0], y: [0, 28, 0] }}
           transition={{ duration: 16, repeat: Infinity, ease: 'easeInOut' }}
-          className={`absolute -bottom-32 right-[-90px] w-[520px] h-[520px] rounded-full blur-3xl ${
-            theme === 'light' ? 'bg-cyan-400/25' : 'bg-cyan-500/12'
+              className={`absolute -bottom-32 right-[-90px] w-[520px] h-[520px] rounded-full blur-3xl ${theme === 'light' ? 'bg-cyan-400/25' : 'bg-cyan-500/12'
           }`}
         />
         <motion.div
           animate={{ scale: [0.95, 1.12, 0.95], x: [0, 22, 0], y: [0, 22, 0] }}
           transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut' }}
-          className={`absolute top-1/2 left-1/3 w-[380px] h-[380px] rounded-full blur-3xl ${
-            theme === 'light' ? 'bg-rose-300/20' : 'bg-rose-500/8'
+              className={`absolute top-1/2 left-1/3 w-[380px] h-[380px] rounded-full blur-3xl ${theme === 'light' ? 'bg-rose-300/20' : 'bg-rose-500/8'
           }`}
         />
       </div>
@@ -2014,15 +2093,13 @@ export default function App() {
                     <span className="crisync-wordmark-accent">Sync</span>
                   </span>
                   <span
-                    className={`hidden 2xl:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
-                      crises.length > 0
+                        className={`hidden 2xl:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${crises.length > 0
                         ? 'bg-rose-500/15 border-rose-500/30 text-rose-300'
                         : 'bg-emerald-500/15 border-emerald-500/30 text-emerald-300'
                     }`}
                   >
                     <span
-                      className={`w-1.5 h-1.5 rounded-full animate-ping ${
-                        crises.length > 0 ? 'bg-rose-400' : 'bg-emerald-400'
+                          className={`w-1.5 h-1.5 rounded-full animate-ping ${crises.length > 0 ? 'bg-rose-400' : 'bg-emerald-400'
                       }`}
                     />
                     {crises[0]?.title || 'No Active Crisis Declared'}
@@ -2043,8 +2120,7 @@ export default function App() {
                   key={item.id}
                   type="button"
                   onClick={() => setActiveTab(item.id)}
-                  className={`relative shrink-0 px-3 sm:px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-colors ${
-                    isActive
+                      className={`relative shrink-0 px-3 sm:px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-colors ${isActive
                       ? 'text-white keep-white'
                       : 'text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.04]'
                   }`}
@@ -2217,8 +2293,7 @@ export default function App() {
                     key={langOpt.code}
                     type="button"
                     onClick={() => handleLanguageBriefingChange(langOpt.code)}
-                    className={`px-2 py-0.5 rounded-lg text-[11px] font-bold transition ${
-                      briefingLang === langOpt.code
+                        className={`px-2 py-0.5 rounded-lg text-[11px] font-bold transition ${briefingLang === langOpt.code
                         ? 'bg-indigo-600 text-white keep-white'
                         : 'text-zinc-400 hover:text-white'
                     }`}
@@ -2281,8 +2356,7 @@ export default function App() {
                         handleLanguageBriefingChange(langOpt.code);
                         setLanguageMenuOpen(false);
                       }}
-                      className={`w-full text-left px-4 py-3 rounded-2xl border flex items-center justify-between transition ${
-                        isActive
+                          className={`w-full text-left px-4 py-3 rounded-2xl border flex items-center justify-between transition ${isActive
                           ? 'bg-indigo-600/20 border-2 border-indigo-500 text-white'
                           : 'bg-white/[0.03] hover:bg-white/[0.08] border-white/[0.08] text-zinc-300'
                       }`}
@@ -2361,15 +2435,13 @@ export default function App() {
                             setActiveTab(item.id);
                             setMobileNavDrawerOpen(false);
                           }}
-                          className={`w-full text-left p-3.5 rounded-2xl border flex items-center gap-3 transition ${
-                            isActive
+                              className={`w-full text-left p-3.5 rounded-2xl border flex items-center gap-3 transition ${isActive
                               ? 'bg-indigo-600 text-white border-indigo-400 keep-white shadow-md'
                               : 'bg-white/[0.03] border-white/10 text-zinc-300 hover:bg-white/[0.07]'
                           }`}
                         >
                           <span
-                            className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
-                              isActive ? 'bg-indigo-700/60 text-white keep-white' : 'bg-black/25'
+                                className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${isActive ? 'bg-indigo-700/60 text-white keep-white' : 'bg-black/25'
                             }`}
                           >
                             {getModuleIcon(item.id, 'w-4 h-4')}
@@ -2397,8 +2469,7 @@ export default function App() {
                         key={langOpt.code}
                         type="button"
                         onClick={() => handleLanguageBriefingChange(langOpt.code)}
-                        className={`py-2 px-2 rounded-xl text-xs font-bold border transition truncate ${
-                          briefingLang === langOpt.code
+                            className={`py-2 px-2 rounded-xl text-xs font-bold border transition truncate ${briefingLang === langOpt.code
                             ? 'bg-indigo-600 border-indigo-400 text-white keep-white shadow-sm'
                             : 'bg-white/[0.03] border-white/10 text-zinc-300 hover:bg-white/[0.07]'
                         }`}
@@ -2515,17 +2586,8 @@ export default function App() {
               <form
                 key="my-profile-settings-form"
                 onSubmit={handleSaveProfile}
-                autoComplete="off"
                 className="flex-1 min-h-0 overflow-y-auto sidebar-scroll pr-1 space-y-4 text-xs"
               >
-                <div
-                  aria-hidden="true"
-                  className="pointer-events-none fixed -left-[9999px] top-0 h-px w-px opacity-0 overflow-hidden"
-                >
-                  <input type="text" name="prevent_profile_autofill_user" autoComplete="username" tabIndex={-1} defaultValue="" />
-                  <input type="password" name="prevent_profile_autofill_pass" autoComplete="current-password" tabIndex={-1} defaultValue="" />
-                </div>
-
                 <div className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/[0.08] space-y-3">
                   <div className="flex flex-wrap items-center gap-4">
                     {profilePhotoUrl ? (
@@ -2702,8 +2764,7 @@ export default function App() {
                   </p>
 
                   <div
-                    className={`p-2.5 rounded-xl border text-xs flex items-center justify-between gap-2 ${
-                      currentDeviceBound
+                        className={`p-2.5 rounded-xl border text-xs flex items-center justify-between gap-2 ${currentDeviceBound
                         ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
                         : 'bg-amber-500/10 border-amber-500/30 text-amber-300'
                     }`}
@@ -2752,8 +2813,7 @@ export default function App() {
                     <button
                       type="button"
                       onClick={() => setQuickUnlockMode('Pattern')}
-                      className={`py-1.5 px-2.5 rounded-lg text-xs font-extrabold transition ${
-                        quickUnlockMode === 'Pattern'
+                          className={`py-1.5 px-2.5 rounded-lg text-xs font-extrabold transition ${quickUnlockMode === 'Pattern'
                           ? 'bg-indigo-600 text-white keep-white'
                           : 'text-zinc-300 hover:text-white'
                       }`}
@@ -2763,8 +2823,7 @@ export default function App() {
                     <button
                       type="button"
                       onClick={() => setQuickUnlockMode('Pin')}
-                      className={`py-1.5 px-2.5 rounded-lg text-xs font-extrabold transition ${
-                        quickUnlockMode === 'Pin'
+                          className={`py-1.5 px-2.5 rounded-lg text-xs font-extrabold transition ${quickUnlockMode === 'Pin'
                           ? 'bg-indigo-600 text-white keep-white'
                           : 'text-zinc-300 hover:text-white'
                       }`}
@@ -2914,8 +2973,7 @@ export default function App() {
               animate={{ opacity: 1, x: 0, scale: 1 }}
               exit={{ opacity: 0, x: 24, scale: 0.96 }}
               transition={{ duration: 0.22 }}
-              className={`keep-white fixed top-20 right-4 sm:right-6 z-[90] w-[calc(100%-2rem)] sm:max-w-md rounded-2xl border text-xs sm:text-sm font-semibold backdrop-blur-2xl shadow-2xl overflow-hidden ${
-                statusBanner.type === 'error'
+                  className={`keep-white fixed top-20 right-4 sm:right-6 z-[90] w-[calc(100%-2rem)] sm:max-w-md rounded-2xl border text-xs sm:text-sm font-semibold backdrop-blur-2xl shadow-2xl overflow-hidden ${statusBanner.type === 'error'
                   ? 'bg-rose-950/90 border-rose-500/45 text-rose-100'
                   : statusBanner.type === 'info'
                   ? 'bg-amber-950/90 border-amber-500/45 text-amber-100'
@@ -2945,8 +3003,7 @@ export default function App() {
                 initial={{ width: '100%' }}
                 animate={{ width: '0%' }}
                 transition={{ duration: 5.5, ease: 'linear' }}
-                className={`h-1 ${
-                  statusBanner.type === 'error'
+                    className={`h-1 ${statusBanner.type === 'error'
                     ? 'bg-rose-400'
                     : statusBanner.type === 'info'
                     ? 'bg-amber-400'
@@ -2984,6 +3041,9 @@ export default function App() {
                 organisations={organisations}
                 feedbackAnalytics={feedbackAnalytics}
                 sitRepReport={sitRepReport}
+                    lastSyncedAt={lastSyncedAt}
+                    onManualRefresh={() => loadAllData()}
+                    isSyncing={loading}
                 onChangeBriefingLanguage={handleLanguageBriefingChange}
                 onMergeDuplicate={handleMergeDuplicate}
                 onUpdateRequestStatus={handleUpdateRequestStatus}
@@ -3094,7 +3154,7 @@ export default function App() {
                           membersCount: payload.membersCount,
                           requiresAccessibility: payload.requiresAccessibility,
                           assistanceRequestId: payload.assistanceRequestId || null,
-                          citizenUserId: authUser.userId
+                              citizenUserId: payload.citizenUserId || (authUser?.role === 'Citizen' ? authUser.userId : null)
                         })
                       },
                       authUser?.token
@@ -3114,6 +3174,7 @@ export default function App() {
                 currentUserId={authUser.userId}
                 volunteers={volunteersData.volunteers || []}
                 assignments={volunteersData.assignments || []}
+                    requests={requests}
                 volunteerMatches={volunteerMatches}
                 onRegisterVolunteer={handleRegisterVolunteer}
                 onVerifyActivateVolunteer={handleVerifyActivateVolunteer}
@@ -3135,7 +3196,7 @@ export default function App() {
                     notify('error', err.message);
                   }
                 }}
-                onAssignVolunteer={async (volunteerProfileId, taskTitle, requiredSkill) => {
+                    onAssignVolunteer={async (volunteerProfileId, taskTitle, requiredSkill, assistanceRequestId) => {
                   try {
                     await apiFetch<any>(
                       '/volunteers/assign',
@@ -3143,7 +3204,7 @@ export default function App() {
                         method: 'POST',
                         body: JSON.stringify({
                           volunteerProfileId,
-                          assistanceRequestId: requests[0]?.id || null,
+                              assistanceRequestId: assistanceRequestId || null,
                           taskTitle,
                           requiredSkill
                         })
@@ -3170,9 +3231,9 @@ export default function App() {
                 onRecordExpenditure={handleRecordExpenditure}
                 onRejectFlaggedDonation={handleRejectFlaggedDonation}
                 onRecordDonation={async (payload) => {
-                  const targetCampaignId = payload.campaignId || donationsData.campaigns?.[0]?.id;
+                      const targetCampaignId = payload.campaignId;
                   if (!targetCampaignId) {
-                    notify('error', 'No active relief campaign found to credit donation.');
+                        notify('error', 'Please select a specific relief campaign to credit your donation.');
                     return;
                   }
                   try {
@@ -3265,12 +3326,12 @@ export default function App() {
                 onAdminDeleteCampaign={handleAdminDeleteCampaign}
                 activeLanguage={briefingLang as SupportedLanguage}
                 onChangeLanguage={handleLanguageBriefingChange}
-                onCalculateRoute={async () => {
+                    onCalculateRoute={async (customOriginLat?: number, customOriginLon?: number, customDestLat?: number, customDestLon?: number) => {
                   try {
-                    const originLat = resources[0]?.warehouseLatitude ?? 6.9271;
-                    const originLon = resources[0]?.warehouseLongitude ?? 79.8612;
-                    const destLat = requests[0]?.latitude ?? crises[0]?.centerLatitude ?? 6.9319;
-                    const destLon = requests[0]?.longitude ?? crises[0]?.centerLongitude ?? 79.8478;
+                        const originLat = customOriginLat ?? resources[0]?.warehouseLatitude ?? 6.9271;
+                        const originLon = customOriginLon ?? resources[0]?.warehouseLongitude ?? 79.8612;
+                        const destLat = customDestLat ?? requests[0]?.latitude ?? crises[0]?.centerLatitude ?? 6.9319;
+                        const destLon = customDestLon ?? requests[0]?.longitude ?? crises[0]?.centerLongitude ?? 79.8478;
                     const route = await apiFetch<any>(
                       `/mapping/route?originLat=${originLat}&originLon=${originLon}&destLat=${destLat}&destLon=${destLon}`,
                       {},
@@ -3341,8 +3402,7 @@ export default function App() {
                 key={item.id}
                 type="button"
                 onClick={() => setActiveTab(item.id)}
-                className={`flex-1 min-w-0 py-1.5 px-1 rounded-xl flex flex-col items-center justify-center gap-1 transition ${
-                  isActive
+                    className={`flex-1 min-w-0 py-1.5 px-1 rounded-xl flex flex-col items-center justify-center gap-1 transition ${isActive
                     ? 'bg-indigo-600 text-white keep-white shadow-sm'
                     : 'text-zinc-400 hover:text-zinc-200'
                 }`}
@@ -3357,8 +3417,7 @@ export default function App() {
           <button
             type="button"
             onClick={() => setMobileNavDrawerOpen(true)}
-            className={`shrink-0 px-3 py-1.5 rounded-xl flex flex-col items-center justify-center gap-1 transition ${
-              mobileNavDrawerOpen
+                className={`shrink-0 px-3 py-1.5 rounded-xl flex flex-col items-center justify-center gap-1 transition ${mobileNavDrawerOpen
                 ? 'bg-indigo-500/20 text-indigo-300'
                 : 'text-zinc-400 hover:text-zinc-200'
             }`}

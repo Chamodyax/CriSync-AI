@@ -34,7 +34,8 @@ import {
   Download,
   FileSpreadsheet,
   Star,
-  Filter
+  Filter,
+  RotateCcw
 } from 'lucide-react';
 import { LANGUAGE_OPTIONS, SupportedLanguage, TRANSLATIONS } from '../i18n';
 import { resolveEvidencePhoto } from '../utils/fieldPhotos';
@@ -100,6 +101,9 @@ interface DashboardTabProps {
   onInviteStaff?: (payload: any) => Promise<any>;
   feedbackAnalytics?: any | null;
   sitRepReport?: any | null;
+  lastSyncedAt?: Date | null;
+  onManualRefresh?: () => Promise<void> | void;
+  isSyncing?: boolean;
 }
 
 export const DashboardTab: React.FC<DashboardTabProps> = ({
@@ -120,8 +124,31 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
   onRegisterCitizenOnBehalf,
   onInviteStaff,
   feedbackAnalytics,
-  sitRepReport
+  sitRepReport,
+  lastSyncedAt,
+  onManualRefresh,
+  isSyncing = false
 }) => {
+  const [secondsAgo, setSecondsAgo] = useState(0);
+
+  useEffect(() => {
+    if (!lastSyncedAt) return;
+    const calc = () => {
+      const diff = Math.floor((Date.now() - new Date(lastSyncedAt).getTime()) / 1000);
+      setSecondsAgo(Math.max(0, diff));
+    };
+    calc();
+    const interval = setInterval(calc, 2000);
+    return () => clearInterval(interval);
+  }, [lastSyncedAt]);
+
+  const lastSyncedText = !lastSyncedAt
+    ? 'just now'
+    : secondsAgo < 5
+      ? 'just now'
+      : secondsAgo < 60
+        ? `${secondsAgo}s ago`
+        : `${Math.floor(secondsAgo / 60)}m ago`;
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<'all' | 'critical' | 'overdue' | 'suspicious' | 'duplicates' | 'verified'>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('ALL');
@@ -176,6 +203,82 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
   const [unlockedFields, setUnlockedFields] = useState<Record<string, boolean>>({});
   const unlockField = (fieldKey: string) => {
     setUnlockedFields((prev) => (prev[fieldKey] ? prev : { ...prev, [fieldKey]: true }));
+  };
+
+  // Destructive action confirmation & Undo state (P0-1 Fix)
+  const [destructiveModal, setDestructiveModal] = useState<{
+    req: any;
+    actionType: 'Rejected' | 'Closed';
+  } | null>(null);
+  const [destructiveReasonCategory, setDestructiveReasonCategory] = useState('Duplicate submission');
+  const [destructiveCustomNote, setDestructiveCustomNote] = useState('');
+  const [isSubmittingDestructive, setIsSubmittingDestructive] = useState(false);
+  const [undoToast, setUndoToast] = useState<{
+    reqId: string;
+    previousStatus: string;
+    caseCode: string;
+    actionType: 'Rejected' | 'Closed';
+  } | null>(null);
+
+  useEffect(() => {
+    if (!undoToast) return;
+    const timer = setTimeout(() => {
+      setUndoToast(null);
+    }, 7000);
+    return () => clearTimeout(timer);
+  }, [undoToast]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && destructiveModal) {
+        setDestructiveModal(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [destructiveModal]);
+
+  const openDestructiveConfirmModal = (req: any, actionType: 'Rejected' | 'Closed') => {
+    setDestructiveModal({ req, actionType });
+    setDestructiveReasonCategory(
+      actionType === 'Rejected'
+        ? 'Duplicate submission'
+        : 'Relief assistance fulfilled on-site'
+    );
+    setDestructiveCustomNote('');
+  };
+
+  const handleConfirmDestructiveAction = async () => {
+    if (!destructiveModal) return;
+    const { req, actionType } = destructiveModal;
+    setIsSubmittingDestructive(true);
+    try {
+      const fullNote = destructiveCustomNote.trim()
+        ? `[${destructiveReasonCategory}] ${destructiveCustomNote.trim()}`
+        : `[${destructiveReasonCategory}] Case ${actionType.toLowerCase()} after coordinator review.`;
+      const prevStatus = req.status || 'PendingTriage';
+      await onUpdateRequestStatus(req.id, actionType, fullNote);
+      setDestructiveModal(null);
+      setUndoToast({
+        reqId: req.id,
+        previousStatus: prevStatus,
+        caseCode: req.trackingCode || (req.id ? req.id.slice(0, 8) : 'Case'),
+        actionType
+      });
+    } finally {
+      setIsSubmittingDestructive(false);
+    }
+  };
+
+  const handleUndoDestructiveAction = async () => {
+    if (!undoToast) return;
+    const { reqId, previousStatus, actionType } = undoToast;
+    setUndoToast(null);
+    await onUpdateRequestStatus(
+      reqId,
+      previousStatus,
+      `Action ${actionType} reversed via Undo by coordinator.`
+    );
   };
   const [alertCrisisId, setAlertCrisisId] = useState(crises[0]?.id || '');
   const [alertTitle, setAlertTitle] = useState('');
@@ -545,8 +648,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                     <button
                       type="button"
                       onClick={() => setCommandTab('alert')}
-                      className={`px-4 py-2 rounded-xl text-xs font-extrabold border transition flex items-center gap-1.5 ${
-                        commandTab === 'alert'
+                          className={`px-4 py-2 rounded-xl text-xs font-extrabold border transition flex items-center gap-1.5 ${commandTab === 'alert'
                           ? 'bg-rose-600 border-rose-500 text-white keep-white shadow-sm'
                           : 'bg-white/[0.03] border-white/10 text-zinc-300 hover:text-white'
                       }`}
@@ -557,8 +659,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                     <button
                       type="button"
                       onClick={() => setCommandTab('crisis')}
-                      className={`px-4 py-2 rounded-xl text-xs font-extrabold border transition flex items-center gap-1.5 ${
-                        commandTab === 'crisis'
+                          className={`px-4 py-2 rounded-xl text-xs font-extrabold border transition flex items-center gap-1.5 ${commandTab === 'crisis'
                           ? 'bg-indigo-600 border-indigo-500 text-white keep-white shadow-sm'
                           : 'bg-white/[0.03] border-white/10 text-zinc-300 hover:text-white'
                       }`}
@@ -570,8 +671,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                       <button
                         type="button"
                         onClick={() => setCommandTab('operational-zone')}
-                        className={`px-4 py-2 rounded-xl text-xs font-extrabold border transition flex items-center gap-1.5 ${
-                          commandTab === 'operational-zone'
+                            className={`px-4 py-2 rounded-xl text-xs font-extrabold border transition flex items-center gap-1.5 ${commandTab === 'operational-zone'
                             ? 'bg-cyan-600 border-cyan-500 text-white keep-white shadow-sm'
                             : 'bg-white/[0.03] border-white/10 text-zinc-300 hover:text-white'
                         }`}
@@ -586,8 +686,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                   <button
                     type="button"
                     onClick={() => setCommandTab('citizen-behalf')}
-                    className={`px-4 py-2 rounded-xl text-xs font-extrabold border transition flex items-center gap-1.5 ${
-                      commandTab === 'citizen-behalf'
+                        className={`px-4 py-2 rounded-xl text-xs font-extrabold border transition flex items-center gap-1.5 ${commandTab === 'citizen-behalf'
                         ? 'bg-sky-600 border-sky-500 text-white keep-white shadow-sm'
                         : 'bg-white/[0.03] border-white/10 text-zinc-300 hover:text-white'
                     }`}
@@ -600,8 +699,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                   <button
                     type="button"
                     onClick={() => setCommandTab('invite-staff')}
-                    className={`px-4 py-2 rounded-xl text-xs font-extrabold border transition flex items-center gap-1.5 ${
-                      commandTab === 'invite-staff'
+                        className={`px-4 py-2 rounded-xl text-xs font-extrabold border transition flex items-center gap-1.5 ${commandTab === 'invite-staff'
                         ? 'bg-amber-600 border-amber-500 text-white keep-white shadow-sm'
                         : 'bg-white/[0.03] border-white/10 text-zinc-300 hover:text-white'
                     }`}
@@ -613,14 +711,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
               </div>
 
               {commandTab === 'citizen-behalf' && canRegisterCitizenProxy ? (
-                <form key="citizen-behalf-form" onSubmit={handleCitizenProxySubmit} className="grid grid-cols-1 md:grid-cols-3 gap-3.5 text-xs" autoComplete="off">
-                  <div
-                    aria-hidden="true"
-                    className="pointer-events-none fixed -left-[9999px] top-0 h-px w-px opacity-0 overflow-hidden"
-                  >
-                    <input type="text" name="prevent_proxy_autofill_user" autoComplete="username" tabIndex={-1} defaultValue="" />
-                    <input type="password" name="prevent_proxy_autofill_pass" autoComplete="current-password" tabIndex={-1} defaultValue="" />
-                  </div>
+                    <form key="citizen-behalf-form" onSubmit={handleCitizenProxySubmit} className="grid grid-cols-1 md:grid-cols-3 gap-3.5 text-xs">
                   <div className="md:col-span-3 p-3 rounded-2xl bg-sky-500/10 border border-sky-500/30 text-sky-200 text-[11px]">
                     <strong className="text-white">Case Manager Proxy Onboarding:</strong> Register an affected Citizen who lacks a phone or internet connection during a disaster, including their household vulnerability profile.
                   </div>
@@ -760,14 +851,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                   </div>
                 </form>
               ) : commandTab === 'invite-staff' && canInviteOperational ? (
-                <form key="invite-staff-form" onSubmit={handleInviteStaffSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-3.5 text-xs" autoComplete="off">
-                  <div
-                    aria-hidden="true"
-                    className="pointer-events-none fixed -left-[9999px] top-0 h-px w-px opacity-0 overflow-hidden"
-                  >
-                    <input type="text" name="prevent_invite_autofill_user" autoComplete="username" tabIndex={-1} defaultValue="" />
-                    <input type="password" name="prevent_invite_autofill_pass" autoComplete="current-password" tabIndex={-1} defaultValue="" />
-                  </div>
+                    <form key="invite-staff-form" onSubmit={handleInviteStaffSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-3.5 text-xs">
                   <div className="md:col-span-3 p-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-[11px]">
                     <strong className="text-white">Invitation Authority:</strong> System Admin and Emergency Coordinator can invite <strong>Case Manager</strong>, <strong>Shelter Admin</strong>, <strong>Resource & Logistics Manager</strong>, and <strong>Volunteer Coordinator</strong>. Note: <strong>Donor / Funding Officer</strong> handles money & financial transactions and can only be invited exclusively by the <strong>Global System Admin</strong>.
                   </div>
@@ -1220,15 +1304,31 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
       )}
 
       <div className="bento-glass rounded-2xl px-4 py-2.5 flex flex-wrap items-center justify-between gap-3 border border-indigo-500/25 text-xs">
-        <div className="flex items-center gap-2.5">
+        <div className="flex flex-wrap items-center gap-2.5">
           <span className="inline-flex items-center gap-1.5 font-extrabold uppercase tracking-wider text-emerald-300">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+            <span className={`w-2 h-2 rounded-full ${isSyncing ? 'bg-amber-400 animate-spin' : 'bg-emerald-400 animate-ping'}`} />
             Live Command Telemetry
           </span>
           <span className="text-zinc-400 hidden sm:inline">•</span>
           <span className="text-zinc-300 font-semibold hidden sm:inline">
-            Real-Time Crisis &amp; Logistics Synchronization
+            Auto-Sync (30s)
           </span>
+          {lastSyncedText && (
+            <span className="px-2 py-0.5 rounded-md bg-white/[0.06] border border-white/10 text-[11px] font-mono text-zinc-300">
+              Synced {lastSyncedText}
+            </span>
+          )}
+          {onManualRefresh && (
+            <button
+              type="button"
+              onClick={onManualRefresh}
+              disabled={isSyncing}
+              title="Click to refresh live crisis data"
+              className="p-1 rounded-lg bg-white/[0.05] hover:bg-white/10 border border-white/10 text-zinc-300 hover:text-white transition disabled:opacity-50"
+            >
+              <RotateCcw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin text-amber-400' : ''}`} />
+            </button>
+          )}
         </div>
         <div className="flex flex-wrap items-center gap-2.5 font-mono text-[11px] font-bold">
           <span className="px-2.5 py-1 rounded-lg bg-indigo-500/15 border border-indigo-500/30 text-indigo-300">
@@ -1337,8 +1437,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                       key={langOption.code}
                       type="button"
                       onClick={() => onChangeBriefingLanguage(langOption.code)}
-                      className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
-                        isSelected
+                      className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${isSelected
                           ? 'bg-indigo-600 text-white keep-white shadow-sm'
                           : 'text-zinc-400 hover:text-white hover:bg-white/5'
                       }`}
@@ -1685,8 +1784,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                   key={tab.id}
                   type="button"
                   onClick={() => setActiveFilter(tab.id as any)}
-                  className={`shrink-0 px-3 py-1.5 rounded-xl text-xs font-bold transition ${
-                    activeFilter === tab.id
+                  className={`shrink-0 px-3 py-1.5 rounded-xl text-xs font-bold transition ${activeFilter === tab.id
                       ? 'bg-indigo-600 text-white keep-white shadow-sm'
                       : 'text-zinc-400 hover:text-white'
                   }`}
@@ -1771,8 +1869,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                 transition={{ duration: 0.22, delay: Math.min(index * 0.04, 0.25) }}
                 whileHover={{ y: -3 }}
                 key={req.id}
-                className={`rounded-3xl p-5 border transition-all flex flex-col justify-between relative overflow-hidden ${
-                  isCritical
+                className={`rounded-3xl p-5 border transition-all flex flex-col justify-between relative overflow-hidden ${isCritical
                     ? 'crisync-critical-pulse bg-gradient-to-br from-rose-500/[0.06] via-white/[0.02] to-transparent border-rose-500/35 hover:border-rose-500/50'
                     : 'bg-white/[0.025] border-white/[0.08] hover:border-white/20'
                 }`}
@@ -1782,8 +1879,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                     <div className="flex items-center gap-3">
                       <div
                         title="AI Priority Score out of 100"
-                        className={`w-13 h-13 px-2.5 py-2 rounded-2xl flex flex-col items-center justify-center font-mono border shrink-0 ${
-                          isCritical
+                        className={`w-13 h-13 px-2.5 py-2 rounded-2xl flex flex-col items-center justify-center font-mono border shrink-0 ${isCritical
                             ? 'bg-rose-500/20 border-rose-500/40 text-rose-300'
                             : 'bg-indigo-500/20 border-indigo-500/40 text-indigo-300'
                         }`}
@@ -1800,15 +1896,13 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                             {req.referenceCode}
                           </span>
                           <span
-                            className={`inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-0.5 rounded-full border ${
-                              isCritical
+                            className={`inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-0.5 rounded-full border ${isCritical
                                 ? 'bg-rose-500/20 text-rose-300 border-rose-500/40'
                                 : 'bg-amber-500/20 text-amber-300 border-amber-500/40'
                             }`}
                           >
                             <span
-                              className={`w-1.5 h-1.5 rounded-full ${
-                                isCritical ? 'bg-rose-400 animate-ping' : 'bg-amber-400'
+                              className={`w-1.5 h-1.5 rounded-full ${isCritical ? 'bg-rose-400 animate-ping' : 'bg-amber-400'
                               }`}
                             />
                             {t.citizen.urgencies[req.finalApprovedUrgency]?.label || req.finalApprovedUrgency}
@@ -1977,13 +2071,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                         <motion.button
                           whileHover={{ scale: 1.02 }}
                           whileTap={{ scale: 0.97 }}
-                          onClick={() =>
-                            onUpdateRequestStatus(
-                              req.id,
-                              'Closed',
-                              'Case resolved and closed by case manager.'
-                            )
-                          }
+                          onClick={() => openDestructiveConfirmModal(req, 'Closed')}
                           className="py-2 px-3 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 text-zinc-300 text-xs font-bold flex items-center justify-center gap-1.5 transition"
                         >
                           <Archive className="w-3.5 h-3.5" />
@@ -1993,17 +2081,11 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                         <motion.button
                           whileHover={{ scale: 1.02 }}
                           whileTap={{ scale: 0.97 }}
-                          onClick={() =>
-                            onUpdateRequestStatus(
-                              req.id,
-                              'Rejected',
-                              'Case rejected after human verification review.'
-                            )
-                          }
+                          onClick={() => openDestructiveConfirmModal(req, 'Rejected')}
                           className="py-2 px-3 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-300 text-xs font-bold flex items-center justify-center gap-1.5 transition"
                         >
                           <Ban className="w-3.5 h-3.5" />
-                          <span>Reject</span>
+                          <span>{t.dashboard.rejectBtn}</span>
                         </motion.button>
 
                         {organisations.length > 0 && (
@@ -2149,6 +2231,203 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                 )}
               </div>
             </motion.div>
+          </motion.div>
+        )}
+
+        {destructiveModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => !isSubmittingDestructive && setDestructiveModal(null)}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-950/80 backdrop-blur-md"
+          >
+            <motion.div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="destructive-modal-title"
+              initial={{ opacity: 0, scale: 0.95, y: 16 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 12 }}
+              transition={{ type: 'spring', stiffness: 350, damping: 28 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bento-glass rounded-3xl max-w-lg w-full overflow-hidden border border-rose-500/40 shadow-2xl bg-zinc-950/95 p-6 space-y-4"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className={`p-2.5 rounded-2xl ${destructiveModal.actionType === 'Rejected' ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30' : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'}`}>
+                    {destructiveModal.actionType === 'Rejected' ? (
+                      <Ban className="w-5 h-5" />
+                    ) : (
+                      <Archive className="w-5 h-5" />
+                    )}
+                  </div>
+                  <div>
+                    <h3 id="destructive-modal-title" className="text-base font-bold text-white flex items-center gap-2">
+                      {destructiveModal.actionType === 'Rejected'
+                        ? 'Confirm Case Rejection (ඉල්ලීම ප්‍රතික්ෂේප කිරීම)'
+                        : 'Confirm Case Resolution (නඩුව අවසන් කිරීම)'}
+                    </h3>
+                    <p className="text-xs text-zinc-400 mt-0.5">
+                      {destructiveModal.actionType === 'Rejected'
+                        ? 'This action marks the citizen request as rejected in operational logs.'
+                        : 'This action records the request as fulfilled and closed.'}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  aria-label="Cancel"
+                  onClick={() => setDestructiveModal(null)}
+                  disabled={isSubmittingDestructive}
+                  className="p-1.5 rounded-xl text-zinc-400 hover:text-white hover:bg-white/10 transition"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Case details summary */}
+              <div className="p-3.5 rounded-2xl bg-white/[0.04] border border-white/10 space-y-1.5">
+                <div className="flex justify-between items-center text-xs">
+                  <span className="font-mono text-indigo-300 font-bold">
+                    {destructiveModal.req.trackingCode || (destructiveModal.req.id ? destructiveModal.req.id.slice(0, 8) : 'REQ')}
+                  </span>
+                  <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-white/10 text-zinc-300 uppercase">
+                    {destructiveModal.req.urgencyLevel || destructiveModal.req.status}
+                  </span>
+                </div>
+                <h4 className="text-sm font-semibold text-white">
+                  {destructiveModal.req.title}
+                </h4>
+                <div className="text-xs text-zinc-400 flex items-center gap-3">
+                  <span>📍 {destructiveModal.req.district || 'Active Zone'}</span>
+                  {destructiveModal.req.affectedCount > 0 && (
+                    <span>👥 {destructiveModal.req.affectedCount} Affected</span>
+                  )}
+                </div>
+              </div>
+
+              {/* Mandatory Rejection Reason */}
+              <div className="space-y-2">
+                <label className="block text-xs font-semibold text-zinc-300">
+                  {destructiveModal.actionType === 'Rejected'
+                    ? 'Mandatory Rejection Category (හේතුව තෝරන්න):'
+                    : 'Resolution Reason / Category:'}
+                </label>
+                <select
+                  value={destructiveReasonCategory}
+                  onChange={(e) => setDestructiveReasonCategory(e.target.value)}
+                  disabled={isSubmittingDestructive}
+                  className="w-full py-2 px-3 rounded-xl bg-zinc-900 border border-white/15 text-xs text-white focus:outline-none focus:border-rose-500/50"
+                >
+                  {destructiveModal.actionType === 'Rejected' ? (
+                    <>
+                      <option value="Duplicate submission">Duplicate submission (අනුපිටපත් ඉල්ලීමක්)</option>
+                      <option value="Outside active operational jurisdiction">Outside active operational zone (මෙහෙයුම් කලාපයෙන් පිටත)</option>
+                      <option value="Resolved by external responders">Resolved by external first responders (ප්‍රාදේශීයව විසඳන ලද)</option>
+                      <option value="Non-humanitarian or invalid inquiry">Non-humanitarian or invalid inquiry (ආපදා නොවන විමසීමක්)</option>
+                      <option value="Other verification rationale">Other verification rationale (වෙනත් විශේෂිත හේතුවක්)</option>
+                    </>
+                  ) : (
+                    <>
+                      <option value="Relief assistance fulfilled on-site">Relief assistance fulfilled on-site (සහනාධාර ලබාදී අවසන්)</option>
+                      <option value="Evacuation or shelter transfer complete">Evacuation or shelter transfer complete (නවාතැන් ලබාදී අවසන්)</option>
+                      <option value="Medical triage completed">Medical triage completed (වෛද්‍ය ප්‍රතිකාර ලබාදී අවසන්)</option>
+                      <option value="Other resolution">Other resolution (වෙනත්)</option>
+                    </>
+                  )}
+                </select>
+              </div>
+
+              {/* Audit trail note */}
+              <div className="space-y-1.5">
+                <label className="block text-xs font-semibold text-zinc-300">
+                  Audit Log Note (අමතර සටහන):
+                </label>
+                <textarea
+                  rows={2}
+                  value={destructiveCustomNote}
+                  onChange={(e) => setDestructiveCustomNote(e.target.value)}
+                  disabled={isSubmittingDestructive}
+                  placeholder="Enter details for the coordinator audit log..."
+                  className="w-full py-2 px-3 rounded-xl bg-zinc-900 border border-white/15 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-rose-500/50 resize-none"
+                />
+              </div>
+
+              {/* Action buttons */}
+              <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-white/10">
+                <button
+                  type="button"
+                  onClick={() => setDestructiveModal(null)}
+                  disabled={isSubmittingDestructive}
+                  className="py-2 px-4 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 text-zinc-300 text-xs font-bold transition"
+                >
+                  Cancel (අවලංගු කරන්න)
+                </button>
+                <button
+                  type="button"
+                  onClick={handleConfirmDestructiveAction}
+                  disabled={isSubmittingDestructive}
+                  className={`keep-white py-2 px-4 rounded-xl text-white text-xs font-bold flex items-center gap-1.5 transition shadow-lg ${destructiveModal.actionType === 'Rejected'
+                    ? 'bg-rose-600 hover:bg-rose-500 border border-rose-500/40'
+                    : 'bg-indigo-600 hover:bg-indigo-500 border border-indigo-500/40'
+                    }`}
+                >
+                  {isSubmittingDestructive ? (
+                    <span>Processing...</span>
+                  ) : (
+                    <>
+                      {destructiveModal.actionType === 'Rejected' ? <Ban className="w-3.5 h-3.5" /> : <Archive className="w-3.5 h-3.5" />}
+                      <span>
+                        {destructiveModal.actionType === 'Rejected'
+                          ? 'Confirm Rejection (ප්‍රතික්ෂේප කරන්න)'
+                          : 'Confirm Close (අවසන් කරන්න)'}
+                      </span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+
+        {/* Undo Floating Toast (P0-1 Fix) */}
+        {undoToast && (
+          <motion.div
+            initial={{ opacity: 0, y: 30, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.95 }}
+            role="status"
+            aria-live="polite"
+            className="fixed bottom-6 right-6 z-50 flex items-center gap-3 p-3.5 pr-4 rounded-2xl bg-zinc-900 border border-amber-500/40 shadow-2xl text-white text-xs max-w-md"
+          >
+            <div className="p-2 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/30">
+              <AlertTriangle className="w-4 h-4" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold text-white">
+                Case marked as {undoToast.actionType}
+              </p>
+              <p className="text-[11px] text-zinc-400 truncate">
+                Case <span className="font-mono text-amber-300 font-bold">{undoToast.caseCode}</span> was updated.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={handleUndoDestructiveAction}
+              className="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 transition shadow"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span>Undo (ආපසු හරවන්න)</span>
+            </button>
+            <button
+              type="button"
+              aria-label="Dismiss toast"
+              onClick={() => setUndoToast(null)}
+              className="p-1 rounded-lg text-zinc-400 hover:text-white transition"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
           </motion.div>
         )}
       </AnimatePresence>
