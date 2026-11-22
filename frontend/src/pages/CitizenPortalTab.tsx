@@ -49,6 +49,7 @@ interface QueuedOfflineRequest {
 }
 
 const OFFLINE_QUEUE_STORAGE_KEY = 'crisync_offline_request_queue';
+const CITIZEN_FORM_DRAFT_KEY = 'crisync_citizen_form_draft';
 
 interface CitizenPortalTabProps {
   alerts: any[];
@@ -109,9 +110,19 @@ export const CitizenPortalTab: React.FC<CitizenPortalTabProps> = ({
   onSaveHousehold,
   onSubmitFeedback
 }) => {
-  const [portalMode, setPortalMode] = useState<'guided' | 'tabs'>('guided');
-  const [wizardStep, setWizardStep] = useState<WizardStepNumber>(1);
-  const [familyConfirmed, setFamilyConfirmed] = useState(false);
+  // Autosaved draft initialization (P0-3 Fix)
+  const [savedDraft] = useState<any>(() => {
+    try {
+      const raw = localStorage.getItem(CITIZEN_FORM_DRAFT_KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  const [portalMode, setPortalMode] = useState<'guided' | 'tabs'>(savedDraft?.portalMode || 'guided');
+  const [wizardStep, setWizardStep] = useState<WizardStepNumber>(savedDraft?.wizardStep || 1);
+  const [familyConfirmed, setFamilyConfirmed] = useState(savedDraft?.familyConfirmed ?? false);
   const [stepError, setStepError] = useState<string | null>(null);
   const [savingFamily, setSavingFamily] = useState(false);
   const [submittingRequest, setSubmittingRequest] = useState(false);
@@ -123,26 +134,26 @@ export const CitizenPortalTab: React.FC<CitizenPortalTabProps> = ({
   const [showExactGps, setShowExactGps] = useState(false);
   const [language, setLanguage] = useState<SupportedLanguage>(activeLanguage || 'en');
 
-  const [selectedCrisisId, setSelectedCrisisId] = useState('');
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [category, setCategory] = useState('Food');
-  const [urgency, setUrgency] = useState('High');
-  const [peopleCount, setPeopleCount] = useState(1);
-  const [quantity, setQuantity] = useState(1);
-  const [accessibility, setAccessibility] = useState(false);
-  const [address, setAddress] = useState('');
-  const [latitude, setLatitude] = useState(6.9271);
-  const [longitude, setLongitude] = useState(79.8612);
-  const [evidenceFileName, setEvidenceFileName] = useState('');
+  const [selectedCrisisId, setSelectedCrisisId] = useState(savedDraft?.selectedCrisisId || '');
+  const [title, setTitle] = useState(savedDraft?.title || '');
+  const [description, setDescription] = useState(savedDraft?.description || '');
+  const [category, setCategory] = useState(savedDraft?.category || 'Food');
+  const [urgency, setUrgency] = useState(savedDraft?.urgency || 'High');
+  const [peopleCount, setPeopleCount] = useState(savedDraft?.peopleCount || 1);
+  const [quantity, setQuantity] = useState(savedDraft?.quantity || 1);
+  const [accessibility, setAccessibility] = useState(savedDraft?.accessibility ?? false);
+  const [address, setAddress] = useState(savedDraft?.address || '');
+  const [latitude, setLatitude] = useState(savedDraft?.latitude || 6.9271);
+  const [longitude, setLongitude] = useState(savedDraft?.longitude || 79.8612);
+  const [evidenceFileName, setEvidenceFileName] = useState(savedDraft?.evidenceFileName || '');
 
-  const [headName, setHeadName] = useState('');
-  const [totalMembers, setTotalMembers] = useState(1);
-  const [childrenCount, setChildrenCount] = useState(0);
-  const [elderlyCount, setElderlyCount] = useState(0);
-  const [hasMobility, setHasMobility] = useState(false);
-  const [hasChronicMedical, setHasChronicMedical] = useState(false);
-  const [medicalNotes, setMedicalNotes] = useState('');
+  const [headName, setHeadName] = useState(savedDraft?.headName || '');
+  const [totalMembers, setTotalMembers] = useState(savedDraft?.totalMembers || 1);
+  const [childrenCount, setChildrenCount] = useState(savedDraft?.childrenCount || 0);
+  const [elderlyCount, setElderlyCount] = useState(savedDraft?.elderlyCount || 0);
+  const [hasMobility, setHasMobility] = useState(savedDraft?.hasMobility ?? false);
+  const [hasChronicMedical, setHasChronicMedical] = useState(savedDraft?.hasChronicMedical ?? false);
+  const [medicalNotes, setMedicalNotes] = useState(savedDraft?.medicalNotes || '');
 
   const [feedbackRequestId, setFeedbackRequestId] = useState<string | null>(null);
   const [rating, setRating] = useState(5);
@@ -174,6 +185,61 @@ export const CitizenPortalTab: React.FC<CitizenPortalTabProps> = ({
     } catch {
     }
   }, [queuedOfflineRequests]);
+
+  // Autosave citizen form draft across tab switches and refreshes (P0-3 Fix)
+  useEffect(() => {
+    if (title || description || address || headName || totalMembers > 1 || wizardStep > 1) {
+      try {
+        localStorage.setItem(CITIZEN_FORM_DRAFT_KEY, JSON.stringify({
+          portalMode,
+          wizardStep,
+          familyConfirmed,
+          selectedCrisisId,
+          title,
+          description,
+          category,
+          urgency,
+          peopleCount,
+          quantity,
+          accessibility,
+          address,
+          latitude,
+          longitude,
+          evidenceFileName,
+          headName,
+          totalMembers,
+          childrenCount,
+          elderlyCount,
+          hasMobility,
+          hasChronicMedical,
+          medicalNotes
+        }));
+      } catch {}
+    }
+  }, [
+    portalMode,
+    wizardStep,
+    familyConfirmed,
+    selectedCrisisId,
+    title,
+    description,
+    category,
+    urgency,
+    peopleCount,
+    quantity,
+    accessibility,
+    address,
+    latitude,
+    longitude,
+    evidenceFileName,
+    headName,
+    totalMembers,
+    childrenCount,
+    elderlyCount,
+    hasMobility,
+    hasChronicMedical,
+    medicalNotes
+  ]);
 
   const syncOfflineQueue = async () => {
     if (queuedOfflineRequests.length === 0 || syncingOfflineQueue) return;
@@ -379,6 +445,9 @@ export const CitizenPortalTab: React.FC<CitizenPortalTabProps> = ({
     setDescription('');
     setEvidenceFileName('');
     setAppliedTemplateLabel(null);
+    try {
+      localStorage.removeItem(CITIZEN_FORM_DRAFT_KEY);
+    } catch {}
   };
 
   const handleHouseholdSubmit = async (e: React.FormEvent) => {
@@ -448,6 +517,9 @@ export const CitizenPortalTab: React.FC<CitizenPortalTabProps> = ({
       setDescription('');
       setEvidenceFileName('');
       setAppliedTemplateLabel(null);
+      try {
+        localStorage.removeItem(CITIZEN_FORM_DRAFT_KEY);
+      } catch {}
       setWizardStep(5);
     } finally {
       setSubmittingRequest(false);
@@ -457,6 +529,9 @@ export const CitizenPortalTab: React.FC<CitizenPortalTabProps> = ({
   const handleStartNewRequest = () => {
     setStepError(null);
     setAppliedTemplateLabel(null);
+    try {
+      localStorage.removeItem(CITIZEN_FORM_DRAFT_KEY);
+    } catch {}
     setWizardStep(2);
   };
 
