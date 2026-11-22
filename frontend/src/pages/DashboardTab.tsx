@@ -30,7 +30,11 @@ import {
   Camera,
   BarChart3,
   AlertTriangle,
-  Ban
+  Ban,
+  Download,
+  FileSpreadsheet,
+  Star,
+  Filter
 } from 'lucide-react';
 import { LANGUAGE_OPTIONS, SupportedLanguage, TRANSLATIONS } from '../i18n';
 import { resolveEvidencePhoto } from '../utils/fieldPhotos';
@@ -94,6 +98,8 @@ interface DashboardTabProps {
   onCreateOperationalArea?: (crisisId: string, payload: any) => Promise<void>;
   onRegisterCitizenOnBehalf?: (payload: any) => Promise<any>;
   onInviteStaff?: (payload: any) => Promise<any>;
+  feedbackAnalytics?: any | null;
+  sitRepReport?: any | null;
 }
 
 export const DashboardTab: React.FC<DashboardTabProps> = ({
@@ -112,10 +118,15 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
   onCreateCrisisEvent,
   onCreateOperationalArea,
   onRegisterCitizenOnBehalf,
-  onInviteStaff
+  onInviteStaff,
+  feedbackAnalytics,
+  sitRepReport
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<'all' | 'critical' | 'overdue' | 'suspicious' | 'duplicates' | 'verified'>('all');
+  const [categoryFilter, setCategoryFilter] = useState<string>('ALL');
+  const [urgencyFilter, setUrgencyFilter] = useState<string>('ALL');
+  const [sortBy, setSortBy] = useState<'priority' | 'newest' | 'people'>('priority');
   const [expandedCards, setExpandedCards] = useState<Record<string, boolean>>({});
   const canDeclareOrAlert =
     userRole === 'EmergencyCoordinator' || userRole === 'SystemAdmin' || userRole === 'OrganizationAdmin';
@@ -360,33 +371,114 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
   const suspiciousCount = requests.filter((r) => Boolean(r.isFlaggedSuspicious)).length;
   const duplicateCount = requests.filter((r) => Boolean(r.isFlaggedPotentialDuplicate)).length;
 
-  const filteredRequests = requests.filter((req) => {
-    const matchesSearch =
-      !searchQuery.trim() ||
-      req.referenceCode?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      req.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      req.category?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      req.locationAddress?.toLowerCase().includes(searchQuery.toLowerCase());
+  const filteredRequests = requests
+    .filter((req) => {
+      const matchesSearch =
+        !searchQuery.trim() ||
+        req.referenceCode?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        req.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        req.category?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        req.locationAddress?.toLowerCase().includes(searchQuery.toLowerCase());
 
-    if (!matchesSearch) return false;
+      if (!matchesSearch) return false;
+      if (categoryFilter !== 'ALL' && req.category !== categoryFilter) return false;
+      if (urgencyFilter !== 'ALL' && req.finalApprovedUrgency !== urgencyFilter) return false;
 
-    if (activeFilter === 'critical') {
-      return req.finalApprovedUrgency === 'LifeThreatening' || req.finalApprovedUrgency === 'Critical';
+      if (activeFilter === 'critical') {
+        return req.finalApprovedUrgency === 'LifeThreatening' || req.finalApprovedUrgency === 'Critical';
+      }
+      if (activeFilter === 'overdue') {
+        return isRequestOverdue(req);
+      }
+      if (activeFilter === 'suspicious') {
+        return Boolean(req.isFlaggedSuspicious);
+      }
+      if (activeFilter === 'duplicates') {
+        return Boolean(req.isFlaggedPotentialDuplicate);
+      }
+      if (activeFilter === 'verified') {
+        return req.status === 'Verified' || req.status === 'Escalated' || req.status === 'Dispatched';
+      }
+      return true;
+    })
+    .sort((a, b) => {
+      if (sortBy === 'newest') {
+        return new Date(b.createdAtUtc || 0).getTime() - new Date(a.createdAtUtc || 0).getTime();
+      }
+      if (sortBy === 'people') {
+        return (Number(b.affectedPeopleCount) || 0) - (Number(a.affectedPeopleCount) || 0);
+      }
+      return (Number(b.priorityScore) || 0) - (Number(a.priorityScore) || 0);
+    });
+
+  const handleExportSitRepCsv = () => {
+    const csvRows: string[] = [
+      [
+        'ReferenceCode',
+        'Category',
+        'Urgency',
+        'PriorityScore',
+        'Status',
+        'Title',
+        'AffectedPeople',
+        'RequestedQty',
+        'LocationAddress',
+        'DuplicateFlag',
+        'SuspiciousFlag',
+        'CreatedAtUtc'
+      ].join(',')
+    ];
+
+    for (const r of filteredRequests) {
+      const escapeCsv = (val: any) => `"${String(val ?? '').replace(/"/g, '""')}"`;
+      csvRows.push(
+        [
+          escapeCsv(r.referenceCode),
+          escapeCsv(r.category),
+          escapeCsv(r.finalApprovedUrgency),
+          escapeCsv(r.priorityScore),
+          escapeCsv(r.status),
+          escapeCsv(r.title),
+          escapeCsv(r.affectedPeopleCount),
+          escapeCsv(r.requestedQuantity),
+          escapeCsv(r.locationAddress),
+          escapeCsv(Boolean(r.isFlaggedPotentialDuplicate)),
+          escapeCsv(Boolean(r.isFlaggedSuspicious)),
+          escapeCsv(r.createdAtUtc)
+        ].join(',')
+      );
     }
-    if (activeFilter === 'overdue') {
-      return isRequestOverdue(req);
-    }
-    if (activeFilter === 'suspicious') {
-      return Boolean(req.isFlaggedSuspicious);
-    }
-    if (activeFilter === 'duplicates') {
-      return Boolean(req.isFlaggedPotentialDuplicate);
-    }
-    if (activeFilter === 'verified') {
-      return req.status === 'Verified' || req.status === 'Escalated' || req.status === 'Dispatched';
-    }
-    return true;
-  });
+
+    const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `CriSync_SitRep_${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleExportSitRepJson = () => {
+    const payload = sitRepReport || {
+      generatedAtUtc: new Date().toISOString(),
+      activeCrisisTitle: crises[0]?.title || 'Active Operation',
+      metrics,
+      feedbackAnalytics,
+      exportedRequestsCount: filteredRequests.length,
+      requests: filteredRequests
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `CriSync_SitRep_${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
 
   const activeLangOption = LANGUAGE_OPTIONS.find((l) => l.code === langKey) || LANGUAGE_OPTIONS[0];
 
@@ -1138,7 +1230,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
             Real-Time Crisis &amp; Logistics Synchronization
           </span>
         </div>
-        <div className="flex flex-wrap items-center gap-3 font-mono text-[11px] font-bold">
+        <div className="flex flex-wrap items-center gap-2.5 font-mono text-[11px] font-bold">
           <span className="px-2.5 py-1 rounded-lg bg-indigo-500/15 border border-indigo-500/30 text-indigo-300">
             {crises.length} Active Crises
           </span>
@@ -1148,8 +1240,52 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
           <span className="px-2.5 py-1 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-300">
             {metrics ? `${metrics.totalShelterCapacity} Shelter Beds` : `${requests.length} Cases`}
           </span>
+          <button
+            type="button"
+            onClick={handleExportSitRepCsv}
+            className="keep-white px-3 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-sans font-extrabold inline-flex items-center gap-1.5 shadow-sm transition"
+          >
+            <FileSpreadsheet className="w-3.5 h-3.5" />
+            <span>Export SitRep (CSV)</span>
+          </button>
+          <button
+            type="button"
+            onClick={handleExportSitRepJson}
+            className="px-3 py-1 rounded-lg bg-white/[0.06] hover:bg-white/[0.12] border border-white/15 text-zinc-200 font-sans font-extrabold inline-flex items-center gap-1.5 transition"
+          >
+            <Download className="w-3.5 h-3.5 text-cyan-400" />
+            <span>SitRep JSON</span>
+          </button>
         </div>
       </div>
+
+      {feedbackAnalytics && (
+        <div className="bento-glass rounded-3xl p-4 sm:p-5 border border-emerald-500/25 flex flex-wrap items-center justify-between gap-4 text-xs">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-amber-500/20 border border-amber-500/40 text-amber-300 flex items-center justify-center shrink-0">
+              <Star className="w-5 h-5 fill-amber-400" />
+            </div>
+            <div>
+              <span className="text-[11px] font-bold uppercase tracking-wider text-amber-400 block">
+                Citizen Aid Delivery Quality &amp; Accountability
+              </span>
+              <h3 className="text-sm sm:text-base font-extrabold text-white">
+                {feedbackAnalytics.totalReviewsCount > 0
+                  ? `${feedbackAnalytics.averageRating} / 5.0 Average Citizen Rating (${feedbackAnalytics.totalReviewsCount} Verified Reviews)`
+                  : 'Citizen Delivery Feedback & Rating Analytics Active'}
+              </h3>
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-3 font-mono text-xs">
+            <span className="px-3 py-1.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 font-bold">
+              Timely Aid: {feedbackAnalytics.timelyDeliveryPercentage}%
+            </span>
+            <span className="px-3 py-1.5 rounded-xl bg-cyan-500/15 border border-cyan-500/30 text-cyan-300 font-bold">
+              Sufficient Qty: {feedbackAnalytics.sufficientQuantityPercentage}%
+            </span>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
         <motion.div
@@ -1559,6 +1695,67 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                 </button>
               ))}
             </div>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center justify-between gap-2.5 p-3 rounded-2xl bg-black/20 border border-white/[0.06] text-xs">
+          <div className="flex items-center gap-2 text-zinc-300 font-bold">
+            <Filter className="w-3.5 h-3.5 text-indigo-400" />
+            <span>Advanced Multi-Facet Filters ({filteredRequests.length} matching):</span>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <select
+              aria-label="Filter by Aid Category"
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value)}
+              className="rsvp-input py-1.5 px-2.5 text-xs w-auto"
+            >
+              <option value="ALL">All Categories</option>
+              <option value="Medicine">Medicine</option>
+              <option value="Food">Food</option>
+              <option value="WaterAndSanitation">Clean Water &amp; Sanitation</option>
+              <option value="TemporaryShelter">Temporary Shelter</option>
+              <option value="SearchAndRescue">Search &amp; Rescue</option>
+              <option value="AccessibilityAssistance">Accessibility Support</option>
+              <option value="Transportation">Transportation</option>
+            </select>
+            <select
+              aria-label="Filter by Urgency Level"
+              value={urgencyFilter}
+              onChange={(e) => setUrgencyFilter(e.target.value)}
+              className="rsvp-input py-1.5 px-2.5 text-xs w-auto"
+            >
+              <option value="ALL">All Urgency Levels</option>
+              <option value="LifeThreatening">Life Threatening</option>
+              <option value="Critical">Critical</option>
+              <option value="High">High</option>
+              <option value="Medium">Medium</option>
+              <option value="Low">Low</option>
+            </select>
+            <select
+              aria-label="Sort Requests By"
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as any)}
+              className="rsvp-input py-1.5 px-2.5 text-xs w-auto"
+            >
+              <option value="priority">Sort: Highest AI Priority</option>
+              <option value="newest">Sort: Newest Submitted</option>
+              <option value="people">Sort: Most People Affected</option>
+            </select>
+            {(categoryFilter !== 'ALL' || urgencyFilter !== 'ALL' || searchQuery.trim() !== '' || activeFilter !== 'all') && (
+              <button
+                type="button"
+                onClick={() => {
+                  setCategoryFilter('ALL');
+                  setUrgencyFilter('ALL');
+                  setActiveFilter('all');
+                  setSearchQuery('');
+                }}
+                className="px-2.5 py-1.5 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-300 font-bold transition"
+              >
+                Reset Filters
+              </button>
+            )}
           </div>
         </div>
 

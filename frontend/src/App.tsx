@@ -696,6 +696,8 @@ export default function App() {
   const [transparencyReport, setTransparencyReport] = useState<any | null>(null);
   const [mappingReferences, setMappingReferences] = useState<any[]>([]);
   const [coverageReport, setCoverageReport] = useState<any | null>(null);
+  const [feedbackAnalytics, setFeedbackAnalytics] = useState<any | null>(null);
+  const [sitRepReport, setSitRepReport] = useState<any | null>(null);
 
   useEffect(() => {
     setShowBrandIntro(true);
@@ -834,7 +836,9 @@ export default function App() {
         allocsDataRes,
         transparencyRes,
         mapRefsRes,
-        coverageRes
+        coverageRes,
+        feedbackAnalyticsRes,
+        sitRepRes
       ] = await Promise.all([
         apiFetch<any[]>('/organisations', {}, activeToken).catch(() => []),
         apiFetch<any>('/admin/metrics', {}, activeToken),
@@ -858,7 +862,9 @@ export default function App() {
         apiFetch<any>('/logistics/allocations', {}, activeToken).catch(() => ({ allocations: [], dispatches: [], partnerAidRequests: [] })),
         apiFetch<any>('/donations/transparency-report', {}, activeToken).catch(() => null),
         apiFetch<any[]>('/mapping/references', {}, activeToken).catch(() => []),
-        apiFetch<any>('/mapping/coverage-report', {}, activeToken).catch(() => null)
+        apiFetch<any>('/mapping/coverage-report', {}, activeToken).catch(() => null),
+        apiFetch<any>('/requests/feedback', {}, activeToken).catch(() => null),
+        apiFetch<any>('/reports/sitrep', {}, activeToken).catch(() => null)
       ]);
 
       if (Array.isArray(orgsRes) && orgsRes.length > 0) {
@@ -886,6 +892,8 @@ export default function App() {
       setTransparencyReport(transparencyRes);
       setMappingReferences(Array.isArray(mapRefsRes) ? mapRefsRes : []);
       setCoverageReport(coverageRes);
+      setFeedbackAnalytics(feedbackAnalyticsRes);
+      setSitRepReport(sitRepRes);
 
       if (requestsRes.length >= 2 && selectedCompetingIds.length === 0) {
         const medRequests = requestsRes
@@ -2974,6 +2982,8 @@ export default function App() {
                 requests={requests}
                 crises={crises}
                 organisations={organisations}
+                feedbackAnalytics={feedbackAnalytics}
+                sitRepReport={sitRepReport}
                 onChangeBriefingLanguage={handleLanguageBriefingChange}
                 onMergeDuplicate={handleMergeDuplicate}
                 onUpdateRequestStatus={handleUpdateRequestStatus}
@@ -3051,10 +3061,27 @@ export default function App() {
               <SheltersTab
                 userRole={authUser.role}
                 shelters={sheltersData.shelters || []}
+                allocations={sheltersData.allocations || []}
                 requests={requests}
                 onRecommendShelters={handleRecommendShelters}
                 onCreateShelter={handleCreateShelter}
                 onRequestShelterSupplies={handleRequestShelterSupplies}
+                onCheckoutShelterAllocation={async (allocationId, householdName) => {
+                  try {
+                    await apiFetch<any>(
+                      `/shelters/allocations/${allocationId}/checkout`,
+                      {
+                        method: 'POST',
+                        body: JSON.stringify({ dischargeNotes: `Discharged ${householdName}` })
+                      },
+                      authUser?.token
+                    );
+                    notify('success', `Checked out '${householdName}' and released shelter capacity.`);
+                    await loadAllData();
+                  } catch (err: any) {
+                    notify('error', err.message);
+                  }
+                }}
                 onAllocateShelter={async (payload) => {
                   try {
                     await apiFetch<any>(

@@ -39,6 +39,7 @@ import { LANGUAGE_OPTIONS, SupportedLanguage, TRANSLATIONS } from '../i18n';
 export const SheltersTab: React.FC<{
   userRole: string;
   shelters: any[];
+  allocations?: any[];
   requests: any[];
   onAllocateShelter: (payload: {
     shelterId: string;
@@ -47,10 +48,21 @@ export const SheltersTab: React.FC<{
     requiresAccessibility: boolean;
     assistanceRequestId?: string | null;
   }) => Promise<void>;
+  onCheckoutShelterAllocation?: (allocationId: string, householdName: string) => Promise<void>;
   onCreateShelter: (payload: any) => Promise<void>;
   onRecommendShelters: (requestId: string) => Promise<any[]>;
   onRequestShelterSupplies?: (shelterId: string, payload: any) => Promise<void>;
-}> = ({ userRole, shelters, requests, onAllocateShelter, onCreateShelter, onRecommendShelters, onRequestShelterSupplies }) => {
+}> = ({
+  userRole,
+  shelters,
+  allocations = [],
+  requests,
+  onAllocateShelter,
+  onCheckoutShelterAllocation,
+  onCreateShelter,
+  onRecommendShelters,
+  onRequestShelterSupplies
+}) => {
   const [shelterId, setShelterId] = useState(shelters[0]?.id || '');
   const [householdName, setHouseholdName] = useState('');
   const [membersCount, setMembersCount] = useState(1);
@@ -439,6 +451,70 @@ export const SheltersTab: React.FC<{
                 </motion.div>
               );
             })}
+            </div>
+          )}
+
+          {allocations.length > 0 && (
+            <div className="pt-4 border-t border-white/[0.08] space-y-3">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <h3 className="text-sm sm:text-base font-extrabold text-white flex items-center gap-2">
+                    <Users className="w-4 h-4 text-emerald-400" />
+                    Active Shelter Check-Ins &amp; Household Discharge
+                  </h3>
+                  <p className="text-xs text-zinc-400">
+                    Discharge checked-in families once safe to release shelter capacity back to the live pool.
+                  </p>
+                </div>
+                <span className="px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-xs font-bold text-emerald-300">
+                  {allocations.filter((a) => a.allocationStatus !== 'CheckedOut').length} Checked-In Households
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                {allocations.slice(0, 12).map((alloc: any) => {
+                  const shelterObj = shelters.find((s) => s.id === alloc.shelterId);
+                  const isCheckedOut = alloc.allocationStatus === 'CheckedOut';
+                  return (
+                    <div
+                      key={alloc.id}
+                      className={`p-3.5 rounded-2xl border flex items-center justify-between gap-3 ${
+                        isCheckedOut
+                          ? 'bg-white/[0.015] border-white/[0.06] opacity-70'
+                          : 'bg-white/[0.03] border-white/10'
+                      }`}
+                    >
+                      <div className="space-y-0.5 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="font-extrabold text-white truncate">{alloc.householdName}</span>
+                          <span
+                            className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
+                              isCheckedOut
+                                ? 'bg-zinc-500/20 border-zinc-500/30 text-zinc-400'
+                                : 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300'
+                            }`}
+                          >
+                            {alloc.allocationStatus}
+                          </span>
+                        </div>
+                        <p className="text-zinc-400 truncate">
+                          {shelterObj?.name || 'Relief Shelter'} • <strong className="text-zinc-200">{alloc.allocatedMembersCount} members</strong>
+                          {alloc.requiresAccessibility ? ' • Wheelchair Space' : ''}
+                        </p>
+                      </div>
+                      {!isCheckedOut && onCheckoutShelterAllocation && (canRegisterShelter || userRole === 'CaseManager') && (
+                        <button
+                          type="button"
+                          onClick={() => onCheckoutShelterAllocation(alloc.id, alloc.householdName)}
+                          className="keep-white px-3 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold shrink-0 transition shadow-sm"
+                        >
+                          Discharge / Check-Out
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           )}
         </div>

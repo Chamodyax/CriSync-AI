@@ -602,6 +602,49 @@ public class CrisisAndRequestsController : ControllerBase
         return Ok(new { Primary = primary, MergedDuplicate = duplicate });
     }
 
+    [HttpGet("requests/feedback")]
+    [Authorize]
+    public async Task<ActionResult<FeedbackAnalyticsSummaryDto>> GetFeedbackAnalytics(CancellationToken cancellationToken)
+    {
+        var feedbacks = await _unitOfWork.RequestFeedbacks.GetAllAsync(cancellationToken);
+        var requests = await _unitOfWork.AssistanceRequests.GetAllAsync(cancellationToken);
+        var reqMap = requests.ToDictionary(r => r.Id, r => r);
+
+        int total = feedbacks.Count;
+        double avgRating = total > 0 ? Math.Round(feedbacks.Average(f => f.Rating), 2) : 0.0;
+        double timelyPct = total > 0 ? Math.Round(feedbacks.Count(f => f.WasAidTimely) * 100.0 / total, 1) : 100.0;
+        double sufficientPct = total > 0 ? Math.Round(feedbacks.Count(f => f.WasQuantitySufficient) * 100.0 / total, 1) : 100.0;
+
+        var recent = feedbacks
+            .OrderByDescending(f => f.CreatedAtUtc)
+            .Take(25)
+            .Select(f =>
+            {
+                reqMap.TryGetValue(f.AssistanceRequestId, out var req);
+                return new RequestFeedbackItemDto(
+                    f.Id,
+                    f.AssistanceRequestId,
+                    req?.ReferenceCode ?? "REQ-UNKNOWN",
+                    req?.Title ?? "Assistance Request",
+                    f.CitizenUserId,
+                    f.Rating,
+                    f.Comments,
+                    f.WasAidTimely,
+                    f.WasQuantitySufficient,
+                    f.CreatedAtUtc
+                );
+            })
+            .ToList();
+
+        return Ok(new FeedbackAnalyticsSummaryDto(
+            total,
+            avgRating,
+            timelyPct,
+            sufficientPct,
+            recent
+        ));
+    }
+
     [HttpPost("requests/feedback")]
     [Authorize]
     public async Task<ActionResult> SubmitFeedback([FromBody] SubmitFeedbackDto dto, CancellationToken cancellationToken)
@@ -618,6 +661,24 @@ public class CrisisAndRequestsController : ControllerBase
         };
 
         await _unitOfWork.RequestFeedbacks.AddAsync(feedback, cancellationToken);
+        await _unitOfWork.AuditEvents.AddAsync(new AuditEventRecord
+        {
+            EventCategory = "CitizenFeedback",
+            ActionName = "CitizenAidFeedback_Submitted",
+            EntityType = nameof(RequestFeedback),
+            EntityId = feedback.Id.ToString(),
+            ActorUserId = actorId == Guid.Empty ? null : actorId,
+            ActorUserName = User.FindFirstValue(ClaimTypes.Name) ?? "Citizen",
+            ActorRole = User.FindFirstValue(ClaimTypes.Role) ?? "Citizen",
+            IpAddress = GetClientIp(),
+            DetailsJson = JsonSerializer.Serialize(new
+            {
+                feedback.AssistanceRequestId,
+                feedback.Rating,
+                feedback.WasAidTimely,
+                feedback.WasQuantitySufficient
+            })
+        }, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
         return Ok(feedback);
     }

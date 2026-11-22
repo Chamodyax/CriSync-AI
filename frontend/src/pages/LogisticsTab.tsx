@@ -96,6 +96,24 @@ export const LogisticsTab: React.FC<LogisticsTabProps> = ({
     userRole === 'OrganizationAdmin' ||
     userRole === 'SystemAdmin';
 
+  const lowStockAndExpiringItems = resources
+    .map((r) => {
+      const avail = Number(r.availableQuantity) || 0;
+      const threshold = Number(r.reorderThreshold) || 20;
+      const isLow = avail <= threshold;
+      const daysToExpiry = r.expiryDateUtc
+        ? Math.ceil((new Date(r.expiryDateUtc).getTime() - Date.now()) / 86400000)
+        : null;
+      const isExpiringSoon = daysToExpiry !== null && daysToExpiry <= 30;
+      return {
+        ...r,
+        isLow,
+        isExpiringSoon,
+        daysToExpiry
+      };
+    })
+    .filter((r) => r.isLow || r.isExpiringSoon);
+
   const handleCreateResource = async (e: React.FormEvent) => {
     e.preventDefault();
     await onAddResource({
@@ -143,6 +161,88 @@ export const LogisticsTab: React.FC<LogisticsTabProps> = ({
           </div>
         </div>
       </div>
+
+      {lowStockAndExpiringItems.length > 0 && (
+        <div className="bento-glass rounded-3xl p-5 border border-amber-500/40 bg-amber-500/[0.06] space-y-3.5">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-2xl bg-amber-500/20 border border-amber-500/40 text-amber-300 flex items-center justify-center shrink-0">
+                <AlertTriangle className="w-5 h-5" />
+              </div>
+              <div>
+                <span className="text-[11px] font-bold uppercase tracking-wider text-amber-400 block">
+                  Automated Warehouse Threshold &amp; FEFO Expiry Monitor
+                </span>
+                <h3 className="text-sm sm:text-base font-extrabold text-white">
+                  {lowStockAndExpiringItems.length} Warehouse Batch(es) Below Reorder Threshold or Expiring Within 30 Days
+                </h3>
+              </div>
+            </div>
+            <span className="px-3 py-1 rounded-full bg-rose-500/20 border border-rose-500/40 text-xs font-bold text-rose-300">
+              Immediate Action Recommended
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 text-xs">
+            {lowStockAndExpiringItems.map((item) => (
+              <div
+                key={item.id}
+                className="p-3.5 rounded-2xl bg-black/25 border border-amber-500/30 flex flex-col justify-between gap-2.5"
+              >
+                <div className="space-y-1">
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="font-extrabold text-white">{item.name}</span>
+                    <span className="px-2 py-0.5 rounded-md bg-white/10 text-zinc-200 font-semibold text-[10px] shrink-0">
+                      {item.category}
+                    </span>
+                  </div>
+                  <p className="text-zinc-400">{item.warehouseName}</p>
+                  <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                    {item.isLow && (
+                      <span className="px-2 py-0.5 rounded-full bg-rose-500/20 border border-rose-500/40 text-rose-300 font-mono font-bold text-[11px]">
+                        Low Stock: {item.availableQuantity} / {item.reorderThreshold} min
+                      </span>
+                    )}
+                    {item.isExpiringSoon && (
+                      <span className="px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-300 font-mono font-bold text-[11px]">
+                        Expires in {item.daysToExpiry}d
+                      </span>
+                    )}
+                  </div>
+                </div>
+                {canDispatch && onReplenishResource && (
+                  <div className="flex items-center gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => onReplenishResource(item.id, 50, 'Quick emergency threshold restock (+50)')}
+                      className="keep-white flex-1 py-1.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold inline-flex items-center justify-center gap-1 shadow-sm transition"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Quick Restock (+50)</span>
+                    </button>
+                    {onCreatePartnerAidRequest && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          onCreatePartnerAidRequest({
+                            neededCategory: item.category,
+                            resourceName: item.name,
+                            quantityNeeded: Math.max(50, (item.reorderThreshold || 30) * 2),
+                            justification: `Automated low-stock escalation for ${item.warehouseName} (${item.availableQuantity} remaining)`
+                          })
+                        }
+                        className="py-1.5 px-2.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-200 font-bold transition"
+                      >
+                        Partner Aid
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         <div className="lg:col-span-6 bento-glass rounded-3xl p-5 sm:p-6 space-y-5">

@@ -616,3 +616,59 @@ public record QuickUnlockStatusDto(
     int FailedAttempts,
     List<TrustedDeviceSummaryDto> TrustedDevices
 );
+
+public record CheckoutShelterAllocationDto(
+    string? DischargeNotes = null
+);
+
+public record FeedbackAnalyticsSummaryDto(
+    int TotalReviewsCount,
+    double AverageRating,
+    double TimelyDeliveryPercentage,
+    double SufficientQuantityPercentage,
+    List<RequestFeedbackItemDto> RecentFeedbacks
+);
+
+public record RequestFeedbackItemDto(
+    Guid Id,
+    Guid AssistanceRequestId,
+    string RequestReferenceCode,
+    string RequestTitle,
+    Guid CitizenUserId,
+    int Rating,
+    string Comments,
+    bool WasAidTimely,
+    bool WasQuantitySufficient,
+    DateTime CreatedAtUtc
+);
+
+public record SitRepLowStockAlertDto(
+    Guid ResourceItemId,
+    string ResourceName,
+    string Category,
+    string WarehouseName,
+    int AvailableQuantity,
+    int ReorderThreshold,
+    DateTime? ExpiryDateUtc,
+    int? DaysUntilExpiry,
+    string AlertReason
+);
+
+public record SitRepReportDto(
+    DateTime GeneratedAtUtc,
+    string GeneratedByUser,
+    string ActiveCrisisTitle,
+    string ActiveCrisisRegion,
+    string ActiveCrisisSeverity,
+    int TotalAssistanceRequests,
+    int UnresolvedRequestsCount,
+    int CriticalOpenRequestsCount,
+    int TotalShelterCapacity,
+    int TotalShelterOccupied,
+    int ActiveShelterCheckInsCount,
+    decimal TotalDonationsCollectedUsd,
+    decimal TotalDonationsDisbursedUsd,
+    double AverageCitizenRating,
+    int TotalCitizenReviews,
+    List<SitRepLowStockAlertDto> WarehouseAlerts
+);

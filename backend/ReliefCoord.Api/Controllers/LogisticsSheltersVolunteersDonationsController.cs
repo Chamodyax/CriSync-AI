@@ -598,6 +598,127 @@ public class LogisticsSheltersVolunteersDonationsController : ControllerBase
         return Ok(allocation);
     }
 
+    [HttpPost("shelters/allocations/{id:guid}/checkout")]
+    [Authorize(Roles = "ShelterAdmin,EmergencyCoordinator,CaseManager,SystemAdmin,OrganizationAdmin")]
+    public async Task<ActionResult> CheckoutShelterAllocation(
+        Guid id,
+        [FromBody] CheckoutShelterAllocationDto? dto,
+        CancellationToken cancellationToken)
+    {
+        var actorId = Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var uid) ? uid : Guid.Empty;
+        var actorName = User.FindFirstValue(ClaimTypes.Name) ?? "Shelter Administrator";
+        var roleStr = User.FindFirstValue(ClaimTypes.Role) ?? "ShelterAdmin";
+        Enum.TryParse<UserRole>(roleStr, out var actorRole);
+
+        var allocation = await _opsService.CheckoutShelterAllocationAsync(
+            actorId,
+            actorName,
+            actorRole,
+            id,
+            dto?.DischargeNotes,
+            cancellationToken);
+        return Ok(allocation);
+    }
+
+    [HttpGet("logistics/alerts")]
+    [Authorize]
+    public async Task<ActionResult<List<SitRepLowStockAlertDto>>> GetWarehouseStockAndExpiryAlerts(CancellationToken cancellationToken)
+    {
+        var resources = await _unitOfWork.Resources.GetAllAsync(cancellationToken);
+        var alerts = BuildWarehouseAlerts(resources);
+        return Ok(alerts);
+    }
+
+    [HttpGet("reports/sitrep")]
+    [Authorize]
+    public async Task<ActionResult<SitRepReportDto>> GetSituationReport(CancellationToken cancellationToken)
+    {
+        var crises = await _unitOfWork.CrisisEvents.GetAllAsync(cancellationToken);
+        var activeCrisis = crises.OrderByDescending(c => c.IsActive).ThenByDescending(c => c.CreatedAtUtc).FirstOrDefault();
+        var requests = await _unitOfWork.AssistanceRequests.GetAllAsync(cancellationToken);
+        var shelters = await _unitOfWork.Shelters.GetAllAsync(cancellationToken);
+        var allocations = await _unitOfWork.ShelterAllocations.GetAllAsync(cancellationToken);
+        var campaigns = await _unitOfWork.DonationCampaigns.GetAllAsync(cancellationToken);
+        var feedbacks = await _unitOfWork.RequestFeedbacks.GetAllAsync(cancellationToken);
+        var resources = await _unitOfWork.Resources.GetAllAsync(cancellationToken);
+
+        int unresolved = requests.Count(r =>
+            r.Status != RequestStatus.Fulfilled &&
+            r.Status != RequestStatus.Closed &&
+            r.Status != RequestStatus.MergedAsDuplicate &&
+            r.Status != RequestStatus.Rejected);
+
+        int criticalOpen = requests.Count(r =>
+            r.FinalApprovedUrgency >= UrgencyLevel.Critical &&
+            r.Status != RequestStatus.Fulfilled &&
+            r.Status != RequestStatus.Closed);
+
+        int activeShelterCheckIns = allocations.Count(a =>
+            !string.Equals(a.AllocationStatus, "CheckedOut", StringComparison.OrdinalIgnoreCase));
+
+        double avgRating = feedbacks.Count > 0 ? Math.Round(feedbacks.Average(f => f.Rating), 2) : 0.0;
+        var warehouseAlerts = BuildWarehouseAlerts(resources);
+
+        var report = new SitRepReportDto(
+            DateTime.UtcNow,
+            User.FindFirstValue(ClaimTypes.Name) ?? "Humanitarian Coordinator",
+            activeCrisis?.Title ?? "No Active Crisis Declared",
+            activeCrisis?.Region ?? "N/A",
+            activeCrisis?.Severity.ToString() ?? "N/A",
+            requests.Count,
+            unresolved,
+            criticalOpen,
+            shelters.Sum(s => s.TotalCapacity),
+            shelters.Sum(s => s.CurrentOccupancy),
+            activeShelterCheckIns,
+            campaigns.Sum(c => c.CollectedAmountUsd),
+            campaigns.Sum(c => c.DisbursedAmountUsd),
+            avgRating,
+            feedbacks.Count,
+            warehouseAlerts
+        );
+
+        return Ok(report);
+    }
+
+    private static List<SitRepLowStockAlertDto> BuildWarehouseAlerts(IReadOnlyList<ResourceItem> resources)
+    {
+        var alerts = new List<SitRepLowStockAlertDto>();
+        foreach (var r in resources)
+        {
+            bool isLowStock = r.AvailableQuantity <= r.ReorderThreshold;
+            int? daysUntilExpiry = r.ExpiryDateUtc.HasValue
+                ? (int)Math.Ceiling((r.ExpiryDateUtc.Value - DateTime.UtcNow).TotalDays)
+                : null;
+            bool isExpiringSoon = daysUntilExpiry.HasValue && daysUntilExpiry.Value <= 30;
+
+            if (!isLowStock && !isExpiringSoon)
+            {
+                continue;
+            }
+
+            string reason = (isLowStock && isExpiringSoon)
+                ? $"Low Stock ({r.AvailableQuantity}/{r.ReorderThreshold}) & Expiring in {daysUntilExpiry}d"
+                : isLowStock
+                    ? $"Below Reorder Threshold ({r.AvailableQuantity} <= {r.ReorderThreshold} {r.Unit})"
+                    : $"FEFO Expiry Alert ({daysUntilExpiry} days left)";
+
+            alerts.Add(new SitRepLowStockAlertDto(
+                r.Id,
+                r.Name,
+                r.Category.ToString(),
+                r.WarehouseName,
+                r.AvailableQuantity,
+                r.ReorderThreshold,
+                r.ExpiryDateUtc,
+                daysUntilExpiry,
+                reason
+            ));
+        }
+
+        return alerts;
+    }
+
     [HttpPost("shelters/{id:guid}/request-supplies")]
     [Authorize(Roles = "ShelterAdmin,EmergencyCoordinator,SystemAdmin,OrganizationAdmin")]
     public async Task<ActionResult> RequestShelterSupplies(Guid id, [FromBody] RequestShelterSuppliesDto dto, CancellationToken cancellationToken)

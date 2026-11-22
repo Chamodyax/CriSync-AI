@@ -147,6 +147,8 @@ export const CitizenPortalTab: React.FC<CitizenPortalTabProps> = ({
   const [feedbackRequestId, setFeedbackRequestId] = useState<string | null>(null);
   const [rating, setRating] = useState(5);
   const [feedbackComments, setFeedbackComments] = useState('');
+  const [wasAidTimely, setWasAidTimely] = useState(true);
+  const [wasQuantitySufficient, setWasQuantitySufficient] = useState(true);
 
   const [selectedFaqId, setSelectedFaqId] = useState<string>('shelter');
   const [customAiQuery, setCustomAiQuery] = useState('');
@@ -467,10 +469,13 @@ export const CitizenPortalTab: React.FC<CitizenPortalTabProps> = ({
       assistanceRequestId: feedbackRequestId,
       rating: Number(rating),
       comments: feedbackComments,
-      wasAidTimely: true,
-      wasQuantitySufficient: true
+      wasAidTimely,
+      wasQuantitySufficient
     });
     setFeedbackRequestId(null);
+    setFeedbackComments('');
+    setWasAidTimely(true);
+    setWasQuantitySufficient(true);
   };
 
   const handleAskCustomAiQuestion = (e: React.FormEvent) => {
@@ -1143,9 +1148,31 @@ export const CitizenPortalTab: React.FC<CitizenPortalTabProps> = ({
                   required
                   value={feedbackComments}
                   onChange={(e) => setFeedbackComments(e.target.value)}
+                  placeholder="Share details on delivery speed, item condition, or remaining needs..."
                   className="rsvp-input"
                 />
               </div>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-4 p-3 rounded-2xl bg-black/20 border border-white/10">
+              <label className="flex items-center gap-2 text-zinc-200 font-semibold cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={wasAidTimely}
+                  onChange={(e) => setWasAidTimely(e.target.checked)}
+                  className="w-4 h-4 rounded border-white/20 text-emerald-500"
+                />
+                <span>Aid arrived in a timely manner</span>
+              </label>
+              <label className="flex items-center gap-2 text-zinc-200 font-semibold cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={wasQuantitySufficient}
+                  onChange={(e) => setWasQuantitySufficient(e.target.checked)}
+                  className="w-4 h-4 rounded border-white/20 text-emerald-500"
+                />
+                <span>Delivered quantity was sufficient for household needs</span>
+              </label>
             </div>
 
             <button

@@ -601,6 +601,86 @@ public class HumanitarianOperationsService
         return allocation!;
     }
 
+    public async Task<ShelterAllocation> CheckoutShelterAllocationAsync(
+        Guid actorUserId,
+        string actorName,
+        UserRole actorRole,
+        Guid allocationId,
+        string? dischargeNotes = null,
+        CancellationToken cancellationToken = default)
+    {
+        if (actorRole != UserRole.ShelterAdmin &&
+            actorRole != UserRole.EmergencyCoordinator &&
+            actorRole != UserRole.CaseManager &&
+            actorRole != UserRole.OrganizationAdmin &&
+            actorRole != UserRole.SystemAdmin)
+        {
+            throw new UnauthorizedAccessException("Shelter discharge requires ShelterAdmin, CaseManager, EmergencyCoordinator, OrganizationAdmin, or SystemAdmin role.");
+        }
+
+        ShelterAllocation? allocation = null;
+
+        await ShelterAllocationLock.WaitAsync(cancellationToken);
+        try
+        {
+            await _unitOfWork.ExecuteInTransactionAsync(async () =>
+            {
+                allocation = await _unitOfWork.ShelterAllocations.GetByIdAsync(allocationId, cancellationToken)
+                    ?? throw new KeyNotFoundException("Shelter allocation record not found.");
+
+                if (string.Equals(allocation.AllocationStatus, "CheckedOut", StringComparison.OrdinalIgnoreCase))
+                {
+                    throw new InvalidOperationException($"Household '{allocation.HouseholdName}' has already been checked out.");
+                }
+
+                var shelter = await _unitOfWork.Shelters.GetByIdAsync(allocation.ShelterId, cancellationToken);
+                if (shelter != null)
+                {
+                    shelter.CurrentOccupancy = Math.Max(0, shelter.CurrentOccupancy - allocation.AllocatedMembersCount);
+                    if (shelter.CurrentOccupancy < shelter.TotalCapacity &&
+                        string.Equals(shelter.Status, "AtFullCapacity", StringComparison.OrdinalIgnoreCase))
+                    {
+                        shelter.Status = "Operational";
+                    }
+                    shelter.UpdatedAtUtc = DateTime.UtcNow;
+                    await _unitOfWork.Shelters.UpdateAsync(shelter, cancellationToken);
+                }
+
+                allocation.AllocationStatus = "CheckedOut";
+                allocation.UpdatedAtUtc = DateTime.UtcNow;
+                await _unitOfWork.ShelterAllocations.UpdateAsync(allocation, cancellationToken);
+
+                await _unitOfWork.AuditEvents.AddAsync(new AuditEventRecord
+                {
+                    EventCategory = "ShelterManagement",
+                    ActionName = "ShelterHouseholdCheckedOut",
+                    EntityType = nameof(ShelterAllocation),
+                    EntityId = allocation.Id.ToString(),
+                    ActorUserId = actorUserId,
+                    ActorUserName = actorName,
+                    ActorRole = actorRole.ToString(),
+                    DetailsJson = JsonSerializer.Serialize(new
+                    {
+                        allocation.ShelterId,
+                        ShelterName = shelter?.Name ?? "Shelter",
+                        allocation.HouseholdName,
+                        ReleasedSpaces = allocation.AllocatedMembersCount,
+                        NewOccupancy = shelter?.CurrentOccupancy ?? 0,
+                        DischargeNotes = dischargeNotes ?? "Household safely discharged"
+                    })
+                }, cancellationToken);
+
+                await _unitOfWork.SaveChangesAsync(cancellationToken);
+            }, cancellationToken);
+        }
+        finally
+        {
+            ShelterAllocationLock.Release();
+        }
+
+        return allocation!;
+    }
+
     public async Task<NotificationRecord> SendIdempotentNotificationAsync(
         SendNotificationRequestDto dto,
         CancellationToken cancellationToken = default)
